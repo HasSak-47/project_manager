@@ -1,38 +1,29 @@
+use std::path::Path;
+
+mod manager;
+mod configs;
+
+use configs::project::{self, Project};
+use configs::config::{self, Config};
+
+
 fn main(){
-    // if the config file exists then skips this part
-    // otherwise it creates the file and path
-    /*
-    #[cfg(not(debug_assertions))]
-    let config_path = match env::var("XDG_CONFIG_HOME"){
-        Ok(k) => k,
-        // if XDG_CONFIG_HOME is not set then $HOME/.config should be taken
-        Err(_) => 
-            match env::var("HOME") {
-                Ok(mut k) => {k.push_str("/.config"); k},
-                Err(_) => panic!("neither XDG_CONFIG_HOME and HOME where found!"),
-            }
-    } + "project_manager";
-    */
-    let config_path = "project_manager";
-    let mut config_data = std::fs::read_to_string(config_path).unwrap_or_else(|_|{
-        if std::fs::File::create(config_path).is_err() {
-            println!("could not create config file at {}", config_path);
-        }
-        String::new()
-    });
+    let config_path = dirs::config_dir().unwrap().to_str().unwrap().to_string();
+    let config_prmg = {let mut a = config_path.clone(); a.push_str("/project_manager"); a};
+    let config_file = {let mut a = config_prmg.clone(); a.push_str("/config");          a};
 
-    while config_data.find("\n\n").is_some(){
-        config_data = config_data.replace("\n\n", "\n");
-    }
-    let lines_split = config_data.split('\n');
-    let mut lines_raw = Vec::<String>::new();
-    for line in lines_split{
-        if line.len() == 0{
-            continue;
-        }
-        lines_raw.push(line.to_string());
+    if !Path::new(&config_prmg).exists(){
+        std::fs::create_dir(&config_prmg).unwrap();
     }
 
-    println!("{:?}", lines_raw);
-    // test push
+    if std::fs::File::open(&config_file).is_err(){
+        std::fs::write(&config_file, config::DEFAULT_CONFIG).unwrap();
+    }
+
+    let config_data = String::from_utf8(std::fs::read(config_file).unwrap()).unwrap();
+    let data : Config = toml::from_str(config_data.as_str()).unwrap();
+
+    let projects = Project::get_projects(&data).unwrap();
+
+    manager::child(data, projects);
 }
