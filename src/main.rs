@@ -1,6 +1,6 @@
 use std::path::Path;
 
-mod manager;
+mod daemon;
 mod configs;
 
 use configs::project::{self, Project};
@@ -25,5 +25,5 @@ fn main(){
 
     let projects = Project::get_projects(&data).unwrap();
 
-    manager::child(data, projects);
+    daemon::child(data, projects);
 }
