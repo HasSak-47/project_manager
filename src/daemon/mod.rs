@@ -68,8 +68,10 @@ impl ProjectManager{
         }
 
         v
-
     }
+
+    pub fn commit(&self){} 
+    pub fn push(&self){} 
 }
 
 fn get_duration(s: &String) -> std::time::Duration{

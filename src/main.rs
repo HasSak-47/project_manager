@@ -2,12 +2,16 @@ use std::path::Path;
 
 mod daemon;
 mod configs;
+mod tracker;
+mod editor;
 
 use configs::project::{self, Project};
 use configs::config::{self, Config};
 
 
 fn main(){
+    editor::add_project();
+    return;
     let config_path = dirs::config_dir().unwrap().to_str().unwrap().to_string();
     let config_prmg = {let mut a = config_path.clone(); a.push_str("/project_manager"); a};
     let config_file = {let mut a = config_prmg.clone(); a.push_str("/config");          a};
