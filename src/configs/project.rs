@@ -1,6 +1,7 @@
 use serde::{Serialize, Deserialize};
 use super::config;
 use std::time::Duration;
+use toml;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Project{
@@ -33,6 +34,15 @@ pub struct Remote{
 }
 
 impl Project{
+
+    pub const fn new() -> Project{
+        Project {
+               project: ProjectId{ name: String::new(), version: String::new(), folder: String::new()} ,
+               local: Local { countdown: String::new(), add_all: false, force_commit: false }, 
+               remote: Remote { push: false, remote: String::new(), countdown: String::new(), local_commit: true, force_push: true}
+        }
+    }
+
     pub fn get_projects(config: &config::Config) -> Result<Vec<Self>, ()>{
         let projects = match &config.projects{
             Some(map) => {
@@ -64,17 +74,16 @@ impl Project{
 
 pub const PROJECT_CONFIG_TEMPLATE: &str =
 "[project]
-name= \"{}\"
-version= \"{}\"
-folder= \"{}\"
-
+name = \"{}\"
+version = \"{}\"
+folder = \"{}\"
 [local]
-countdown= 0.5
-add_all= false
-force_commit= false
-
+countdown = \"{}\"
+add_all = {}
+force_commit = {}
 [remote]
-remote= \"\"
-countdown= 1.0
-force_push= false";
-
+push = {}
+remote = \"{}\"
+countdown = \"{}\"
+local_commit = {}, 
+force_push   = {}";
