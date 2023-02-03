@@ -1,0 +1,11 @@
+[package]
+name    =  "project_manager"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+toml  = "0.6"
+serde = "1.0"
+dirs  = "1.0"
+# tui = "0.19"
+# crossterm = "0.25"
