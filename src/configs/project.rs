@@ -1,6 +1,5 @@
 use serde::{Serialize, Deserialize};
 use super::config;
-use std::time::Duration;
 use toml;
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -15,6 +14,7 @@ pub struct ProjectId{
     pub name    : String,
     pub version : String,
     pub folder  : String,
+    pub todo_path: String,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -37,7 +37,7 @@ impl Project{
 
     pub const fn new() -> Project{
         Project {
-               project: ProjectId{ name: String::new(), version: String::new(), folder: String::new()} ,
+               project: ProjectId{ name: String::new(), version: String::new(), folder: String::new(), todo_path: String::new()} ,
                local: Local { countdown: String::new(), add_all: false, force_commit: false }, 
                remote: Remote { push: false, remote: String::new(), countdown: String::new(), local_commit: true, force_push: true}
         }
@@ -71,12 +71,12 @@ impl Project{
     }
 }
 
-
 pub const PROJECT_CONFIG_TEMPLATE: &str =
 "[project]
 name = \"{}\"
 version = \"{}\"
 folder = \"{}\"
+todo_path = \"{}\"
 [local]
 countdown = \"{}\"
 add_all = {}
