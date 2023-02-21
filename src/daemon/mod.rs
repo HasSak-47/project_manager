@@ -76,6 +76,7 @@ impl ProjectManager{
 
 fn get_duration(s: &String) -> std::time::Duration{
     let parts : Vec<&str> = s.split(':').collect();
+    // would be really funny that it crashes
     let h = u64::from_str_radix(parts[0], 10).unwrap();
     let m = u64::from_str_radix(parts[1], 10).unwrap();
 
@@ -103,7 +104,8 @@ impl From<&Project> for ProjectManager{
 
 #[allow(dead_code)]
 #[allow(unused_variables)]
-pub fn child(config: Config, projects: Vec<Project>){
+// should be checked in case of any bugss
+pub fn main(config: Config, projects: Vec<Project>){
     let managers : Vec<ProjectManager> = projects.iter().fold(Vec::new(), |mut vec, p| {
         vec.push(ProjectManager::from(p));
         vec.last_mut().unwrap().id = vec.len() -1;
