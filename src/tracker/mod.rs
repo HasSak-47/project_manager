@@ -1,4 +1,5 @@
 use super::configs::{config, project, status};
+use crossterm::terminal::size as get_termina_size;
 use toml;
 
 #[derive(Debug)]
@@ -11,20 +12,12 @@ impl Completion{
     fn new(name: String, perc: f64) -> Self {Self{name, perc}}
 }
 
-fn format_f64(mut p: f64) -> String{
-    let c = (p * 10.) as usize;
-    let r = 10 - c;
-    let mut outs = String::new();
-
-    for _ in 0..c{
-        outs.push('#')
-    };
-    for _ in c..10{
-        outs.push(' ')
-    };
-
-    p *= 100.0;
-    format!("[{outs}] {p:6.2} %")
+fn format_f64(name: &String, val: f64, longest_name: usize, max_width: usize) -> String{
+    let width = max_width - (longest_name + 12); 
+    let a = (width as f64 * val) as usize;
+    let b = width - a;
+    format!("{name:longest_name$}: [{:#<a$}{: <b$}] {:>6.2}%", "", "", val * 100.0)
+    
 }
 
 pub fn main(_: config::Config, projects: Vec<project::Project>) {
@@ -45,7 +38,10 @@ pub fn main(_: config::Config, projects: Vec<project::Project>) {
 
     //formating goes here
     let longest_name = p_data.iter().max_by(|a, b| {a.name.len().cmp(&b.name.len())}).unwrap().name.len();
+    let width = get_termina_size().unwrap().0 as usize;
     for project in p_data{
-        println!("{:longest_name$}: {}", project.name, format_f64(project.perc))
+        println!("{}", format_f64(&project.name, project.perc, longest_name, width));
+        //println!(format_f64(project.name, Project.longest_name, ))
+        // println!("{:longest_name$}: {}", project.name, format_f64(project.perc))
     }
 }
