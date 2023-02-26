@@ -44,6 +44,7 @@ impl Project{
     }
 
     pub fn get_projects(config: &config::Config) -> Result<Vec<Self>, ()>{
+        // gets all projects path an name (name, path)
         let projects = match &config.projects{
             Some(map) => {
                 map.iter().fold(Vec::<(String, String)>::new(), |mut vec, entry|{
