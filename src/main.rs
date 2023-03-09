@@ -1,6 +1,7 @@
 mod options;
 mod utils;
 mod config;
+mod errors;
 
 //possible functions
 mod list; mod daemon; mod add;
