@@ -1,5 +1,3 @@
-use super::config::{Manager, Project};
-
 pub mod prelude{
     pub trait PushAndReturn<T>{
         fn push_and_return(self, val: T) -> Self;
