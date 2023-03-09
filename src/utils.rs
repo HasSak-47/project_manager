@@ -1,7 +1,5 @@
 use super::config::{Manager, Project};
 
-type possible_func = fn(Manager, Vec<Project>);
-
 pub mod prelude{
     pub trait PushAndReturn<T>{
         fn push_and_return(self, val: T) -> Self;
