@@ -7,14 +7,18 @@ pub struct Manager{
     pub projects: Option<Map<String, Value>>,
 }
 
+pub fn get_config_path() -> String{
+    format!("{}/project_manager/config", dirs::config_dir().unwrap().to_str().unwrap())
+}
+
 fn create_manager() {
-    let config_path = format!("{}/project_manager/config", dirs::config_dir().unwrap().to_str().unwrap());
+    let config_path = get_config_path();
     std::fs::write(config_path, "[projects]").unwrap();
 }
 
 #[allow(dead_code)]
 pub fn load_manager() -> Manager{
-    let config_path = format!("{}/project_manager/config", dirs::config_dir().unwrap().to_str().unwrap());
+    let config_path = get_config_path();
     
     let config_data = String::from_utf8( match std::fs::read(config_path){
         Ok(v) => v,
