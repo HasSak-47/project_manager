@@ -1,54 +1,37 @@
-mod options;
-mod utils;
+use std::fs::File;
+
+use dirs::{home_dir, config_dir};
+use serde::{Serialize, Deserialize};
+
 mod config;
-mod errors;
-mod constats;
+mod error;
 
-//possible functions
-mod list;
-mod daemon;
-mod add;
+use error::*;
 
-use std::env;
-use serde::Deserialize;
-// hehehe impl trait goes brrrrr
-use utils::prelude::PushAndReturn;
 
-fn main(){
-    use config::project::*;
+fn get_dir(a: fn() -> Option<std::path::PathBuf>) -> ProjectResult<String>{
+    use ProjectError as PE;
+    let str = a().ok_or(PE::DirNotFound)?.to_str().ok_or(PE::DirToStr)?.to_string();
+    Ok(str)
+}
 
-    let a : Project = toml::from_str(
-"
-[id]
-name = \"test\"
-version = \"0.0.0\"
+#[derive(Serialize, Deserialize, Default)]
+struct Config{
+    folders: Vec<String>
+}
 
-[features.done]
-wacky =  0.0
-[features.todo]
-wacky =  0.0
+const CONFIG_PATH: &str = "project_manager/config";
 
-[front.done]
-wacky =  0.0
-[front.todo]
-wacky =  0.0
+fn main() -> ProjectResult<()>{
 
-[middle.done]
-wacky =  0.0
-[middle.todo]
-wacky =  0.0
 
-[back.done]
-wacky =  0.0
-[back.todo]
-wacky =  0.0
 
-").unwrap();
+    let config_file= format!("{}/{CONFIG_PATH}", get_dir(config_dir)?);
+    let file = File::open(config_file);
 
-    // bitch wtf
-    // let arguments = env::args()
-    //     .into_iter()
-    //     .fold(Vec::new(), |args, arg| args.push_and_return(arg));
+    let mut project_folder = Vec::new(); 
+    project_folder.push(get_dir(home_dir)?);
 
-    // options::run(if arguments.len() == 1 {options::DEFAULT_OPT} else {arguments[1].as_str()});
+    Ok(())
+    
 }
