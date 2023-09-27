@@ -21,8 +21,7 @@ impl std::default::Default for ManagerConfig{
     }
 }
 
-
-pub fn load_config(path: String) -> ProjectResult<ManagerConfig>{
+pub fn load_config<S: std::fmt::Display>(path: S) -> ProjectResult<ManagerConfig>{
     let file_path = format!("{path}/{CONFIG_PATH}");
     let file = File::open(file_path).unwrap();
 

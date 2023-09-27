@@ -1,18 +1,16 @@
 mod config;
 mod error;
 
-use dirs::config_dir;
 use error::*;
-use config::{manager, project};
+use config::manager;
 
 fn main() -> ProjectResult<()>{
-    let config = manager::load_config(getdir(config_dir))?;
+    let config = manager::get_config();
     let folders = &config.projects;
 
     for folder in folders{
         println!("{folder}");
     }
-
-    Ok(())
     
+    Ok(())
 }
