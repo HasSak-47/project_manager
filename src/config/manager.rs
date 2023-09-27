@@ -22,7 +22,7 @@ impl std::default::Default for ManagerConfig{
 }
 
 
-fn load_config(path: String) -> ProjectResult<ManagerConfig>{
+pub fn load_config(path: String) -> ProjectResult<ManagerConfig>{
     let file_path = format!("{path}/{CONFIG_PATH}");
     let file = File::open(file_path).unwrap();
 
@@ -34,7 +34,7 @@ fn load_config(path: String) -> ProjectResult<ManagerConfig>{
     Ok(config)
 }
 
-pub fn get_manager_config() -> ManagerConfig{
+pub fn get_config() -> ManagerConfig{
     match get_dir(config_dir){
         Ok(path) => {load_config(path).unwrap_or(ManagerConfig::default())},
         Err(_) => {ManagerConfig::default()},
