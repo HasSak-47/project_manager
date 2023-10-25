@@ -12,16 +12,16 @@ pub struct Feature{
 
 #[derive(Debug, Default, Clone)]
 pub struct Project{
-    info : ProjectInfo,
+    pub info : ProjectInfo,
     todo: Vec<Feature>,
     done: Vec<Feature>,
 }
 
 #[derive(Default, Clone, Deserialize, Serialize, Debug)]
 pub struct ProjectInfo{
-    name: String,
-    version: String,
-    edition: String,
+    pub name: String,
+    pub version: String,
+    pub edition: String,
 }
 
 
@@ -82,4 +82,39 @@ pub fn load_project<S: std::fmt::Display>(path : S) -> ProjectResult<Project>{
     }
 
     Ok(project)
+}
+
+impl Project {
+    #[allow(unused)]
+    pub const fn new() -> Self{
+        Project{
+            info: ProjectInfo {
+                name: String::new(),
+                version: String::new(),
+                edition: String::new(),
+            },
+            
+            todo: Vec::new(),
+            done: Vec::new(),
+        }
+    }
+
+    fn extract_weight(feats: &Vec<Feature>) -> f32{
+        let mut f = 0f32;
+
+        for feat in feats{
+            f += feat.difficulty;
+            f += Self::extract_weight(&feat.sub_feature);
+        }
+
+        f
+    }
+
+    pub fn get_todo(&self) -> f32{
+        Self::extract_weight(&self.todo)
+    }
+
+    pub fn get_done(&self) -> f32{
+        Self::extract_weight(&self.done)
+    }
 }
