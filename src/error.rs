@@ -1,5 +1,6 @@
 #[derive(Debug)]
 pub enum ProjectError{
+    Option,
     DirNotFound,
     DirToStr,
     IOError(std::io::Error),
@@ -29,4 +30,18 @@ pub fn get_dir(a: fn() -> Option<std::path::PathBuf>) -> ProjectResult<String>{
     use ProjectError as PE;
     let str = a().ok_or(PE::DirNotFound)?.to_str().ok_or(PE::DirToStr)?.to_string();
     Ok(str)
+}
+
+pub fn to_res<T>(o: Option<T>) -> ProjectResult<T>{
+    match o{
+        Some(s) => Ok(s),
+        None => Err(ProjectError::Option)
+    }
+}
+
+pub fn to_res_err<T>(o: Option<T>, e: ProjectError) -> ProjectResult<T>{
+    match o{
+        Some(s) => Ok(s),
+        None => Err(e)
+    }
 }
