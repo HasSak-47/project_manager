@@ -4,21 +4,32 @@ version="0.0.0"
 edition="0.0.0"
 
 [[todo]]
-name="read"
-priority=1.0
-difficulty=0.2
+name="upgrade system"
+priority=0.3
+difficulty=1.0
 
-[[todo.subfeature]]
-name="test subfeat"
-priority=1.0
-difficulty=0.2
 
 [[todo]]
-name="other"
+name="cli system"
+priority=0.8
+difficulty=0.5
+
+[[todo]]
+name="project status"
+priority=0.1
+difficulty=0.1
+
+[[todo.subfeature]]
+name="calculate % done"
+priority=0.4
+difficulty=0.1
+
+[[done]]
+name="read project"
 priority=1.0
 difficulty=0.2
 
-[[todo.subfeature]]
-name="other subfeat"
+[[done.subfeature]]
+name="read subfeat"
 priority=1.0
 difficulty=0.2

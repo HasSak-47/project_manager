@@ -47,23 +47,23 @@ fn gen_feature(t: &Table) -> ProjectResult<Feature>{
 }
 
 fn get_feature(t: &Table) -> ProjectResult<Feature>{
-    let mut f = gen_feature(t);
+    let mut f = gen_feature(t)?;
     let subfeature = t.get("subfeature");
     if let None = subfeature{
-        return f;
+        return Ok(f);
     }
 
     let arr = subfeature.unwrap().as_array();
     match arr{
         Some(subfeats) => {
             for feat in subfeats {
-                f?.sub_feature.push(get_feature(feat.as_table().unwrap())?)
+                f.sub_feature.push(get_feature(feat.as_table().unwrap())?)
             }
         },
-        None => return f,
+        None => return Ok(f),
     }
 
-    f
+    Ok(f)
 }
 
 pub fn load_project<S: std::fmt::Display>(path : S) -> ProjectResult<Project>{

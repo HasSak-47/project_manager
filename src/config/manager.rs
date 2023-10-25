@@ -50,6 +50,7 @@ fn map_to_data(m: Map<String, toml::Value>) -> Vec<ProjectData>{
     r
 }
 
+
 pub fn load_config<S: std::fmt::Display>(path: S)
     -> ProjectResult<Manager>
 {
