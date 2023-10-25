@@ -1,1 +1,24 @@
-name="project_manager"\n
+[project]
+name="Project Manager"
+version="0.0.0"
+edition="0.0.0"
+
+[[todo]]
+name="read"
+priority=1.0
+difficulty=0.2
+
+[[todo.subfeature]]
+name="test subfeat"
+priority=1.0
+difficulty=0.2
+
+[[todo]]
+name="other"
+priority=1.0
+difficulty=0.2
+
+[[todo.subfeature]]
+name="other subfeat"
+priority=1.0
+difficulty=0.2
