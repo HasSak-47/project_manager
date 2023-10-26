@@ -61,10 +61,42 @@ pub fn load_config<S: std::fmt::Display>(path: S)
     Ok(Manager{manager: config.manager, projects: map_to_data(config.projects)})
 }
 
-pub fn get_config() -> Manager{
+fn get_config() -> Manager{
     match get_dir(config_dir){
         Ok(path) => {load_config(path).unwrap_or(Manager::default())},
         Err(_) => {Manager::default()},
     }
 }
 
+use super::project::Project;
+impl Manager{
+    pub fn get_config() -> Self{
+        get_config()
+    }
+
+    pub fn get_projects(&self) -> ProjectResult<Vec<Project>>{
+        let mut v = Vec::new();
+        
+        for p in &self.projects{
+            v.push(Project::load_project(&p.path)?);
+        }
+
+        Ok(v)
+    }
+
+    pub fn get_unbroken_projects(&self) -> Vec<Project>{
+        let mut v = Vec::new();
+        
+        for p in &self.projects{
+            let _p = Project::load_project(&p.path);
+            if _p.is_ok(){
+                v.push(_p.unwrap());
+            }
+            else{
+                println!("not ok: {} err: {:?}",p.path, _p.err().unwrap());
+            }
+        }
+
+        v
+    }
+}

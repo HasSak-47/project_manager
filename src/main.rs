@@ -1,25 +1,27 @@
 mod config;
 mod error;
 mod utils;
+mod baked;
 
 use error::*;
 #[allow(unused_imports)]
-use config::{manager, project};
+use config::{manager::Manager, project};
+
+use std::env::args;
 
 fn main() -> ProjectResult<()>{
-    let manager = manager::get_config();
-    for project in manager.projects{
-        let p = project::load_project(project.path)?;
-        let p_done = p.get_done();
-        let p_todo = p.get_todo();
+    let manager = Manager::get_config();
+    let mut projects = manager.get_unbroken_projects();
 
-        let p_total = p_todo + p_done;
-        let p_done_p = 100. * if p_total != 0. {p_done / p_total} else {0.};
+    projects.sort_by(|a,b|{
+        let ac = a.get_completion();
+        let bc = b.get_completion();
+        bc.partial_cmp(&ac).unwrap()
+    });
 
-        println!("{:30} {p_done_p:04.2}", p.info.name);
+    for p in projects{
+        println!("{:20}: {:>7.2}%", p.info.name, p.get_completion() * 100.);
     }
-
-
 
 
     Ok(())

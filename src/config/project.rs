@@ -39,7 +39,7 @@ fn gen_feature(t: &Table) -> ProjectResult<Feature>{
     use crate::error::to_res;
     
     f.name = to_res(t["name"].as_str())?.to_string();
-    f.description = t["name"].as_str().map(str::to_string);
+    f.description = t.get("description").map(|x| x.as_str().unwrap_or("").to_string());
     f.difficulty = to_res(t["difficulty"].as_float())? as f32;
     f.priority = to_res(t["priority"].as_float())? as f32;
 
@@ -66,7 +66,8 @@ fn get_feature(t: &Table) -> ProjectResult<Feature>{
     Ok(f)
 }
 
-pub fn load_project<S: std::fmt::Display>(path : S) -> ProjectResult<Project>{
+pub fn load_project<S: AsRef<str>>(path : S) -> ProjectResult<Project>{
+    let path = path.as_ref();
     let path = format!{"{path}/status.toml"};
     let data = crate::utils::read_file(path)?;
 
@@ -99,6 +100,10 @@ impl Project {
         }
     }
 
+    pub fn load_project<S : AsRef<str>>(path: S) -> ProjectResult<Self>{
+        load_project(path)
+    }
+
     fn extract_weight(feats: &Vec<Feature>) -> f32{
         let mut f = 0f32;
 
@@ -116,5 +121,15 @@ impl Project {
 
     pub fn get_done(&self) -> f32{
         Self::extract_weight(&self.done)
+    }
+
+    pub fn get_completion(&self) -> f32{
+        let t = self.get_todo();
+        let d = self.get_done();
+
+        let total = t + d;
+        if total == 0.{ 0. }
+        else{ d  / total }
+
     }
 }
