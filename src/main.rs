@@ -1,33 +1,28 @@
-use std::env;
+mod config;
+mod error;
+mod utils;
+mod baked;
 
-mod daemon;
-mod configs;
-mod tracker;
-mod editor;
+use error::*;
+#[allow(unused_imports)]
+use config::{manager::Manager, project};
 
-use configs::project::{self, Project};
-use configs::config::{self, Config};
+use std::env::args;
 
-fn main(){
-    let config : Config = Config::get_config();//toml::from_str(config_data.as_str()).unwrap();
-    let projects = Project::get_projects(&config).unwrap();
+fn main() -> ProjectResult<()>{
+    let manager = Manager::get_config();
+    let mut projects = manager.get_unbroken_projects();
 
-    // tracker::main(data, projects);
-    let mut args = Vec::<String>::new();
-    for arg in env::args() {
-        args.push(arg);
+    projects.sort_by(|a,b|{
+        let ac = a.get_completion();
+        let bc = b.get_completion();
+        bc.partial_cmp(&ac).unwrap()
+    });
+
+    for p in projects{
+        println!("{:20}: {:>7.2}%", p.info.name, p.get_completion() * 100.);
     }
 
-    if args.len() >= 2 {
-        if args[1] == "--daemon"{
-            daemon::main(config, projects); 
-        }
-        else 
-        if args[1] == "--create" {
-            editor::make_project(config);
-        }
-    }
-    else{
-        tracker::main(config, projects);
-    }
+
+    Ok(())
 }
