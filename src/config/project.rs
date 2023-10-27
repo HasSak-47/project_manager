@@ -13,8 +13,9 @@ pub struct Feature{
 #[derive(Debug, Default, Clone)]
 pub struct Project{
     pub info : ProjectInfo,
-    todo: Vec<Feature>,
-    done: Vec<Feature>,
+    pub subproj: Vec<Project>,
+    pub todo: Vec<Feature>,
+    pub done: Vec<Feature>,
 }
 
 #[derive(Default, Clone, Deserialize, Serialize, Debug)]
@@ -28,6 +29,7 @@ pub struct ProjectInfo{
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ProjectToml{
     project : ProjectInfo,
+    subproj : Option<Array>,
     todo    : Option<Array>, 
     done    : Option<Array>, 
 }
@@ -66,7 +68,7 @@ fn get_feature(t: &Table) -> ProjectResult<Feature>{
     Ok(f)
 }
 
-pub fn load_project<S: AsRef<str>>(path : S) -> ProjectResult<Project>{
+fn load_project<S: AsRef<str>>(path : S) -> ProjectResult<Project>{
     let path = path.as_ref();
     let path = format!{"{path}/status.toml"};
     let data = crate::utils::read_file(path)?;
@@ -94,6 +96,7 @@ impl Project {
                 version: String::new(),
                 edition: String::new(),
             },
+            subproj: Vec::new(),
             
             todo: Vec::new(),
             done: Vec::new(),

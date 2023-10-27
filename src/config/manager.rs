@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 use dirs::config_dir;
-use toml::{self, map::Map};
+use toml::{self, map::Map, Table};
 
 use crate::error::*;
 
@@ -20,7 +20,7 @@ pub struct ManagerData{
 #[derive(Serialize, Deserialize, Debug)]
 struct ManagerToml{
     pub manager : ManagerData,
-    pub projects: Map<String, toml::Value>,
+    pub projects: Table 
 }
 
 #[derive(Default, Debug)]
