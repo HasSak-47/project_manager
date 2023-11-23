@@ -3,11 +3,12 @@ use toml::{Table, value::Array};
 
 #[derive(Deserialize, Serialize, Debug, Default, Clone)]
 pub struct Feature{
-    name       : String,
-    priority   : f32,
-    difficulty : f32,
-    description: Option<String>,
-    sub_feature: Vec<Feature>,
+    pub name       : String,
+    pub priority   : f32,
+    pub difficulty : f32,
+    pub description: Option<String>,
+    pub done: Vec<Feature>,
+    pub todo: Vec<Feature>,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -48,13 +49,33 @@ fn gen_feature(t: &Table) -> ProjectResult<Feature>{
     Ok(f)
 }
 
+fn get_subfeatures(value: &toml::Value) -> ProjectResult<Vec<Feature>>{
+    let mut v = Vec::new();
+    match value.as_array(){
+        Some(feats) => {
+            for feat in feats{
+                v.push(get_feature(feat.as_table().unwrap())?);
+            }
+        },
+        None => {}
+    };
+
+
+    Ok(v)
+}
+
 fn get_feature(t: &Table) -> ProjectResult<Feature>{
     let mut f = gen_feature(t)?;
-    let subfeature = t.get("subfeature");
-    if let None = subfeature{
-        return Ok(f);
+    let done = t.get("done");
+    let todo = t.get("todo");
+    if let Some(done_feats_val) = done {
+        f.done.append(&mut get_subfeatures(done_feats_val)?);
+    }
+    if let Some(todo_feats_val) = todo {
+        f.done.append(&mut get_subfeatures(todo_feats_val)?);
     }
 
+    /*
     let arr = subfeature.unwrap().as_array();
     match arr{
         Some(subfeats) => {
@@ -64,6 +85,7 @@ fn get_feature(t: &Table) -> ProjectResult<Feature>{
         },
         None => return Ok(f),
     }
+    */
 
     Ok(f)
 }
@@ -112,7 +134,8 @@ impl Project {
 
         for feat in feats{
             f += feat.difficulty;
-            f += Self::extract_weight(&feat.sub_feature);
+            f += Self::extract_weight(&feat.done);
+            f += Self::extract_weight(&feat.todo);
         }
 
         f
