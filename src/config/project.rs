@@ -60,7 +60,6 @@ fn get_subfeatures(value: &toml::Value) -> ProjectResult<Vec<Feature>>{
         None => {}
     };
 
-
     Ok(v)
 }
 
@@ -71,21 +70,10 @@ fn get_feature(t: &Table) -> ProjectResult<Feature>{
     if let Some(done_feats_val) = done {
         f.done.append(&mut get_subfeatures(done_feats_val)?);
     }
-    if let Some(todo_feats_val) = todo {
-        f.done.append(&mut get_subfeatures(todo_feats_val)?);
-    }
 
-    /*
-    let arr = subfeature.unwrap().as_array();
-    match arr{
-        Some(subfeats) => {
-            for feat in subfeats {
-                f.sub_feature.push(get_feature(feat.as_table().unwrap())?)
-            }
-        },
-        None => return Ok(f),
+    if let Some(todo_feats_val) = todo {
+        f.todo.append(&mut get_subfeatures(todo_feats_val)?);
     }
-    */
 
     Ok(f)
 }
@@ -129,24 +117,30 @@ impl Project {
         load_project(path)
     }
 
-    fn extract_weight(feats: &Vec<Feature>) -> f32{
-        let mut f = 0f32;
-
-        for feat in feats{
-            f += feat.difficulty;
-            f += Self::extract_weight(&feat.done);
-            f += Self::extract_weight(&feat.todo);
+    fn _get_todo(v : &Vec<Feature>) -> f32{
+        let mut t = 0.;
+        for f in v{
+            t += f.difficulty;
+            t += Self::_get_todo(&f.todo);
         }
+        t
+    }
 
-        f
+    fn _get_done(v : &Vec<Feature>) -> f32{
+        let mut t = 0.;
+        for f in v{
+            t += f.difficulty;
+            t += Self::_get_done(&f.done);
+        }
+        t
     }
 
     pub fn get_todo(&self) -> f32{
-        Self::extract_weight(&self.todo)
+        Self::_get_todo(&self.todo)
     }
 
     pub fn get_done(&self) -> f32{
-        Self::extract_weight(&self.done)
+        Self::_get_done(&self.done)
     }
 
     pub fn get_completion(&self) -> f32{
@@ -156,6 +150,5 @@ impl Project {
         let total = t + d;
         if total == 0.{ 0. }
         else{ d  / total }
-
     }
 }
