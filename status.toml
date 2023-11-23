@@ -24,6 +24,7 @@ priority=0.3
 difficulty=0.8
 
 
+
 [[todo]]
 name="cli system"
 priority=0.8
@@ -48,6 +49,12 @@ difficulty=0.1
 name="improve subfeature implementation"
 priority=0.1
 difficulty=0.6
+
+[[todo.done]]
+name="feats can have done and todo subfeats"
+priority=0.1
+difficulty=0.6
+
 
 [[done]]
 name="read project"
