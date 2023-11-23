@@ -10,6 +10,8 @@ const CONFIG_PATH: &str = "project_manager/config.toml";
 pub struct ProjectData{
     pub path: String,
     pub name: String,
+    pub ignore: Option<bool>,
+    pub subprojects: Option<Vec<String>>,
 }
 
 #[derive(Serialize, Deserialize, Default, Debug)]
@@ -44,6 +46,8 @@ fn map_to_data(m: Map<String, toml::Value>) -> Vec<ProjectData>{
         r.push(ProjectData{
             name: k,
             path: v.as_str().unwrap().to_string(),
+            ignore: None,
+            subprojects: None,
         });
     }
 
