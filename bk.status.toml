@@ -1,7 +1,7 @@
 [project]
 name="Project Manager"
-version="0.1.1"
-edition="0.1.1"
+version="0.0.1"
+edition="0.0.0"
 
 [[todo]]
 name="upgrade system"
@@ -10,13 +10,19 @@ difficulty=1.0
 
 [[todo]]
 name="redo get project config"
+description="""
+ways to implement
+1) a project.toml be saved in the config folder wich hold the project structure and instead of the config.toml having the path to the status.toml it would hold to the name of the project and the project.toml
+2) the status.toml could hold the subprojects and those would also be in the config.toml
+"""
 priority=0.1
 difficulty=0.2
 
-[[todo.todo]]
+[[todo.subfeature]]
 name="create subprojects"
 priority=0.3
 difficulty=0.8
+
 
 [[todo]]
 name="cli system"
@@ -43,18 +49,12 @@ name="improve subfeature implementation"
 priority=0.1
 difficulty=0.6
 
-[[todo.done]]
-name="feats can have done and todo subfeats"
-priority=0.1
-difficulty=0.6
-
-
 [[done]]
 name="read project"
 priority=1.0
 difficulty=0.2
 
-[[done.done]]
+[[done.subfeature]]
 name="read subfeat"
 priority=1.0
 difficulty=0.2
@@ -64,7 +64,7 @@ name="project status"
 priority=0.1
 difficulty=0.1
 
-[[done.done]]
+[[done.subfeature]]
 name="calculate % done"
 priority=0.4
 difficulty=0.1
