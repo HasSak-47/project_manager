@@ -1,0 +1,24 @@
+[project]
+name="Project Manager"
+version="0.1.1"
+edition="0.1.1"
+
+[[todo]]
+name="upgrade system"
+priority=0.3
+difficulty=1.0
+
+[[todo.done]]
+name="read subfeat"
+priority=1.0
+difficulty=0.2
+
+[[done]]
+name="project status"
+priority=0.1
+difficulty=0.1
+
+[[done.done]]
+name="calculate % done"
+priority=0.4
+difficulty=0.1
