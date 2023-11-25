@@ -26,13 +26,12 @@ impl CliUtil for PrintPercentajes{
 
         println!("pm version {}", EDITION);
         for p in projects{
-            print!("{:20}: {:>7.2}%", p.info.name, p.get_completion() * 100.);
-            if p.info.edition != EDITION {
-                print!(" config out date! '{}'", p.info.edition);
+            print!("{:20}: {:>7.2}%", p.project.name, p.get_completion() * 100.);
+            if p.project.edition != EDITION {
+                print!(" --config out date! '{}'--", p.project.edition);
             }
             println!();
         }
         Ok(())
     }
 }
-

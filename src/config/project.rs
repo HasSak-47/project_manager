@@ -1,6 +1,15 @@
 use serde::{Deserialize, Serialize};
-use toml::{Table, value::Array};
 use crate::error::*;
+
+#[derive(Deserialize, Serialize, Debug, Default, Clone)]
+pub struct FeatureTOML{
+    pub name       : String,
+    pub priority   : f32,
+    pub difficulty : f32,
+    pub description: Option<String>,
+    pub done: Option<Vec<FeatureTOML>>,
+    pub todo: Option<Vec<FeatureTOML>>,
+}
 
 #[derive(Deserialize, Serialize, Debug, Default, Clone)]
 pub struct Feature{
@@ -10,6 +19,26 @@ pub struct Feature{
     pub description: Option<String>,
     pub done: Vec<Feature>,
     pub todo: Vec<Feature>,
+}
+
+fn opt_vec_to_vec(v: Option<Vec<FeatureTOML>>) -> Vec<Feature>{
+    let v = v.unwrap_or(Vec::new());
+    v.into_iter()
+        .map(|x| x.into())
+        .collect()
+}
+
+impl From<FeatureTOML> for Feature{
+    fn from(value: FeatureTOML) -> Self {
+        Feature {
+            name: value.name,
+            priority: value.priority,
+            difficulty: value.difficulty,
+            description: value.description,
+            todo: opt_vec_to_vec(value.todo),
+            done: opt_vec_to_vec(value.done),
+        }
+    }
 }
 
 #[derive(Default, Clone, Deserialize, Serialize, Debug)]
@@ -22,15 +51,13 @@ pub struct ProjectInfo{
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub struct ProjectToml{
     pub project: ProjectInfo,
-    pub subproj: Option<Vec<Project>>,
-    pub todo   : Option<Vec<Feature>>,
-    pub done   : Option<Vec<Feature>>,
+    pub todo   : Option<Vec<FeatureTOML>>,
+    pub done   : Option<Vec<FeatureTOML>>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Project{
     pub project: ProjectInfo,
-    pub subproj: Vec<Project>,
     pub todo   : Vec<Feature>,
     pub done   : Vec<Feature>,
 }
@@ -39,9 +66,8 @@ impl From<ProjectToml> for Project{
     fn from(value: ProjectToml) -> Self {
         Self {
             project: value.project,
-            subproj: value.subproj.unwrap_or(Vec::new()),
-            todo: value.todo.unwrap_or(Vec::new()),
-            done: value.done.unwrap_or(Vec::new()),
+            todo: opt_vec_to_vec(value.todo),
+            done: opt_vec_to_vec(value.done),
         }
     }
 }
@@ -56,6 +82,7 @@ fn load_project<S: AsRef<str>>(path : S) -> ProjectResult<Project>{
     Ok(project_toml.into())
 }
 
+#[allow(dead_code)]
 impl Project {
     #[allow(unused)]
     pub const fn new() -> Self{
@@ -65,7 +92,6 @@ impl Project {
                 version: String::new(),
                 edition: String::new(),
             },
-            subproj: Vec::new(),
             
             todo: Vec::new(),
             done: Vec::new(),
