@@ -5,7 +5,7 @@ mod error;
 mod utils;
 mod baked;
 
-use cli::{PrintPercentajes, CliUtil};
+use cli::{PrintPercentajes, CliUtil, UpdateStatusEdition};
 #[allow(unused_imports)]
 use config::project::{Feature, Project, ProjectToml};
 use error::*;
@@ -13,10 +13,10 @@ use error::*;
 use config::{manager::Manager, project};
 
 #[allow(dead_code)]
-const EDITION : &str = env!("CARGO_PKG_VERSION");
+const EDITION : &str = "0.1.0";
 
 fn main() -> ProjectResult<()>{
-    PrintPercentajes::run()?;
+    UpdateStatusEdition::run()?;
 
     Ok(())
 }
