@@ -52,11 +52,20 @@ impl CliUtil for UpdateStatusEdition{
                 continue;
             }
             let otoml : v0_1_0::next::ProjectToml = itoml.into();
-            let pth = format!("{}/status_v2.toml", st.path);
+            let pth = format!("{}/status.toml", st.path);
             let mut file = File::create(&pth)?;
-            println!("fucker2!");
             file.write_all(toml::to_string(&otoml)?.as_bytes())?;
         }
+        Ok(())
+    }
+}
+
+impl CliUtil for SelectRandomProject{
+    fn run() -> ProjectResult<()> {
+        use rand::random;
+        let manager = Manager::get_config();
+        let projects = manager.get_unbroken_projects();
+        println!("do: {}", projects[random::<usize>() % projects.len()].project.name);
         Ok(())
     }
 }
