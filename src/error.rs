@@ -1,5 +1,6 @@
 #[derive(Debug)]
 pub enum ProjectError{
+    #[allow(dead_code)]
     Option,
     DirNotFound,
     DirToStr,
@@ -32,6 +33,7 @@ pub fn get_dir(a: fn() -> Option<std::path::PathBuf>) -> ProjectResult<String>{
     Ok(str)
 }
 
+#[allow(dead_code)]
 pub fn to_res<T>(o: Option<T>) -> ProjectResult<T>{
     match o{
         Some(s) => Ok(s),
@@ -39,6 +41,7 @@ pub fn to_res<T>(o: Option<T>) -> ProjectResult<T>{
     }
 }
 
+#[allow(dead_code)]
 pub fn to_res_err<T>(o: Option<T>, e: ProjectError) -> ProjectResult<T>{
     match o{
         Some(s) => Ok(s),
