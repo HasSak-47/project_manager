@@ -7,7 +7,6 @@ mod error;
 mod utils;
 mod baked;
 
-use cli::{PrintPercentajes, CliUtil, UpdateStatusEdition, SelectRandomProject};
 use config::project::{Feature, Project, ProjectToml};
 use error::*;
 use config::{manager::Manager, project};
@@ -17,6 +16,7 @@ use std::env::args;
 const EDITION : &str = "0.1.0";
 
 fn main() -> ProjectResult<()>{
+    /*
     let mut args : Vec<String> = args().into_iter().collect();
     args.remove(0);
     let opt = if args.len() == 0 {
@@ -32,5 +32,6 @@ fn main() -> ProjectResult<()>{
     else{
         PrintPercentajes::run()?;
     }
+    */
     Ok(())
 }
