@@ -1,10 +1,12 @@
+use std::{fs::{DirBuilder, File}, path::{PathBuf, Path}};
+
 use serde::{Serialize, Deserialize};
-use dirs::config_dir;
+use dirs::{config_dir, data_local_dir};
 use toml::{self, map::Map, Table};
 
-use crate::error::*;
+use crate::{error::*, utils::get_dir};
 
-const CONFIG_PATH: &str = "project_manager/config.toml";
+const DATA_PATH: &str = "project_manager/config.toml";
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ProjectData{
@@ -54,28 +56,38 @@ fn map_to_data(m: Map<String, toml::Value>) -> Vec<ProjectData>{
     r
 }
 
-
-pub fn load_config<S: std::fmt::Display>(path: S)
-    -> ProjectResult<Manager>
-{
-    let file_path = format!("{path}/{CONFIG_PATH}");
-    let data = crate::utils::read_file(&file_path)?;
-
-    let config : ManagerToml = toml::from_str(std::str::from_utf8(data.as_bytes())?)?;
-    Ok(Manager{manager: config.manager, projects: map_to_data(config.projects)})
-}
-
-fn get_config() -> Manager{
-    match get_dir(config_dir){
-        Ok(path) => {load_config(path).unwrap_or(Manager::default())},
-        Err(_) => {Manager::default()},
-    }
-}
-
 use super::project::Project;
 impl Manager{
-    pub fn get_config() -> Self{
-        get_config()
+    pub fn load_data_from<P: AsRef<Path>>(path: P)
+        -> ProjectResult<Self>
+    {
+        let data = crate::utils::read_file(path)?;
+        let config : ManagerToml = toml::from_str(std::str::from_utf8(data.as_bytes())?)?;
+
+        Ok(Manager{manager: config.manager, projects: map_to_data(config.projects)})
+    }
+
+    pub fn get_path() -> ProjectResult<PathBuf>{
+        let mut path = get_dir(data_local_dir)?;
+        path.push("project_manager/projects");
+        path.set_extension("toml");
+
+        Ok(path)
+    }
+
+    // creates the data folder and the projects.toml file
+    pub fn create_data() -> ProjectResult<()>{
+        let mut path = get_dir(data_local_dir)?;
+        path.push("project_manager");
+        if !path.exists(){
+            DirBuilder::new().create(&path)?;
+        }
+        path.push("projects");
+        path.set_file_name("toml");
+        if !path.exists() {
+            File::create(path)?;
+        }
+        Ok(())
     }
 
     pub fn get_projects(&self) -> ProjectResult<Vec<Project>>{

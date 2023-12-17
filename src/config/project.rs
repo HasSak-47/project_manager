@@ -72,16 +72,6 @@ impl From<ProjectToml> for Project{
     }
 }
 
-fn load_project<S: AsRef<str>>(path : S) -> ProjectResult<Project>{
-    let path = path.as_ref();
-    let path = format!{"{path}/status.toml"};
-    let data = crate::utils::read_file(path)?;
-
-    let project_toml : ProjectToml = toml::from_str(std::str::from_utf8(data.as_bytes())?)?;
-
-    Ok(project_toml.into())
-}
-
 #[allow(dead_code)]
 impl Project {
     #[allow(unused)]
@@ -99,7 +89,13 @@ impl Project {
     }
 
     pub fn load_project<S : AsRef<str>>(path: S) -> ProjectResult<Self>{
-        load_project(path)
+        let path = path.as_ref();
+        let path = format!{"{path}/status.toml"};
+        let data = crate::utils::read_file(path)?;
+
+        let project_toml : ProjectToml = toml::from_str(std::str::from_utf8(data.as_bytes())?)?;
+
+        Ok(project_toml.into())
     }
 
     fn _get_todo(v : &Vec<Feature>) -> f32{
