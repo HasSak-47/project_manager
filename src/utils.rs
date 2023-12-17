@@ -38,3 +38,33 @@ pub fn version_cmp(config: &str, current: &str) -> bool{
     }
     true
 }
+
+use crate::error::ProjectError;
+use std::path::PathBuf;
+
+pub fn get_dir_str(a: fn() -> Option<PathBuf>) -> ProjectResult<String>{
+    use ProjectError as PE;
+    let str = a().ok_or(PE::DirNotFound)?.to_str().ok_or(PE::DirToStr)?.to_string();
+    Ok(str)
+}
+
+pub fn get_dir(a: fn() -> Option<PathBuf>) -> ProjectResult<PathBuf>{
+    use ProjectError as PE;
+    Ok(a().ok_or(PE::DirNotFound)?)
+}
+
+#[allow(dead_code)]
+pub fn to_res<T>(o: Option<T>) -> ProjectResult<T>{
+    match o{
+        Some(s) => Ok(s),
+        None => Err(ProjectError::Option)
+    }
+}
+
+#[allow(dead_code)]
+pub fn to_res_err<T>(o: Option<T>, e: ProjectError) -> ProjectResult<T>{
+    match o{
+        Some(s) => Ok(s),
+        None => Err(e)
+    }
+}
