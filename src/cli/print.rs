@@ -1,4 +1,4 @@
-use super::RunCmd;
+use super::{RunCmd, Params};
 use clap::{Subcommand, Parser, Args};
 use rand::random;
 use crate::{error::ProjectResult, config::{manager::Manager, project::Project}};
@@ -62,7 +62,7 @@ fn print_random(projects: Vec<Project>){
 }
 
 impl RunCmd for PrintStruct{
-    fn run(&self) -> ProjectResult<()> {
+    fn run(&self, _: Params) -> ProjectResult<()> {
         let manager = Manager::load_data_from(Manager::get_path()?).unwrap();
         let projects = manager.get_unbroken_projects();
         drop(manager);
