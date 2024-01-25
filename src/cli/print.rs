@@ -41,7 +41,7 @@ fn print_project(projects: Vec<Project>, name: String, toml: bool){
                 println!("{name} : {p:?}");
             }
             else{
-                println!("{name} : {}", toml::to_string(&p).unwrap());
+                println!("{name} : {}", toml::to_string_pretty(&p).unwrap());
             }
             return;
         }
@@ -63,7 +63,6 @@ fn print_random(projects: Vec<Project>){
 
 impl RunCmd for PrintStruct{
     fn run(&self) -> ProjectResult<()> {
-
         let manager = Manager::load_data_from(Manager::get_path()?).unwrap();
         let projects = manager.get_unbroken_projects();
         drop(manager);
