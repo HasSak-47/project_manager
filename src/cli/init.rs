@@ -17,6 +17,12 @@ impl RunCmd for InitStruct{
         let mut manager = Manager::load_data_from(&man_path)?;
         let cwd = current_dir().unwrap();
         let f_name = cwd.file_name().unwrap().to_str().unwrap().to_string();
+        for p in &manager.projects{
+            if cwd == p.path || f_name == p.name{
+                return Err(crate::error::ProjectError::Other("Name or Path already exists!!".to_string()));
+            }
+        }
+
         manager.projects.push(ProjectData{
             name: self.name.clone().unwrap_or(f_name),
             path: self.path.clone().unwrap_or(cwd),

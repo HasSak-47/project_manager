@@ -2,7 +2,7 @@ use std::{fs::{DirBuilder, File}, path::{PathBuf, Path}, io::Write};
 
 use serde::{Serialize, Deserialize};
 use dirs::{config_dir, data_local_dir};
-use toml::{self, map::Map, Table};
+use toml::{self, map::Map, Table, Value};
 
 use crate::{error::*, utils::get_dir};
 
@@ -10,21 +10,21 @@ const DATA_PATH: &str = "project_manager/config.toml";
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ProjectData{
-    pub path: PathBuf,
     pub name: String,
+    pub path: PathBuf,
     pub ignore: Option<bool>,
     pub subprojects: Option<Vec<String>>,
 }
 
-#[derive(Serialize, Deserialize, Default, Debug)]
+#[derive(Serialize, Deserialize, Default, Debug, Clone)]
 pub struct ManagerData{
     pub version : String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 struct ManagerToml{
     pub manager : ManagerData,
-    pub projects: Table 
+    pub projects: Table,
 }
 
 #[derive(Serialize, Default, Debug)]
@@ -56,6 +56,18 @@ fn map_to_data(m: Map<String, toml::Value>) -> Vec<ProjectData>{
     r
 }
 
+fn data_to_map(v: &Vec<ProjectData>) -> Table{
+    let mut map = Table::new();
+    for p in v{
+        map.insert(
+            p.name.clone(),
+            Value::String(p.path.to_str().unwrap().to_string())
+            );
+    }
+
+    map
+}
+
 use super::project::Project;
 impl Manager{
     pub fn load_data_from<P: AsRef<Path>>(path: P)
@@ -71,7 +83,12 @@ impl Manager{
         -> ProjectResult<()>
     {
         let mut file = File::open(path)?;
-        let buffer = toml::to_string(self)?;
+        let data = data_to_map(&self.projects);
+        let toml = ManagerToml {
+            manager: self.manager.clone(),
+            projects: data,
+        };
+        let buffer = toml::to_string(&toml)?;
         println!("{buffer}");
         // file.write(buffer.as_bytes())?;
         Ok(())
