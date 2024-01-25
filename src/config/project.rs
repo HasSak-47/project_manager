@@ -118,6 +118,7 @@ impl Project {
         }
         t
     }
+    
 
     pub fn get_todo(&self) -> f32{
         Self::_get_todo(&self.todo)
