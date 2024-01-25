@@ -98,15 +98,14 @@ impl Manager{
     pub fn write_data_to<P: AsRef<Path>>(&self, path: P)
         -> ProjectResult<()>
     {
-        let mut file = File::open(path)?;
+        let mut file = File::create(path)?;
         let data = data_to_map(&self.projects);
         let toml = ManagerToml {
             manager: self.manager.clone(),
             projects: data,
         };
         let buffer = toml::to_string(&toml)?;
-        println!("{buffer}");
-        // file.write(buffer.as_bytes())?;
+        file.write(buffer.as_bytes())?;
         Ok(())
     }
 

@@ -2,8 +2,10 @@ mod print;
 mod delete;
 mod init;
 
+use std::path::PathBuf;
+
 use clap::{Subcommand, Parser, Args};
-use crate::error::ProjectResult;
+use crate::{error::ProjectResult, config::manager::Manager};
 use print::PrintStruct;
 use init::InitStruct;
 
@@ -18,6 +20,9 @@ struct Arguments{
     #[clap(long)]
     debug: bool,
 
+    #[clap(long)]
+    manager_path: Option<PathBuf>,
+
     #[command(subcommand)]
     tree: Option<Tree>,
 }
@@ -25,6 +30,7 @@ struct Arguments{
 pub struct Params{
     verbose: bool,
     debug: bool,
+    manager_path: PathBuf,
 }
 
 trait RunCmd{
@@ -67,6 +73,7 @@ pub fn cli() -> ProjectResult<()>{
     let params = Params{
         debug : args.debug,
         verbose : args.verbose,
+        manager_path: args.manager_path.unwrap_or(Manager::get_path()?),
     };
     match tree{
         TR::Print(p) => p.run(params)?,
