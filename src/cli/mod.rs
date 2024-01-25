@@ -1,4 +1,5 @@
 mod print;
+mod add;
 
 use clap::{Subcommand, Parser, Args};
 use crate::error::ProjectResult;

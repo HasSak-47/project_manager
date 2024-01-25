@@ -2,7 +2,7 @@ use std::{fs::File, io::{Read, BufReader}, default};
 use crate::ProjectResult;
 use std::path::Path;
 
-pub fn read_file<S: AsRef<Path>>(path: S) -> ProjectResult<String>{
+pub fn read_file<P: AsRef<Path>>(path: P) -> ProjectResult<String>{
     let file = File::open(path)?;
     let mut buf_reader = BufReader::new(file);
     let mut data = Vec::new();
