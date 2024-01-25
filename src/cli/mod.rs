@@ -11,7 +11,6 @@ use init::InitStruct;
 
 use self::delete::DelStruct;
 
-
 #[derive(Parser, Debug)]
 #[clap(author="Daniela", version, about)]
 struct Arguments{
@@ -49,6 +48,7 @@ impl RunCmd for NotDone{
 
 #[derive(Subcommand, Debug, Clone)]
 enum Tree{
+    // Daemon(DaemonStruct),
     Print(PrintStruct),
     Init(InitStruct),
     Delete(DelStruct),
