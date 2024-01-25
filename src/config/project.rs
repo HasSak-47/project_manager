@@ -6,8 +6,8 @@ use crate::error::*;
 #[derive(Deserialize, Serialize, Debug, Default, Clone)]
 pub struct FeatureTOML{
     pub name       : String,
-    pub priority   : f32,
-    pub difficulty : f32,
+    pub priority   : f64,
+    pub difficulty : f64,
     pub description: Option<String>,
     pub done: Option<Vec<FeatureTOML>>,
     pub todo: Option<Vec<FeatureTOML>>,
@@ -16,8 +16,8 @@ pub struct FeatureTOML{
 #[derive(Deserialize, Serialize, Debug, Default, Clone)]
 pub struct Feature{
     pub name       : String,
-    pub priority   : f32,
-    pub difficulty : f32,
+    pub priority   : f64,
+    pub difficulty : f64,
     pub description: Option<String>,
     pub done: Vec<Feature>,
     pub todo: Vec<Feature>,
@@ -57,7 +57,7 @@ pub struct ProjectToml{
     pub done   : Option<Vec<FeatureTOML>>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Serialize, Debug)]
 pub struct Project{
     pub project: ProjectInfo,
     pub todo   : Vec<Feature>,
@@ -101,7 +101,7 @@ impl Project {
         Ok(project_toml.into())
     }
 
-    fn _get_todo(v : &Vec<Feature>) -> f32{
+    fn _get_todo(v : &Vec<Feature>) -> f64{
         let mut t = 0.;
         for f in v{
             t += f.difficulty;
@@ -110,7 +110,7 @@ impl Project {
         t
     }
 
-    fn _get_done(v : &Vec<Feature>) -> f32{
+    fn _get_done(v : &Vec<Feature>) -> f64{
         let mut t = 0.;
         for f in v{
             t += f.difficulty;
@@ -120,15 +120,15 @@ impl Project {
     }
     
 
-    pub fn get_todo(&self) -> f32{
+    pub fn get_todo(&self) -> f64{
         Self::_get_todo(&self.todo)
     }
 
-    pub fn get_done(&self) -> f32{
+    pub fn get_done(&self) -> f64{
         Self::_get_done(&self.done)
     }
 
-    pub fn get_completion(&self) -> f32{
+    pub fn get_completion(&self) -> f64{
         let t = self.get_todo();
         let d = self.get_done();
 
