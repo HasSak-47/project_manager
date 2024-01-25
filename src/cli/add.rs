@@ -17,8 +17,8 @@ impl RunCmd for AddStruct{
         let cwd = current_dir().unwrap();
         let f_name = cwd.file_name().unwrap().to_str().unwrap().to_string();
         manager.projects.push(ProjectData{
-            name: self.name.unwrap_or(f_name),
-            path: self.path.unwrap_or(cwd),
+            name: self.name.clone().unwrap_or(f_name),
+            path: self.path.clone().unwrap_or(cwd),
             ignore: None,
             subprojects: None,
         });
