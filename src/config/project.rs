@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use serde::{Deserialize, Serialize};
 use crate::error::*;
 
@@ -88,9 +90,10 @@ impl Project {
         }
     }
 
-    pub fn load_project<S : AsRef<str>>(path: S) -> ProjectResult<Self>{
-        let path = path.as_ref();
-        let path = format!{"{path}/status.toml"};
+    pub fn load_project<P : AsRef<Path>>(path: P) -> ProjectResult<Self>{
+        let mut path = path.as_ref().to_path_buf();
+        path.push("status");
+        path.set_extension("toml");
         let data = crate::utils::read_file(path)?;
 
         let project_toml : ProjectToml = toml::from_str(std::str::from_utf8(data.as_bytes())?)?;
