@@ -108,9 +108,6 @@ impl Manager{
             if _p.is_ok(){
                 v.push(_p.unwrap());
             }
-            else{
-                println!("not ok: {} err: {:?}",p.path, _p.err().unwrap());
-            }
         }
 
         v
