@@ -62,8 +62,8 @@ fn print_random(projects: Vec<Project>){
 }
 
 impl RunCmd for PrintStruct{
-    fn run(&self, _: Params) -> ProjectResult<()> {
-        let manager = Manager::load_data_from(Manager::get_path()?).unwrap();
+    fn run(&self, params: Params) -> ProjectResult<()> {
+        let manager = Manager::load_data_from(&params.manager_path)?;
         let projects = manager.get_unbroken_projects();
         drop(manager);
 

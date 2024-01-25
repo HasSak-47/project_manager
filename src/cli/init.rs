@@ -13,8 +13,7 @@ pub struct InitStruct{
 
 impl RunCmd for InitStruct{
     fn run(&self, params: Params) -> ProjectResult<()> {
-        let man_path = Manager::get_path()?;
-        let mut manager = Manager::load_data_from(&man_path)?;
+        let mut manager = Manager::load_data_from(&params.manager_path)?;
         let cwd = current_dir().unwrap();
         let f_name = cwd.file_name().unwrap().to_str().unwrap().to_string();
         for p in &manager.projects{
@@ -30,7 +29,7 @@ impl RunCmd for InitStruct{
             subprojects: None,
         });
         
-        manager.write_data_to(man_path)?;
+        manager.write_data_to(&params.manager_path)?;
 
 
         Ok(())

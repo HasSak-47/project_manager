@@ -7,18 +7,14 @@ use crate::{error::ProjectResult, config::manager::{Manager, ProjectData, self}}
 // this looks like shit
 #[derive(Args, Debug, Clone)]
 pub struct DelStruct{
-    name: Option<String>,
+    name: String,
 }
 
 
 impl RunCmd for DelStruct{
-    fn run(&self, _: Params) -> ProjectResult<()> {
-        if self.name.is_none(){
-            return Err(crate::error::ProjectError::Other("proj not found".to_string()));
-        }
-        let man_path = Manager::get_path()?;
-        let mut manager = Manager::load_data_from(&man_path)?;
-        let name = self.name.clone().unwrap();
+    fn run(&self, params: Params) -> ProjectResult<()> {
+        let mut manager = Manager::load_data_from(&params.manager_path)?;
+        let name = self.name.clone();
         let delete = manager.projects.iter().enumerate().find(|p| p.1.name == name);
         if delete.is_none(){
             println!("project not found!");
@@ -27,7 +23,7 @@ impl RunCmd for DelStruct{
         let delete = delete.unwrap();
         manager.projects.remove(delete.0);
 
-        manager.write_data_to(man_path)?;
+        manager.write_data_to(&params.manager_path)?;
         Ok(())
     }
 }
