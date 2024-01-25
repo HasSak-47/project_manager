@@ -1,6 +1,7 @@
 mod print;
 mod delete;
 mod init;
+mod new;
 
 use std::path::PathBuf;
 
@@ -52,8 +53,8 @@ enum Tree{
     Print(PrintStruct),
     Init(InitStruct),
     Delete(DelStruct),
-
     New(NotDone),
+
     SetParent(NotDone),
     Tui(NotDone),
     AddFeat(NotDone),

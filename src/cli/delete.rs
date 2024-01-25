@@ -1,8 +1,6 @@
-use std::{path::PathBuf, env::current_dir};
-
 use super::{RunCmd, Params};
-use clap::{Subcommand, Parser, Args};
-use crate::{error::ProjectResult, config::manager::{Manager, ProjectData, self}};
+use clap::Args;
+use crate::{error::ProjectResult, config::manager::Manager};
 
 #[derive(Args, Debug, Clone)]
 pub struct DelStruct{
