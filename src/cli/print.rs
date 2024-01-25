@@ -7,41 +7,64 @@ use crate::{error::ProjectResult, config::{manager::Manager, project::Project}};
 #[derive(Args, Debug, Default, Clone)]
 pub struct PrintStruct{
     #[command(subcommand)]
-    print: Option<PrintEnum>
+    print: Option<PrintEnum>,
+}
+
+#[derive(Args, Debug, Default, Clone)]
+struct PrintPercentaje{
+    #[clap(short, long, default_value = "0")]
+    min: u8,
+    #[clap(short = 'M', long, default_value = "100")]
+    max: u8,
+    #[clap(short, long)]
+    unsorted: bool,
+}
+
+#[derive(Args, Debug, Default, Clone)]
+struct PrintProject{
+    name: String,
+    #[clap(short, long)]
+    toml: bool
 }
 
 #[derive(Subcommand, Default, Debug, Clone)]
-pub enum PrintEnum{
-    Percentaje{
-        #[clap(short, long)]
-        min: Option<u8>,
-        #[clap(short = 'M', long)]
-        max: Option<u8>,
-    },
+enum PrintEnum{
+    Percentaje(PrintPercentaje),
     Random,
-    Project {
-        name: String,
-        #[clap(short, long)]
-        toml: bool
-    },
+    Project(PrintProject),
     #[default]
     None,
 }
 
-fn print_percentaje(projects: Vec<Project>, min: u8, max: u8){
+fn print_percentaje(mut projects: Vec<Project>, data: PrintPercentaje){
+    if !data.unsorted{
+        projects.sort_by(|a, b| b.get_completion().total_cmp(&a.get_completion()));
+    }
+    let projects : Vec<_> = projects
+        .iter()
+        .filter(|p| {
+            let c = (p.get_completion() * 100.) as u8;
+            data.min <= c && c <= data.max
+        }).collect();
+    let mut max_len = 0usize;
+    for p in &projects{
+        let l = p.project.name.len();
+        if l > max_len {max_len = l}
+    }
+
     for p in projects{
-        println!("{} : {}", p.project.name, p.get_completion());
+        println!("{:2$} : {:>7.2}%", p.project.name, p.get_completion() * 100., max_len + 4, );
     }
 }
 
-fn print_project(projects: Vec<Project>, name: String, toml: bool){
+fn print_project(projects: Vec<Project>, data: PrintProject){
     for p in projects{
-        if p.project.name == name {
-            if !toml{
-                println!("{name} : {p:?}");
+        if p.project.name == data.name {
+            if !data.toml{
+                println!("{} : {p:?}", data.name);
             }
             else{
-                println!("{name} : {}", toml::to_string_pretty(&p).unwrap());
+                println!("{} : {}", data.name, toml::to_string_pretty(&p).unwrap());
             }
             return;
         }
@@ -75,8 +98,8 @@ impl RunCmd for PrintStruct{
         };
         use PrintEnum as PE;
         match option{
-            PE::Percentaje { min, max } => {print_percentaje(projects, min.unwrap_or(0), max.unwrap_or(0));},
-            PE::Project { name, toml } => {print_project(projects, name, toml);}
+            PE::Percentaje(p) => {print_percentaje(projects, p);},
+            PE::Project(p) => {print_project(projects, p);}
             PE::Random => {print_random(projects);}
             _ => {print(projects);},
         }
