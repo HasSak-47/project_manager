@@ -90,7 +90,7 @@ impl Project {
         }
     }
 
-    pub fn load_project<P : AsRef<Path>>(path: P) -> ProjectResult<Self>{
+    pub fn read_project_from<P : AsRef<Path>>(path: P) -> ProjectResult<Self>{
         let mut path = path.as_ref().to_path_buf();
         path.push("status");
         path.set_extension("toml");

@@ -1,9 +1,11 @@
-use std::{fs::{DirBuilder, File}, path::{PathBuf, Path},
-    io::{Write, BufReader, BufRead, Read, BufWriter},
+use std::{
+    fs::{DirBuilder, File},
+    path::{PathBuf, Path},
+    io::{Write, BufReader, Read, BufWriter},
 };
 
 use serde::{Serialize, Deserialize};
-use dirs::{config_dir, data_local_dir};
+use dirs::data_local_dir;
 use toml::{self, map::Map, Table, Value};
 
 use crate::{error::*, utils::get_dir};
@@ -70,15 +72,6 @@ fn data_to_map(v: &Vec<ProjectData>) -> Table{
 
 use super::project::Project;
 impl Manager{
-    pub fn load_data_from<P: AsRef<Path>>(path: P)
-        -> ProjectResult<Self>
-    {
-        let data = crate::utils::read_file(path)?;
-        let config : ManagerToml = toml::from_str(std::str::from_utf8(data.as_bytes())?)?;
-
-        Ok(Manager{manager: config.manager, projects: map_to_data(config.projects)})
-    }
-
     pub fn read_buffer<R: Read>(reader: &mut BufReader<R>) -> ProjectResult<Self> {
         let mut data = Vec::new();
         reader.read_to_end(&mut data).unwrap();
@@ -87,24 +80,19 @@ impl Manager{
         Ok(Manager{manager: config.manager, projects: map_to_data(config.projects)})
     }
 
-    pub fn write_buffer<W: Write>(&self, writer: &mut BufWriter<W>) -> ProjectResult<()>
-    {
+    pub fn write_buffer<W: Write>(&self, writer: &mut BufWriter<W>) -> ProjectResult<()> {
         writer.write(toml::to_string(self)?.as_bytes())?;
         Ok(())
     }
 
-    pub fn write_data_to<P: AsRef<Path>>(&self, path: P)
-        -> ProjectResult<()>
-    {
-        let mut file = File::create(path)?;
-        let data = data_to_map(&self.projects);
-        let toml = ManagerToml {
-            manager: self.manager.clone(),
-            projects: data,
-        };
-        let buffer = toml::to_string(&toml)?;
-        file.write(buffer.as_bytes())?;
-        Ok(())
+    pub fn load_data_from<P: AsRef<Path>>(path: P) -> ProjectResult<Self> {
+        let mut buf_reader = BufReader::new(File::open(path)?);
+        Self::read_buffer(&mut buf_reader)
+    }
+
+    pub fn write_data_to<P: AsRef<Path>>(&self, path: P) -> ProjectResult<()> {
+        let mut buf_write = BufWriter::new(File::create(path)?);
+        self.write_buffer(&mut buf_write)
     }
 
     pub fn get_path() -> ProjectResult<PathBuf>{
@@ -130,26 +118,24 @@ impl Manager{
         Ok(())
     }
 
-    pub fn get_projects(&self) -> ProjectResult<Vec<Project>>{
+    #[allow(dead_code)]
+    pub fn get_projects(&self) -> Vec<ProjectResult<Project>>{
         let mut v = Vec::new();
         
         for p in &self.projects{
-            v.push(Project::load_project(&p.path)?);
+            v.push(Project::read_project_from(&p.path));
         }
 
-        Ok(v)
+        v
     }
 
     pub fn get_unbroken_projects(&self) -> Vec<Project>{
         let mut v = Vec::new();
         
         for p in &self.projects{
-            let _p = Project::load_project(&p.path);
+            let _p = Project::read_project_from(&p.path);
             if _p.is_ok(){
                 v.push(_p.unwrap());
-            }
-            else{
-                // println!("broken: {:?}", _p);
             }
         }
 

@@ -4,14 +4,13 @@ use super::{RunCmd, Params};
 use clap::Args;
 use crate::{error::ProjectResult, config::manager::{Manager, ProjectData}};
 
-// this looks like shit
 #[derive(Args, Debug, Clone)]
-pub struct InitStruct{
+pub struct NewStruct{
     name: Option<String>,
     path: Option<PathBuf>,
 }
 
-impl RunCmd for InitStruct{
+impl RunCmd for NewStruct{
     fn run(&self, params: Params) -> ProjectResult<()> {
         let mut manager = Manager::load_data_from(&params.manager_path)?;
         let cwd = current_dir().unwrap();
@@ -30,8 +29,6 @@ impl RunCmd for InitStruct{
         });
         
         manager.write_data_to(&params.manager_path)?;
-
-
         Ok(())
     }
 }
