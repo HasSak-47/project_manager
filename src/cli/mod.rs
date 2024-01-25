@@ -15,23 +15,27 @@ use self::delete::DelStruct;
 struct Arguments{
     #[clap(short, long)]
     verbose: bool,
+    #[clap(long)]
+    debug: bool,
 
     #[command(subcommand)]
     tree: Option<Tree>,
 }
 
+pub struct Params{
+    verbose: bool,
+    debug: bool,
+}
+
 trait RunCmd{
-    fn run(&self) -> ProjectResult<()>;
-    fn run_verbose(&self) -> ProjectResult<()>{
-        self.run()
-    }
+    fn run(&self, params: Params) -> ProjectResult<()>;
 }
 
 #[derive(Args, Default, Debug, Clone, Copy)]
 struct NotDone;
 
 impl RunCmd for NotDone{
-    fn run(&self) -> ProjectResult<()>{
+    fn run(&self, _ : Params) -> ProjectResult<()>{
         println!("not yet implemented!!");
         Ok(())
     }
@@ -60,11 +64,15 @@ pub fn cli() -> ProjectResult<()>{
 
     let tree = args.tree.unwrap();
     use Tree as TR;
+    let params = Params{
+        debug : args.debug,
+        verbose : args.verbose,
+    };
     match tree{
-        TR::Print(p) => p.run()?,
-        TR::Init(i) => i.run()?,
-        TR::Delete(d) => d.run()?,
-        _ => NotDone::default().run()?,
+        TR::Print(p) => p.run(params)?,
+        TR::Init(i) => i.run(params)?,
+        TR::Delete(d) => d.run(params)?,
+        _ => NotDone::default().run(params)?,
     }
 
     Ok(())
