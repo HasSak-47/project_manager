@@ -9,7 +9,7 @@ use std::{path::PathBuf, io::Write};
 use clap::{Subcommand, Parser, Args};
 use project_manager_api::{
     error::{ProjectResult, ProjectError},
-    config::{manager::{Manager, ProjectData}, default::DEFAULT_MANAGER}
+    config::{manager::{Manager}, default::DEFAULT_MANAGER}
 };
 use print::PrintStruct;
 use init::InitStruct;
