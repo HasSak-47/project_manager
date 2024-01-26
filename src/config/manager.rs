@@ -81,7 +81,11 @@ impl Manager{
     }
 
     pub fn write_buffer<W: Write>(&self, writer: &mut BufWriter<W>) -> ProjectResult<()> {
-        writer.write(toml::to_string(self)?.as_bytes())?;
+        let mn = ManagerToml{
+            manager: self.manager.clone(),
+            projects: data_to_map(&self.projects),
+        };
+        writer.write(toml::to_string(&mn)?.as_bytes())?;
         Ok(())
     }
 

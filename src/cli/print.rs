@@ -85,6 +85,8 @@ fn print_project(projects: Vec<Project>, data: PrintProject){
             return;
         }
     }
+
+    println!("project not found");
 }
 
 fn print(projects: Vec<Project>){
