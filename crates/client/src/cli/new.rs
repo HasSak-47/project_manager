@@ -1,6 +1,6 @@
 use std::{path::PathBuf, env::current_dir, fs::File, io::Write};
 
-use super::{RunCmd, Params};
+use super::{Params};
 use clap::Args;
 use project_manager_api::{
     error::{ProjectResult, ProjectError},
@@ -18,8 +18,8 @@ pub struct NewStruct{
     edition: String,
 }
 
-impl RunCmd for NewStruct{
-    fn run(&self, params: Params) -> ProjectResult<()> {
+impl NewStruct{
+    pub fn run(&self, params: Params) -> ProjectResult<()> {
         let mut manager = Manager::load_data_from(&params.manager_path)?;
         let mut path = current_dir()?;
 
