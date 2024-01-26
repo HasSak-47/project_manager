@@ -2,7 +2,7 @@ use std::{path::PathBuf, env::current_dir};
 
 use super::{RunCmd, Params};
 use clap::Args;
-use crate::{error::ProjectResult, config::manager::{Manager, ProjectData}};
+use project_manager_api::{error::{ProjectResult, ProjectError}, config::manager::{Manager, ProjectData}};
 
 #[derive(Args, Debug, Clone)]
 pub struct InitStruct{
@@ -17,7 +17,7 @@ impl RunCmd for InitStruct{
         let f_name = cwd.file_name().unwrap().to_str().unwrap().to_string();
         for p in &manager.projects{
             if cwd == p.path || f_name == p.name{
-                return Err(crate::error::ProjectError::Other("Name or Path already exists!!".to_string()));
+                return Err(ProjectError::Other("Name or Path already exists!!".to_string()));
             }
         }
 

@@ -1,6 +1,6 @@
 use super::{RunCmd, Params};
 use clap::Args;
-use crate::{error::ProjectResult, config::manager::Manager};
+use project_manager_api::{error::ProjectResult, config::manager::Manager};
 
 #[derive(Args, Debug, Clone)]
 pub struct DelStruct{

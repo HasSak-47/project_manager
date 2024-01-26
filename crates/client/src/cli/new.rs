@@ -2,7 +2,10 @@ use std::{path::PathBuf, env::current_dir, fs::File, io::Write};
 
 use super::{RunCmd, Params};
 use clap::Args;
-use crate::{error::ProjectResult, config::{manager::{Manager, ProjectData}, default::create_project}};
+use project_manager_api::{
+    error::{ProjectResult, ProjectError},
+    config::{manager::{Manager, ProjectData}, default::create_project}
+};
 
 #[derive(Args, Debug, Clone)]
 pub struct NewStruct{
@@ -23,7 +26,7 @@ impl RunCmd for NewStruct{
         path.push("status");
         path.set_extension("toml");
         if path.exists(){
-            return Err(crate::error::ProjectError::Other("project already exists!".to_string()));
+            return Err(ProjectError::Other("project already exists!".to_string()));
         }
 
         let mut file = File::create(path)?;
