@@ -77,10 +77,10 @@ fn print_project(projects: Vec<Project>, data: PrintProject){
     for p in projects{
         if p.project.name == data.name {
             if !data.toml{
-                println!("{} : {p:?}", data.name);
+                println!("{}: {p:?}", data.name);
             }
             else{
-                println!("{} : {}", data.name, toml::to_string_pretty(&p).unwrap());
+                println!("{}:\n{}", data.name, toml::to_string_pretty(&p).unwrap());
             }
             return;
         }

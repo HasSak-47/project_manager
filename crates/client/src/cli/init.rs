@@ -4,7 +4,6 @@ use super::{RunCmd, Params};
 use clap::Args;
 use crate::{error::ProjectResult, config::manager::{Manager, ProjectData}};
 
-// this looks like shit
 #[derive(Args, Debug, Clone)]
 pub struct InitStruct{
     name: Option<String>,
