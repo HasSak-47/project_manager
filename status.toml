@@ -93,3 +93,23 @@ difficulty=0.1
 name="rework file interaction"
 priority=1.0
 difficulty=1.0
+
+[[todo]]
+name="split project into api and client"
+priority=0.2
+difficulty=0.1
+
+[[todo.done]]
+name="split project into different crates"
+priority=0.2
+difficulty=0.1
+
+[[todo.todo]]
+name="make the api wasm compatible"
+priority=0.2
+difficulty=0.1
+
+[[todo]]
+name="rework error system"
+priority=0.4
+difficulty=0.6
