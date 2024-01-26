@@ -127,7 +127,7 @@ impl Manager{
         let mut v = Vec::new();
         
         for p in &self.projects{
-            v.push(Project::read_project_from(&p.path));
+            v.push(Project::read_project_from_dir(&p.path));
         }
 
         v
@@ -137,7 +137,7 @@ impl Manager{
         let mut v = Vec::new();
         
         for p in &self.projects{
-            let _p = Project::read_project_from(&p.path);
+            let _p = Project::read_project_from_dir(&p.path);
             if _p.is_ok(){
                 v.push(_p.unwrap());
             }

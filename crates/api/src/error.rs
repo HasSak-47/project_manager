@@ -16,7 +16,7 @@ pub enum ProjectError{
 
 pub type ProjectResult<T> = Result<T, ProjectError>;
 
-macro_rules! into_error{
+macro_rules! into_error {
     ($error_ty: ty, $error_cont: tt) => {
         impl From<$error_ty> for ProjectError{
             fn from(value: $error_ty) -> Self {

@@ -13,7 +13,7 @@ use init::InitStruct;
 use self::{delete::DelStruct, new::NewStruct};
 
 #[derive(Parser, Debug)]
-#[clap(author="Daniela", version, about)]
+#[clap(author="Daniel", version, about)]
 struct Arguments{
     #[clap(short, long)]
     verbose: bool,
@@ -27,6 +27,7 @@ struct Arguments{
     tree: Option<Tree>,
 }
 
+#[allow(dead_code)]
 pub struct Params{
     verbose: bool,
     debug: bool,
@@ -43,7 +44,7 @@ struct NotDone;
 impl RunCmd for NotDone{
     fn run(&self, _ : Params) -> ProjectResult<()>{
         println!("not yet implemented!!");
-        Ok(())
+        Err(crate::error::ProjectError::Other("not yet implemented".to_string()))
     }
 }
 
@@ -56,6 +57,8 @@ enum Tree{
     New(NewStruct),
 
     SetParent(NotDone),
+    SetSubproject(NotDone),
+
     Tui(NotDone),
     AddFeat(NotDone),
     AddSubFeat(NotDone),
@@ -71,7 +74,6 @@ pub fn cli() -> ProjectResult<()>{
         f.write( &DEFAULT_MANAGER.as_bytes())?;
     }
 
-
     let args = Arguments::parse();
     if args.tree.is_none(){
         return Ok(());
@@ -84,6 +86,7 @@ pub fn cli() -> ProjectResult<()>{
         verbose : args.verbose,
         manager_path: args.manager_path.unwrap_or(Manager::get_path()?),
     };
+
     match tree{
         TR::Print(p) => p.run(params)?,
         TR::Init(i) => i.run(params)?,
