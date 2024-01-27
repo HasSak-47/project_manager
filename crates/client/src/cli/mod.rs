@@ -9,12 +9,12 @@ use std::{path::PathBuf, io::Write};
 use clap::{Subcommand, Parser, Args};
 use project_manager_api::{
     error::{ProjectResult, ProjectError},
-    config::{manager::{Manager}, default::DEFAULT_MANAGER}
+    config::{manager::Manager, default::DEFAULT_MANAGER}
 };
 use print::PrintStruct;
 use init::InitStruct;
 
-use self::{delete::DelStruct, new::NewStruct};
+use self::{delete::DelStruct, new::NewStruct, features::AddFeat};
 
 #[derive(Parser, Debug)]
 #[clap(author="Daniel", version, about)]
@@ -59,9 +59,10 @@ enum Tree{
     SetParent(NotDone),
     SetSubproject(NotDone),
 
-    Tui(NotDone),
-    AddFeat(NotDone),
+    AddFeat(AddFeat),
     AddSubFeat(NotDone),
+
+    Tui(NotDone),
     DoneFeat(NotDone),
     Update(NotDone),
 }
@@ -92,6 +93,7 @@ pub fn cli() -> ProjectResult<()>{
         TR::Init(i) => i.run(params)?,
         TR::Delete(d) => d.run(params)?,
         TR::New(n) => n.run(params)?,
+        TR::AddFeat(f) => f.run(params)?,
         _ => NotDone::default().run(params)?,
     }
 

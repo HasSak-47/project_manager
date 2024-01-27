@@ -1,9 +1,15 @@
+use std::path::PathBuf;
+
 #[allow(dead_code)]
 #[derive(Debug)]
 pub enum ProjectError{
     #[allow(dead_code)]
     Option,
     DirNotFound,
+    ProjectNotFound{
+        name: Option<String>,
+        path: Option<PathBuf>,
+    },
     DirToStr,
     CliOptionUnknown,
     IOError(std::io::Error),
