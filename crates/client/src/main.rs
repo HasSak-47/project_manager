@@ -1,5 +1,4 @@
 #![allow(unused_import_braces)]
-
 mod cli;
 
 use cli::cli;
