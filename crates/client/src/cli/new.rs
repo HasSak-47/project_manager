@@ -35,8 +35,7 @@ impl NewStruct{
         manager.projects.push(ProjectData{
             name: self.name.clone(),
             path: self.path.clone().unwrap_or(current_dir()?.clone()),
-            ignore: None,
-            subprojects: None,
+            ..Default::default()
         });
 
         manager.write_data_to(&params.manager_path)?;
