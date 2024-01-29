@@ -1,4 +1,5 @@
 mod print;
+mod git;
 mod features;
 mod delete;
 mod init;
@@ -14,7 +15,7 @@ use project_manager_api::{
 use print::PrintStruct;
 use init::InitStruct;
 
-use self::{delete::DelStruct, new::NewStruct, features::AddFeat};
+use self::{delete::DelStruct, new::NewStruct, features::AddFeat, git::GitStruct};
 
 #[derive(Parser, Debug)]
 #[clap(author="Daniel", version, about)]
@@ -65,6 +66,8 @@ enum Tree{
     Tui(NotDone),
     DoneFeat(NotDone),
     Update(NotDone),
+
+    Git(GitStruct),
 }
 
 pub fn cli() -> ProjectResult<()>{
@@ -94,6 +97,7 @@ pub fn cli() -> ProjectResult<()>{
         TR::Delete(d) => d.run(params)?,
         TR::New(n) => n.run(params)?,
         TR::AddFeat(f) => f.run(params)?,
+        TR::Git(g) => g.run(params)?,
         _ => NotDone::default().run(params)?,
     }
 

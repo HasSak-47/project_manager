@@ -23,11 +23,11 @@ impl NewStruct{
         let mut manager = Manager::load_data_from(&params.manager_path)?;
         let mut path = current_dir()?;
 
-        path.push("status");
-        path.set_extension("toml");
         if path.exists(){
             return Err(ProjectError::Other("project already exists!".to_string()));
         }
+        path.push("status");
+        path.set_extension("toml");
 
         let mut file = File::create(path)?;
         file.write(&create_project(&self.name, &self.version, &self.edition).as_bytes())?;
