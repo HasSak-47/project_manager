@@ -19,9 +19,10 @@ impl GitStruct{
         let current_project = man.find_project_data(|p| p.path == cwd)?.name.clone();
         man.update_project(current_project)?;
         man.write_data_to(man_path)?;
-        process::Command::new("git")
+        let _child = process::Command::new("git")
             .args(self.args.as_slice())
-            .spawn().unwrap();
+            .spawn() .unwrap()
+            .wait();
         Ok(())
     }
 }
