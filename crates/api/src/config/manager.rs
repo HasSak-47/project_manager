@@ -72,6 +72,7 @@ fn data_to_map(v: &Vec<ProjectData>) -> Table{
 }
 
 use super::project::Project;
+
 impl Manager{
     pub fn read_buffer<R: Read>(reader: &mut BufReader<R>) -> ProjectResult<Self> {
         let mut data = Vec::new();
@@ -139,28 +140,30 @@ impl Manager{
     }
 
     pub fn find_project_name(&self, name: String) -> ProjectResult<Project>{
-        self.projects.iter()
-            .find(|p| p.name == name)
-            .ok_or(ProjectError::ProjectNotFound { name: Some(name), path: None })
-            .and_then(|p| Project::read_project_from_dir(&p.path))
+        self.find_project(|p| p.name == name)
     }
 
     pub fn find_project_path<P: AsRef<Path>>(&self, path: P) -> ProjectResult<Project> {
         let path = path.as_ref();
-        self.projects.iter()
-            .find(|p| p.path.as_path() == path)
-            .ok_or(ProjectError::ProjectNotFound { name: None, path: Some(path.to_path_buf()) })
+        self.find_project_data(|p| p.path.as_path() == path)
             .and_then(|p| Project::read_project_from_dir(&p.path))
     }
 
-    pub fn find_project<P>(&self, predicate: P) -> ProjectResult<Project> 
+    pub fn find_project<P>(&self, predicate: P) -> ProjectResult<Project>
+    where
+        P : FnMut(&&ProjectData) -> bool,
+    {
+        self.find_project_data(predicate)
+            .and_then(|p| Project::read_project_from_dir(&p.path))
+    }
+
+    pub fn find_project_data<P>(&self, predicate: P) -> ProjectResult<&ProjectData>
     where
         P : FnMut(&&ProjectData) -> bool,
     {
         self.projects.iter()
             .find(predicate)
             .ok_or(ProjectError::ProjectNotFound { name: None, path: None })
-            .and_then(|p| Project::read_project_from_dir(&p.path))
     }
 
     pub fn update_project<S: AsRef<str>>(&mut self, name: S) -> ProjectResult<()>{
