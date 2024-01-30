@@ -1,5 +1,5 @@
 
-use std::env::current_dir;
+use std::{env::current_dir, process};
 
 use super::Params;
 use clap::Args;
@@ -13,11 +13,15 @@ pub struct GitStruct{
 
 impl GitStruct{
     pub fn run(&self, _params: Params) -> ProjectResult<()>{
-        let man = Manager::load_data_from(Manager::get_path()?)?;
-        let p = man.find_project_path(current_dir()?);
-        for arg in &self.args{
-            println!("{arg}");
-        }
+        let man_path = Manager::get_path()?;
+        let mut man = Manager::load_data_from(&man_path)?;
+        let cwd = current_dir()?;
+        let current_project = man.find_project_data(|p| p.path == cwd)?.name.clone();
+        man.update_project(current_project)?;
+        man.write_data_to(man_path)?;
+        process::Command::new("git")
+            .args(self.args.as_slice())
+            .spawn().unwrap();
         Ok(())
     }
 }
