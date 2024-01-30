@@ -21,7 +21,7 @@ impl GitStruct{
         man.write_data_to(man_path)?;
         let _child = process::Command::new("git")
             .args(self.args.as_slice())
-            .spawn() .unwrap()
+            .spawn().unwrap()
             .wait();
         Ok(())
     }
