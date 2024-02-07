@@ -2,7 +2,7 @@ use std::env::current_dir;
 
 use super::Params;
 use clap::Args;
-use project_manager_api::{error::ProjectResult, config::{project::Feature, manager::Manager}};
+use project_manager_api::{error::ProjectResult, config::{project::Feature, manager::{Manager, ProjectData}}};
 
 #[derive(Args, Debug, Clone)]
 pub struct AddFeat{
@@ -21,7 +21,9 @@ impl AddFeat{
         let manager = Manager::load_data_from(Manager::get_path()?)?;
 
         let path = current_dir()?;
-        let mut project = manager.find_project_path(&path)?;
+        let mut project = manager
+            .find_project(|p| p.path == path)
+            .and_then(|p| p.load_projec() )?;
 
         if self.r#type == "done"{
             project.add_done(feat);

@@ -10,10 +10,12 @@ use std::{path::PathBuf, io::Write};
 use clap::{Subcommand, Parser, Args};
 use project_manager_api::{
     error::{ProjectResult, ProjectError},
-    config::{manager::Manager, default::DEFAULT_MANAGER}
+    config::{manager::Manager, default::DEFAULT_MANAGER}, ProjectsHandler, ProjectLoader
 };
 use print::PrintStruct;
 use init::InitStruct;
+
+use crate::SystemHandler;
 
 use self::{delete::DelStruct, new::NewStruct, features::AddFeat, git::GitStruct};
 
@@ -70,14 +72,9 @@ enum Tree{
     Git(GitStruct),
 }
 
-pub fn cli() -> ProjectResult<()>{
+pub fn cli(handler: SystemHandler) -> ProjectResult<()>
+{
     // set up stuff
-    let path = Manager::get_path()?;
-    if !path.exists(){
-        let mut f = std::fs::File::create(path)?;
-        f.write( &DEFAULT_MANAGER.as_bytes())?;
-    }
-
     let args = Arguments::parse();
     if args.tree.is_none(){
         return Ok(());
@@ -85,20 +82,15 @@ pub fn cli() -> ProjectResult<()>{
 
     let tree = args.tree.unwrap();
     use Tree as TR;
-    let params = Params{
-        debug : args.debug,
-        verbose : args.verbose,
-        manager_path: args.manager_path.unwrap_or(Manager::get_path()?),
-    };
 
     match tree{
-        TR::Print(p) => p.run(params)?,
-        TR::Init(i) => i.run(params)?,
-        TR::Delete(d) => d.run(params)?,
-        TR::New(n) => n.run(params)?,
-        TR::AddFeat(f) => f.run(params)?,
-        TR::Git(g) => g.run(params)?,
-        _ => NotDone::default().run(params)?,
+        TR::Print(p) => p.run(args, handler)?,
+        TR::Init(i) => i.run(args, handler)?,
+        TR::Delete(d) => d.run(args, handler)?,
+        TR::New(n) => n.run(args, handler)?,
+        TR::AddFeat(f) => f.run(args, handler)?,
+        TR::Git(g) => g.run(args, handler)?,
+        _ => NotDone::default().run(args, handler)?,
     }
 
     Ok(())

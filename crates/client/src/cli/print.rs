@@ -1,5 +1,6 @@
 #![allow(unused_import_braces)]
-use super::{Params};
+use crate::{SystemLoader, SystemHandler};
+use super::{Params, Arguments};
 use clap::{Subcommand, Args};
 use rand::random;
 use project_manager_api::{
@@ -7,7 +8,7 @@ use project_manager_api::{
     config::{
         manager::{Manager, ProjectData},
         project::Project
-    },
+    }, ProjectLoader, CachedProject,
 };
 
 // this looks like shit
@@ -64,86 +65,83 @@ enum PrintEnum{
     None,
 }
 
-fn print_projects(manager: Manager, projects: Vec<Project>, _data: PrintProjects){
+fn print_projects(mut projects: Vec<&mut CachedProject>, _data: PrintProjects){
     let mut max_len = 0usize;
     for p in &projects{
-        let l = p.project.name.len();
+        let l = p.get_name().len();
         if l > max_len {max_len = l}
     }
     
-    let sort_by = match _data.sort_by{
-        SortBy::Progress => |a: &ProjectData, b: &ProjectData| b.name.cmp(&a.name),
-        SortBy::LastUsed => |a: &ProjectData, b: &ProjectData| b.name.cmp(&a.name),
-        _ => |a: &ProjectData, b: &ProjectData| b.name.cmp(&a.name),
-    };
-
-    let projects = if let SortBy::None = _data.sort_by{
-    }
+    if let SortBy::None = _data.sort_by{ }
     else{
+        projects.sort_by(match _data.sort_by {
+            SortBy::Progress => |a: &&mut CachedProject, b: &&mut CachedProject| b.get_completion_mut().total_cmp(&a.get_completion_mut()),
+                           _ => |a: &&mut CachedProject, b: &&mut CachedProject| b.get_name().cmp(&a.get_name()),
+        })
     };
 
-    for p in manager.projects{
-        println!("{:2$} {}", p.name, p.path.display(), max_len + 4);
+    for p in projects{
+        println!("{:1$}", p.get_name(), max_len + 4);
     }
 }
 
-fn print_percentaje(mut projects: Vec<Project>, data: PrintPercentaje){
+fn print_percentaje(mut projects: Vec<&mut CachedProject>, data: PrintPercentaje){
     if !data.unsorted{
-        projects.sort_by(|a, b| b.get_completion().total_cmp(&a.get_completion()));
+        projects.sort_by(|a, b| b.get_completion_mut().total_cmp(&a.get_completion_mut()));
     }
     let projects : Vec<_> = projects
         .iter()
         .filter(|p| {
-            let c = (p.get_completion() * 100.) as u8;
+            let c = (p.get_completion_mut() * 100.) as u8;
             data.min <= c && c <= data.max
         }).collect();
     let mut max_len = 0usize;
     for p in &projects{
-        let l = p.project.name.len();
+        let l = p.get_name().len();
         if l > max_len {max_len = l}
     }
 
     for p in projects{
-        println!("{:2$}{:>7.2}%", p.project.name, p.get_completion() * 100., max_len + 4, );
+        println!("{:2$}{:>7.2}%", p.get_name(), p.get_completion_mut() * 100., max_len + 4, );
     }
 }
 
-fn print_project(projects: Vec<Project>, data: PrintProject){
-    for p in projects{
-        if p.project.name == data.name {
+fn print_project(projects: Vec<&mut CachedProject>, data: PrintProject){
+    match projects.iter().find(|p| *p.get_name() == data.name){
+        Some(s) => {
             if !data.toml{
-                println!("{}: {p:?}", data.name);
+                println!("{}: {s:?}", data.name);
             }
             else{
-                println!("{}:\n{}", data.name, toml::to_string_pretty(&p).unwrap());
+                panic!("not implemented!");
             }
-            return;
         }
+        None => println!("project not found"),
     }
 
-    println!("project not found");
 }
 
-fn print(projects: Vec<Project>){
+fn print(projects: Vec<&mut CachedProject>){
     let mut max_len = 0usize;
     for p in &projects{
-        let l = p.project.name.len();
+        let l = p.get_name().len();
         if l > max_len {max_len = l}
     }
     for p in projects{
-        println!("{:1$}{}", p.project.name, max_len);
+        println!("{:1$}{}", p.get_name(), max_len);
     }
 }
 
-fn print_random(projects: Vec<Project>){
+fn print_random(projects: Vec<&mut CachedProject>){
     let i = random::<usize>() % projects.len();
-    println!("{}", projects[i].project.name);
+    println!("{}", projects[i].get_name());
 }
 
 impl PrintStruct{
-    pub fn run(&self, params: Params) -> ProjectResult<()> {
-        let manager = Manager::load_data_from(&params.manager_path)?;
-        let projects = manager.get_unbroken_projects();
+    pub fn run(&self, args: Arguments, mut handler: SystemHandler) -> ProjectResult<()> {
+        handler.load_projects();
+
+        let projects = handler.get_projects_mut();
         let option = if self.print.is_none(){
             PrintEnum::default()
         }
@@ -154,7 +152,7 @@ impl PrintStruct{
         match option{
             PE::Percentajes(p) => {print_percentaje(projects, p);},
             PE::Project(p) => {print_project(projects, p);}
-            PE::Projects(p) => {print_projects(manager, projects, p);}
+            PE::Projects(p) => {print_projects(projects, p);}
             PE::Random => {print_random(projects);}
             _ => {print(projects);},
         }
