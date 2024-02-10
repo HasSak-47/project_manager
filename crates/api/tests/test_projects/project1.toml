@@ -1,0 +1,7 @@
+todo = []
+done = []
+
+[project]
+name = ""
+version = ""
+edition = ""

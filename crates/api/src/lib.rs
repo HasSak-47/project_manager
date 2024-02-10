@@ -1,59 +1,13 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, path::PathBuf};
 
-use config::{project::{Project, ProjectInfo}, manager::{self, ProjectData, Manager, Location}};
+use config::{project::{Project, ProjectInfo}, manager::{ProjectData, Manager, Location}};
 use error::{ProjectResult, ProjectError};
+pub use cached_project::*;
 
 pub mod error;
+pub mod cached_project;
 pub mod utils;
 pub mod config;
-
-/* project cache that may be requested later
-   it may need updating when the project is refreshed */
-#[derive(Debug, Default, Clone)]
-struct ProjectCache{
-    _todo: Option<f64>,
-    _done: Option<f64>,
-    _comp: Option<f64>,
-}
-
-#[derive(Debug, Default, Clone)]
-pub struct CachedProject {
-    _name: String,
-    _data: ProjectData,           // project info according to loader
-    _cache: ProjectCache,         // stuff that is calculated when loading/reloading
-    _proj: Option<Project>,       // the project when its loaded and not broken
-    _loaded: bool,                // if the project is loaded
-}
-
-impl CachedProject{
-    fn __load_project<L>(&mut self, loader: &L)
-    where
-        L: ProjectLoader,
-    {
-        let project : ProjectResult<Project> = 
-            loader.get_project(&self._data.location)
-                .and_then(|p| Ok(toml::from_str(p.as_str())?))
-                .map_err(ProjectError::from)
-        ;
-
-        self._loaded = true;
-        self._proj = project.ok();
-    }
-
-    pub fn get_completion_mut(&mut self) -> f64 {
-        if self._cache._comp.is_some(){
-            return self._cache._comp.unwrap();
-        }
-        if self._loaded && self._proj.is_some(){
-            let comp = self._proj.as_ref().and_then(|p| Some(p.get_completion()) ).unwrap_or(0.);
-            self._cache._comp = Some(comp);
-            return comp;
-        }
-        0.
-    }
-
-    pub fn get_name(&self) -> &String{ &self._name }
-}
 
 pub trait ProjectLoader{
     fn get_manager(&self) -> ProjectResult<String>;
@@ -95,16 +49,30 @@ where
         Ok(s)
     }
 
-    fn save(&self){}
-    fn remove_project(&self){}
-    pub fn load_projects(&mut self){
+    pub fn load_projects(&mut self) {
         for proj in self._projects.values_mut(){
             proj.__load_project(&self._loader);
         } 
     }
 
-    fn drop_projects(&self){}
-    fn drop_cache(&self){}
+    #[allow(dead_code)]
+    fn drop_projects(&self){
+        todo!("find project via name");
+    }
+
+    #[allow(dead_code)]
+    fn drop_cache(&self){
+        todo!("find project via name");
+    }
+
+    pub fn get_project_mut(&mut self, name: String) -> Option<&mut CachedProject>{
+        self._projects.get_mut(&name)
+    }
+
+    pub fn get_project(&self, name: String) -> Option<&CachedProject>{
+        self._projects.get(&name)
+    }
+
     pub fn get_projects_mut(&mut self) -> Vec<&mut CachedProject>{
         self._projects
             .values_mut()
@@ -117,7 +85,7 @@ where
             .collect()
     }
 
-    pub fn add_project(&mut self, name: String, location: Location) -> ProjectResult<()>{
+    pub fn new_project(&mut self, name: String, location: Location) -> ProjectResult<()>{
         let existing = self._projects.iter().find(|(pname, p)| *pname == &name || &p._data.location == &location).is_some();
         if existing {
             return Err(ProjectError::Other(format!("name {name} or location {location:?} already in manager")));
@@ -125,8 +93,17 @@ where
         let c = CachedProject{
             _name: name.clone(),
             _data: ProjectData { location, ..Default::default() },
-            ..Default::default()
+            _loaded: true,
+            _proj: Some(Project{
+                project: ProjectInfo{
+                    name: name.clone(),
+                    ..Default::default()
+                },
+                ..Default::default()
+            }),
+            _cache: ProjectCache::default(),
         };
+
         self._projects.insert(name, c);
         Ok(())
     }
@@ -141,14 +118,18 @@ where
         Ok(())
     }
 
+    pub fn remove_project(&mut self, name: String) -> ProjectResult<()>{
+        self._projects.remove(&name);
+        Ok(())
+    }
+
     pub fn commit_project(&mut self, name: String) -> ProjectResult<()> {
         let p = &self._projects[&name];
         if p._proj.is_none(){
-            return Err(ProjectError::Other("Project is not loaded!".to_string()));
+            return Err(ProjectError::Other("Project is not loaded or it's broken!".to_string()));
         }
-        self._loader.write_project(
-            toml::to_string(&p._proj.as_ref().unwrap()).unwrap(),
-            &p._data.location)?;
+        let tml = toml::to_string(&p._proj.as_ref().unwrap()).unwrap();
+        self._loader.write_project(tml, &p._data.location)?;
         Ok(())
     }
 
@@ -160,7 +141,7 @@ where
         Ok(())
     }
 
-    pub fn new_project(&mut self, name: String, location: Location) {
+    pub fn add_project(&mut self, name: String, location: Location) {
         let cached = CachedProject{
             _name : name.clone(),
             _data : ProjectData{
@@ -170,7 +151,11 @@ where
         self._projects.insert(name, cached);
     }
 
-    pub fn find_project_via_name(&self, name: String) -> ProjectResult<&CachedProject> {
-        Err(ProjectError::Option)
+    pub fn find_via_name(&self, _name: String) -> ProjectResult<&CachedProject> {
+        todo!("find project via name");
+    }
+
+    pub fn find_via_path(&self, _path: PathBuf) -> ProjectResult<&CachedProject> {
+        todo!("find project via name");
     }
 }

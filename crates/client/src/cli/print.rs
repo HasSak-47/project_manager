@@ -1,14 +1,11 @@
 #![allow(unused_import_braces)]
-use crate::{SystemLoader, SystemHandler};
-use super::{Params, Arguments};
+use crate::SystemHandler;
+use super::Arguments;
 use clap::{Subcommand, Args};
 use rand::random;
 use project_manager_api::{
-    error::{ProjectResult},
-    config::{
-        manager::{Manager, ProjectData},
-        project::Project
-    }, ProjectLoader, CachedProject,
+    error::ProjectResult,
+    CachedProject,
 };
 
 // this looks like shit
@@ -75,34 +72,14 @@ fn print_projects(mut projects: Vec<&mut CachedProject>, _data: PrintProjects){
     if let SortBy::None = _data.sort_by{ }
     else{
         projects.sort_by(match _data.sort_by {
-            SortBy::Progress => |a: &&mut CachedProject, b: &&mut CachedProject| b.get_completion_mut().total_cmp(&a.get_completion_mut()),
-                           _ => |a: &&mut CachedProject, b: &&mut CachedProject| b.get_name().cmp(&a.get_name()),
+            _ => |a: &&mut CachedProject, b: &&mut CachedProject|{
+                b.get_completion().total_cmp(&a.get_completion())
+            },
         })
     };
 
     for p in projects{
         println!("{:1$}", p.get_name(), max_len + 4);
-    }
-}
-
-fn print_percentaje(mut projects: Vec<&mut CachedProject>, data: PrintPercentaje){
-    if !data.unsorted{
-        projects.sort_by(|a, b| b.get_completion_mut().total_cmp(&a.get_completion_mut()));
-    }
-    let projects : Vec<_> = projects
-        .iter()
-        .filter(|p| {
-            let c = (p.get_completion_mut() * 100.) as u8;
-            data.min <= c && c <= data.max
-        }).collect();
-    let mut max_len = 0usize;
-    for p in &projects{
-        let l = p.get_name().len();
-        if l > max_len {max_len = l}
-    }
-
-    for p in projects{
-        println!("{:2$}{:>7.2}%", p.get_name(), p.get_completion_mut() * 100., max_len + 4, );
     }
 }
 
@@ -138,7 +115,7 @@ fn print_random(projects: Vec<&mut CachedProject>){
 }
 
 impl PrintStruct{
-    pub fn run(&self, args: Arguments, mut handler: SystemHandler) -> ProjectResult<()> {
+    pub fn run(self, args: Arguments, mut handler: SystemHandler) -> ProjectResult<()> {
         handler.load_projects();
 
         let projects = handler.get_projects_mut();
@@ -150,7 +127,6 @@ impl PrintStruct{
         };
         use PrintEnum as PE;
         match option{
-            PE::Percentajes(p) => {print_percentaje(projects, p);},
             PE::Project(p) => {print_project(projects, p);}
             PE::Projects(p) => {print_projects(projects, p);}
             PE::Random => {print_random(projects);}
