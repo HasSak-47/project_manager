@@ -1,9 +1,11 @@
 
-use std::{env::current_dir, process};
+use std::env::current_dir;
 
-use super::Params;
+use crate::SystemHandler;
+
+use super::Arguments;
 use clap::Args;
-use project_manager_api::{error::ProjectResult, config::manager::Manager};
+use project_manager_api::error::ProjectResult;
 
 #[derive(Args, Debug, Default, Clone)]
 pub struct GitStruct{
@@ -12,17 +14,10 @@ pub struct GitStruct{
 }
 
 impl GitStruct{
-    pub fn run(&self, _params: Params) -> ProjectResult<()>{
-        let man_path = Manager::get_path()?;
-        let mut man = Manager::load_data_from(&man_path)?;
+    pub fn run(self, _args: Arguments, mut handler: SystemHandler) -> ProjectResult<()>{
         let cwd = current_dir()?;
-        let current_project = man.find_project(|p| p.path == cwd)?.name.clone();
-        man.update_project(current_project)?;
-        man.write_data_to(man_path)?;
-        let _child = process::Command::new("git")
-            .args(self.args.as_slice())
-            .spawn().unwrap()
-            .wait();
+        let _current_project = handler.find_via_path(cwd);
+        handler.commit_manager()?;
         Ok(())
     }
 }

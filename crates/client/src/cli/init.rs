@@ -16,8 +16,8 @@ pub struct InitStruct{
 }
 
 impl InitStruct{
-    pub fn run(&self, args: Arguments, handler: SystemHandler) -> ProjectResult<()> {
-        let path = self.path.unwrap_or(current_dir().unwrap());
+    pub fn run(self, args: Arguments, handler: SystemHandler) -> ProjectResult<()> {
+        let path = self.path.clone().unwrap_or(current_dir().unwrap());
 
 
 

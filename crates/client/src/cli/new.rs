@@ -21,26 +21,27 @@ pub struct NewStruct{
 }
 
 impl NewStruct{
-    fn get_location() -> ProjectResult<Location>{
-        let path = current_dir()?;
-        let mut status_path = path.clone();
-        status_path.push("status");
-        status_path.set_extension("toml");
+    fn get_location(&self) -> ProjectResult<Location>{
+        let mut path = current_dir()?;
+        path.push("status");
+        path.set_extension("toml");
 
-        if status_path.exists(){
+        if path.exists(){
             return Err(ProjectError::Other("status.toml already exists try using init instead!".to_string()));
         };
-        Ok(Location::Path(path))
+        Ok(Location::Path{path})
     }
 
     fn validate_path(&self) -> bool { true }
 
-    pub fn run(&self, args: Arguments, mut handler: SystemHandler) -> ProjectResult<()> {
+    pub fn run(self, args: Arguments, mut handler: SystemHandler) -> ProjectResult<()> {
 
         if self.validate_path() {
-            handler.new_project(self.name, Location::Path(self.path.unwrap()));
+            handler.new_project(self.name.clone(), self.get_location()?)?;
         }
 
+        handler.commit_manager()?;
+        handler.commit_projects()?;
 
         Ok(())
     }
