@@ -3,7 +3,7 @@
  */
 use std::{
     path::PathBuf,
-    collections::HashMap,
+    collections::HashMap, fmt::Display,
 };
 
 use serde::{Serialize, Deserialize};
@@ -13,6 +13,15 @@ use serde::{Serialize, Deserialize};
 pub enum Location{
     Path{path: PathBuf},
     Other(String),
+}
+
+impl Display for Location{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Path{path} => write!(f, "location::path {}", path.display()),
+            Self::Other(o) => write!(f, "location::other {o}"),
+        }
+    }
 }
 
 impl Location{

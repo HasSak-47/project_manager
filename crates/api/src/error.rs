@@ -1,39 +1,12 @@
-use std::path::PathBuf;
 
-#[allow(dead_code)]
-#[derive(Debug)]
+use crate::config::manager::Location;
+
+#[derive(Debug, thiserror::Error)]
 pub enum ProjectError{
-    #[allow(dead_code)]
-    Option,
-    DirNotFound,
-    ProjectNotFound{
-        name: Option<String>,
-        path: Option<PathBuf>,
-    },
-    DirToStr,
-    CliOptionUnknown,
-    IOError(std::io::Error),
-    UTF8Error(std::str::Utf8Error),
-    UTF8ErrorString(std::string::FromUtf8Error),
-    TOMLFromStr(toml::de::Error),
-    TOMLToStr(toml::ser::Error),
-    Other(String),
+    #[error("Toml doesn't work!")]
+    BrokenToml,
+    #[error("Project name ({name}) already in Manager")]
+    NameAlreadyManaged{ name: String, },
+    #[error("Project location ({location}) already in Manager")]
+    LocationAlreadyManaged{ location: Location, },
 }
-
-pub type ProjectResult<T> = Result<T, ProjectError>;
-
-macro_rules! into_error {
-    ($error_ty: ty, $error_cont: tt) => {
-        impl From<$error_ty> for ProjectError{
-            fn from(value: $error_ty) -> Self {
-                Self::$error_cont(value)
-            }
-        }
-    }
-}
-
-into_error!(std::io::Error, IOError);
-into_error!(std::str::Utf8Error, UTF8Error);
-into_error!(std::string::FromUtf8Error, UTF8ErrorString);
-into_error!(toml::de::Error, TOMLFromStr);
-into_error!(toml::ser::Error, TOMLToStr);
