@@ -1,5 +1,5 @@
 
-use std::path::PathBuf;
+use std::{path::PathBuf, time::{UNIX_EPOCH, Duration, SystemTime}};
 
 use super::config::{project::Project, manager::{ProjectData, Location}};
 use super::ProjectLoader;
@@ -66,8 +66,10 @@ impl CachedProject{
         return self._cache._comp.unwrap();
     }
 
-    pub fn update(&mut self) {
-        self._data.last_updated = Some(0);
+    pub fn update(&mut self) -> Result<()>{
+        let delta = SystemTime::now().duration_since(UNIX_EPOCH)?;
+        self._data.last_updated = Some(delta.as_secs());
+        Ok(())
     }
 
     pub fn cache_completion(&mut self) -> Result<()>{
