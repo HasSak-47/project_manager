@@ -153,6 +153,6 @@ where
             .iter_mut()
             .map(|(_,c)| c)
             .find(|c| c.match_criteria(&find_criteria))
-            .ok_or(anyhow!("project was not found!"))
+            .ok_or(anyhow!("project with criteria ({find_criteria:?}) was not found!"))
     }
 }
