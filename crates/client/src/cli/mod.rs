@@ -49,8 +49,7 @@ struct NotDone;
 
 impl NotDone{
     pub fn run(&self, _ : Arguments, _handler: SystemHandler) -> Result<()>{
-        anyhow!("not yet implemented");
-        Ok(())
+        Err(anyhow!("not yet implemented"))
     }
 }
 
