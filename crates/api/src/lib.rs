@@ -143,6 +143,11 @@ where
         self._projects.insert(name, cached);
     }
 
+    pub fn remove_project(&mut self, name: String) -> Result<()> {
+        self._projects.remove(&name).ok_or(anyhow!("project {name} not found"))?;
+        Ok(())
+    }
+
     pub fn find_project_mut(&mut self, find_criteria: &FindCriteria) -> Result<&mut CachedProject>{
         self._projects
             .iter_mut()

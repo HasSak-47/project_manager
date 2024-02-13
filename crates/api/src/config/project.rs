@@ -8,8 +8,8 @@ pub struct Feature{
     pub priority   : f64,
     pub difficulty : f64,
     pub description: Option<String>,
-    pub done: Vec<Feature>,
-    pub todo: Vec<Feature>,
+    pub done: Option<Vec<Feature>>,
+    pub todo: Option<Vec<Feature>>,
 }
 
 impl Feature{
@@ -24,11 +24,13 @@ pub struct ProjectInfo{
     pub edition: String,
 }
 
+type OptVec<T> = Option<Vec<T>>;
+
 #[derive(Deserialize, Serialize, Debug, Default, Clone)]
 pub struct Project{
     pub project: ProjectInfo,
-    pub todo   : Vec<Feature>,
-    pub done   : Vec<Feature>,
+    pub todo   : OptVec<Feature>,
+    pub done   : OptVec<Feature>,
 }
 
 #[allow(dead_code)]
@@ -42,8 +44,8 @@ impl Project {
                 edition: String::new(),
             },
             
-            todo: Vec::new(),
-            done: Vec::new(),
+            todo: Some(Vec::new()),
+            done: Some(Vec::new()),
         }
     }
 
@@ -60,24 +62,27 @@ impl Project {
     }
 
 
-    fn _get_act<F>(v: &Vec<Feature>, sel: F) -> f64
+    fn _get_act<F>(v: &Option<Vec<Feature>>, sel: F) -> f64
     where 
-        F: Fn(&Feature) -> &Vec<Feature> + Copy,
+        F: Fn(&Feature) -> &Option<Vec<Feature>> + Copy,
     {
+        if v.is_none(){
+            return 0.;
+        }
         let mut t = 0.;
-        for f in v{
+        for f in v.as_ref().unwrap(){
             t += f.difficulty;
-            t += Self::_get_act(sel(f), sel);
+            t += Self::_get_act(sel(&f), sel);
         }
 
         t
     }
 
-    pub fn get_todo(&self) -> f64{ Self::_get_act(&self.todo, |feat : &Feature| &feat.todo) }
-    pub fn get_done(&self) -> f64{ Self::_get_act(&self.done, |feat : &Feature| &feat.done) }
+    pub fn get_todo(&self) -> f64{ Self::_get_act(&self.todo, |feat : &Feature| &feat.todo )}
+    pub fn get_done(&self) -> f64{ Self::_get_act(&self.done, |feat : &Feature| &feat.done )}
 
-    pub fn add_todo(&mut self, f: Feature){ self.todo.push(f); }
-    pub fn add_done(&mut self, f: Feature){ self.done.push(f); }
+    pub fn add_todo(&mut self, f: Feature){ self.todo.as_mut().and_then(|v| Some(v.push(f))); }
+    pub fn add_done(&mut self, f: Feature){ self.done.as_mut().and_then(|v| Some(v.push(f))); }
 
     pub fn get_completion(&self) -> f64{
         let t = self.get_todo();

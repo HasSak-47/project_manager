@@ -3,7 +3,7 @@
 use std::{path::PathBuf, fs::File, io::{BufReader, Read, BufWriter, Write}};
 use cli::cli;
 use project_manager_api::{ProjectsHandler, ProjectLoader, config::manager::Location};
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 
 mod cli;
 
@@ -26,8 +26,15 @@ impl ProjectLoader for SystemLoader{
         
         Ok(buf)
     }
+
     fn get_project(&self, location: &Location) -> Result<String> {
-        Ok(String::new())
+        if let Location::Path { path } = location{
+            let mut file = File::open(path)?;
+            let mut buf = String::new();
+            file.read_to_string(&mut buf)?;
+            return Ok(buf);
+        }
+        Err(anyhow!("Project at {location} was not found!"))
     }
 
     fn write_manager(&mut self, data: String) -> Result<()> {

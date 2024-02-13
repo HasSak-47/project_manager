@@ -3,7 +3,7 @@ use crate::SystemHandler;
 use super::Arguments;
 use rand::random;
 use project_manager_api::CachedProject;
-use clap::{Subcommand, Args};
+use clap::{Subcommand, Args, ValueEnum};
 
 use anyhow::Result;
 
@@ -34,19 +34,18 @@ struct PrintProject{
 
 #[derive(Args, Debug, Default, Clone)]
 struct PrintProjects{
-    #[clap(subcommand)]
+    #[clap(value_enum, long, default_value = "progress")]
     sort_by: SortBy
 }
 
-#[derive(Subcommand, Default, Debug, Clone)]
+#[derive(ValueEnum, Default, Debug, Clone)]
 enum SortBy{
     #[default]
-    #[clap(skip)]
-    None,
-
     Progress,
     Name,
     LastUsed,
+    #[clap(skip)]
+    None,
 }
 
 
@@ -61,25 +60,30 @@ enum PrintEnum{
     None,
 }
 
-fn print_projects(mut projects: Vec<&mut CachedProject>, _data: PrintProjects){
+fn print_projects(mut projects: Vec<&mut CachedProject>, _data: PrintProjects) -> Result<()>{
     let mut max_len = 0usize;
     for p in &projects{
         let l = p.get_name().len();
         if l > max_len {max_len = l}
     }
+
+    for project in &mut projects{
+        if project.cache_completion().is_err() {
+            println!("project: {project:#?} could not be loaded");
+        }
+    }
     
     if let SortBy::None = _data.sort_by{ }
     else{
         projects.sort_by(match _data.sort_by {
-            _ => |a: &&mut CachedProject, b: &&mut CachedProject|{
-                b.get_completion().total_cmp(&a.get_completion())
-            },
+            _ => |a: &&mut CachedProject, b: &&mut CachedProject|{ b.get_completion().total_cmp(&a.get_completion()) },
         })
     };
 
     for p in projects{
-        println!("{:1$}", p.get_name(), max_len + 4);
+        println!("{:2$}{:.2}%", p.get_name(), p.get_completion() * 100., max_len + 4);
     }
+    Ok(())
 }
 
 fn print_project(projects: Vec<&mut CachedProject>, data: PrintProject){
@@ -104,7 +108,7 @@ fn print(projects: Vec<&mut CachedProject>){
         if l > max_len {max_len = l}
     }
     for p in projects{
-        println!("{:1$}{}", p.get_name(), max_len);
+        println!("{:1$}", p.get_name(), max_len);
     }
 }
 
@@ -114,7 +118,7 @@ fn print_random(projects: Vec<&mut CachedProject>){
 }
 
 impl PrintStruct{
-    pub fn run(self, args: Arguments, mut handler: SystemHandler) -> Result<()> {
+    pub fn run(self, _args: Arguments, mut handler: SystemHandler) -> Result<()> {
         handler.load_projects();
 
         let projects = handler.get_projects_mut();
@@ -127,7 +131,7 @@ impl PrintStruct{
         use PrintEnum as PE;
         match option{
             PE::Project(p) => {print_project(projects, p);}
-            PE::Projects(p) => {print_projects(projects, p);}
+            PE::Projects(p) => {print_projects(projects, p)?;}
             PE::Random => {print_random(projects);}
             _ => {print(projects);},
         }

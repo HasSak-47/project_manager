@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use super::config::{project::Project, manager::{ProjectData, Location}};
 use super::ProjectLoader;
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 
 /* project cache that may be requested later
    it may need updating when the project is refreshed */
@@ -41,8 +41,7 @@ impl CachedProject{
     {
         let project : Result<Project> = 
             loader.get_project(&self._data.location)
-                .and_then(|p| Ok(toml::from_str(p.as_str())?))
-        ;
+                .and_then(|p| Ok(toml::from_str(p.as_str())?));
 
         self._proj = project.ok();
         self._loaded = true;
@@ -53,7 +52,9 @@ impl CachedProject{
             return self._cache._comp.unwrap();
         }
         if self._loaded && self._proj.is_some(){
-            let comp = self._proj.as_ref().and_then(|p| Some(p.get_completion()) ).unwrap_or(0.);
+            let comp = self._proj
+                .as_ref()
+                .and_then(|p| Some(p.get_completion())).unwrap();
             self._cache._comp = Some(comp);
             return comp;
         }
@@ -68,12 +69,13 @@ impl CachedProject{
         self._data.last_updated = Some(0);
     }
 
-    pub fn cache_completion(&mut self) {
-        self._data.last_updated = Some(0);
+    pub fn cache_completion(&mut self) -> Result<()>{
         if self._loaded && self._proj.is_some(){
             let comp = self._proj.as_ref().and_then(|p| Some(p.get_completion()) ).unwrap_or(0.);
             self._cache._comp = Some(comp);
+            return Ok(())
         }
+        Err(anyhow!("Project was not loaded!"))
 
     }
 
