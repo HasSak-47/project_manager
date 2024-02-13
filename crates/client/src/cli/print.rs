@@ -44,6 +44,7 @@ enum SortBy{
     Progress,
     Name,
     LastUsed,
+    #[allow(unused)]
     #[clap(skip)]
     None,
 }
@@ -67,21 +68,9 @@ fn print_projects(mut projects: Vec<&mut CachedProject>, _data: PrintProjects) -
         if l > max_len {max_len = l}
     }
 
-    for project in &mut projects{
-        if project.cache_completion().is_err() {
-            println!("project: {project:#?} could not be loaded");
-        }
-    }
-    
-    if let SortBy::None = _data.sort_by{ }
-    else{
-        projects.sort_by(match _data.sort_by {
-            _ => |a: &&mut CachedProject, b: &&mut CachedProject|{ b.get_completion().total_cmp(&a.get_completion()) },
-        })
-    };
 
     for p in projects{
-        println!("{:2$}{:.2}%", p.get_name(), p.get_completion() * 100., max_len + 4);
+        println!("{:1$}", p.get_name(), max_len + 4);
     }
     Ok(())
 }
@@ -117,6 +106,33 @@ fn print_random(projects: Vec<&mut CachedProject>){
     println!("{}", projects[i].get_name());
 }
 
+impl PrintPercentaje{
+    fn print(&self, mut projects: Vec<&mut CachedProject>) -> Result<()>{
+        let mut max_len = 0usize;
+        for p in &projects{
+            let l = p.get_name().len();
+            if l > max_len {max_len = l}
+        }
+
+        for project in &mut projects{
+            if project.cache_completion().is_err() {
+                println!("project: {project:#?} could not be loaded");
+            }
+        }
+
+        let mut filtered : Vec<_> = projects.iter().filter(|p| {
+            self.min as f64 <= p.get_completion() * 100. &&
+                p.get_completion() * 100. <= self.max as f64}).collect();
+        
+        filtered.sort_by(|a, b| b.get_completion().total_cmp(&a.get_completion()) );
+
+        for p in filtered{
+            println!("{:2$} {:>7.2}%", p.get_name(), 100. * p.get_completion(), max_len + 4);
+        }
+        Ok(())
+    }
+}
+
 impl PrintStruct{
     pub fn run(self, _args: Arguments, mut handler: SystemHandler) -> Result<()> {
         handler.load_projects();
@@ -133,6 +149,7 @@ impl PrintStruct{
             PE::Project(p) => {print_project(projects, p);}
             PE::Projects(p) => {print_projects(projects, p)?;}
             PE::Random => {print_random(projects);}
+            PE::Percentajes(p) => {p.print(projects)?}
             _ => {print(projects);},
         }
 

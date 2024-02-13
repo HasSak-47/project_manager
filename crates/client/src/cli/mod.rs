@@ -25,6 +25,8 @@ use self::{
 #[derive(Parser, Debug)]
 #[clap(author="Daniel", version, about)]
 pub struct Arguments{
+    #[clap(short = 'V', long)]
+    version: bool,
     #[clap(short, long)]
     verbose: bool,
     #[clap(long)]
@@ -35,13 +37,6 @@ pub struct Arguments{
 
     #[command(subcommand)]
     tree: Option<Tree>,
-}
-
-#[allow(dead_code)]
-pub struct Params{
-    verbose: bool,
-    debug: bool,
-    manager_path: PathBuf,
 }
 
 #[derive(Args, Default, Debug, Clone, Copy)]
@@ -78,6 +73,9 @@ pub fn cli(handler: SystemHandler) -> Result<()>
 {
     // set up stuff
     let args = Arguments::parse();
+    if args.version{
+        println!("version: {}", env!("CARGO_PKG_VERSION"));
+    }
     if args.tree.is_none(){
         return Ok(());
     }

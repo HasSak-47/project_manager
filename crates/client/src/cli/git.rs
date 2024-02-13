@@ -1,5 +1,5 @@
 
-use std::env::current_dir;
+use std::{env::current_dir, process};
 
 use crate::SystemHandler;
 
@@ -16,9 +16,12 @@ pub struct GitStruct{
 
 impl GitStruct{
     pub fn run(self, _args: Arguments, mut handler: SystemHandler) -> Result<()>{
-        let cwd = current_dir()?;
-        let current_project = handler.find_project_mut(&FindCriteria::path(cwd))?;
+        let mut status = current_dir()?;
+        status.push("status.toml");
+        let current_project = handler.find_project_mut(&FindCriteria::path(status))?;
         current_project.update();
+        let mut child = process::Command::new("git").args(self.args).spawn()?;
+        child.wait()?;
         handler.commit_manager()?;
         Ok(())
     }

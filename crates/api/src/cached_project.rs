@@ -23,6 +23,7 @@ pub struct CachedProject {
     pub(crate) _loaded: bool,                // if the project is loaded
 }
 
+#[derive(Debug)]
 pub enum FindCriteria{
     Location(Location),
     Name(String),
