@@ -1,12 +1,11 @@
 #![allow(unused_import_braces)]
 use crate::SystemHandler;
 use super::Arguments;
-use clap::{Subcommand, Args};
 use rand::random;
-use project_manager_api::{
-    error::ProjectResult,
-    CachedProject,
-};
+use project_manager_api::CachedProject;
+use clap::{Subcommand, Args};
+
+use anyhow::Result;
 
 // this looks like shit
 #[derive(Args, Debug, Default, Clone)]
@@ -115,7 +114,7 @@ fn print_random(projects: Vec<&mut CachedProject>){
 }
 
 impl PrintStruct{
-    pub fn run(self, args: Arguments, mut handler: SystemHandler) -> ProjectResult<()> {
+    pub fn run(self, args: Arguments, mut handler: SystemHandler) -> Result<()> {
         handler.load_projects();
 
         let projects = handler.get_projects_mut();

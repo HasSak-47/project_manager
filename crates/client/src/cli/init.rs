@@ -5,9 +5,11 @@ use crate::SystemHandler;
 use super::{Params, Arguments};
 use clap::Args;
 use project_manager_api::{
-    error::{ProjectResult, ProjectError},
-    config::manager::{Manager, ProjectData}, CachedProject
+    config::manager::{Manager, ProjectData},
+    CachedProject,
 };
+
+use anyhow::Result;
 
 #[derive(Args, Debug, Clone)]
 pub struct InitStruct{
@@ -16,10 +18,8 @@ pub struct InitStruct{
 }
 
 impl InitStruct{
-    pub fn run(self, args: Arguments, handler: SystemHandler) -> ProjectResult<()> {
+    pub fn run(self, args: Arguments, handler: SystemHandler) -> Result<()> {
         let path = self.path.clone().unwrap_or(current_dir().unwrap());
-
-
 
         Ok(())
     }
