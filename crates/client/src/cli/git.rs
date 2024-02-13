@@ -5,7 +5,8 @@ use crate::SystemHandler;
 
 use super::Arguments;
 use clap::Args;
-use project_manager_api::error::ProjectResult;
+use anyhow::Result;
+use project_manager_api::FindCriteria;
 
 #[derive(Args, Debug, Default, Clone)]
 pub struct GitStruct{
@@ -14,9 +15,10 @@ pub struct GitStruct{
 }
 
 impl GitStruct{
-    pub fn run(self, _args: Arguments, mut handler: SystemHandler) -> ProjectResult<()>{
+    pub fn run(self, _args: Arguments, mut handler: SystemHandler) -> Result<()>{
         let cwd = current_dir()?;
-        let _current_project = handler.find_via_path(cwd);
+        let current_project = handler.find_project_mut(&FindCriteria::path(cwd))?;
+        current_project.update();
         handler.commit_manager()?;
         Ok(())
     }

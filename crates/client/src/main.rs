@@ -1,9 +1,9 @@
 #![allow(unused_import_braces)]
 
-use std::{path::PathBuf, fs::File, io::{BufReader, BufRead, Read, BufWriter, Write}};
-
+use std::{path::PathBuf, fs::File, io::{BufReader, Read, BufWriter, Write}};
 use cli::cli;
-use project_manager_api::{error::ProjectResult, ProjectsHandler, ProjectLoader, config::manager::Location};
+use project_manager_api::{ProjectsHandler, ProjectLoader, config::manager::Location};
+use anyhow::Result;
 
 mod cli;
 
@@ -19,25 +19,25 @@ impl SystemLoader {
 }
 
 impl ProjectLoader for SystemLoader{
-    fn get_manager(&self) -> ProjectResult<String> {
+    fn get_manager(&self) -> Result<String> {
         let mut reader = BufReader::new(File::open(&self.manager_path)?);
         let mut buf = String::new();
         reader.read_to_string(&mut buf)?;
         
         Ok(buf)
     }
-    fn get_project(&self, location: &Location) -> ProjectResult<String> {
+    fn get_project(&self, location: &Location) -> Result<String> {
         Ok(String::new())
     }
 
-    fn write_manager(&mut self, data: String) -> ProjectResult<()> {
+    fn write_manager(&mut self, data: String) -> Result<()> {
         let mut writer = BufWriter::new(File::create(&self.manager_path)?);
         writer.write_all(data.as_bytes())?;
 
         Ok(())
     }
 
-    fn write_project(&mut self, data: String, location: &Location) -> ProjectResult<()> {
+    fn write_project(&mut self, data: String, location: &Location) -> Result<()> {
         if let Location::Path { path } = location{
             println!("writing to...: {}", path.display());
             let mut writer = BufWriter::new(File::create(&path)?);
@@ -47,14 +47,14 @@ impl ProjectLoader for SystemLoader{
         Ok(()) 
     }
 
-    fn ensure_existance(&mut self) -> ProjectResult<()>{
+    fn ensure_existance(&mut self) -> Result<()>{
         Ok(())
     }
 }
 
 pub type SystemHandler = ProjectsHandler<SystemLoader>;
 
-fn main() -> ProjectResult<()>{
+fn main() -> Result<()>{
     let mut loader = SystemLoader::new();
     let mut dir = dirs::data_dir().unwrap();
     dir.push("project_manager");

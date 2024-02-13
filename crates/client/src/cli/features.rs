@@ -4,10 +4,8 @@ use crate::SystemHandler;
 
 use super::Arguments;
 use clap::Args;
-use project_manager_api::{
-    error::ProjectResult,
-    config::project::Feature
-};
+use project_manager_api::config::project::Feature;
+use anyhow::Result;
 
 #[derive(Args, Debug, Clone)]
 pub struct AddFeat{
@@ -20,13 +18,11 @@ pub struct AddFeat{
 }
 
 impl AddFeat{
-    pub fn run(self, _params: Arguments, handler: SystemHandler) -> ProjectResult<()> {
+    pub fn run(self, _params: Arguments, handler: SystemHandler) -> Result<()> {
         // let f = Feature::new(self.name, self.priority, self.difficulty);
         let feat = Feature::new(self.name.clone(), self.priority, self.difficulty);
 
         let path = current_dir()?;
-        let mut project = handler
-            .find_via_path(path)?;
 
         /*
         if self.r#type == "done"{

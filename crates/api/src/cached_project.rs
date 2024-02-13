@@ -1,4 +1,6 @@
 
+use std::path::PathBuf;
+
 use super::config::{project::Project, manager::{ProjectData, Location}};
 use super::ProjectLoader;
 use anyhow::Result;
@@ -6,7 +8,7 @@ use anyhow::Result;
 /* project cache that may be requested later
    it may need updating when the project is refreshed */
 #[derive(Debug, Default, Clone)]
-pub(super) struct ProjectCache{
+pub(crate) struct ProjectCache{
     _todo: Option<f64>,
     _done: Option<f64>,
     _comp: Option<f64>,
@@ -14,15 +16,26 @@ pub(super) struct ProjectCache{
 
 #[derive(Debug, Default, Clone)]
 pub struct CachedProject {
-    pub(super) _name: String,
-    pub(super) _data: ProjectData,           // project info according to loader
-    pub(super) _cache: ProjectCache,         // stuff that is calculated when loading/reloading
-    pub(super) _proj: Option<Project>,       // the project when its loaded and not broken
-    pub(super) _loaded: bool,                // if the project is loaded
+    pub(crate) _name: String,
+    pub(crate) _data: ProjectData,           // project info according to loader
+    pub(crate) _cache: ProjectCache,         // stuff that is calculated when loading/reloading
+    pub(crate) _proj: Option<Project>,       // the project when its loaded and not broken
+    pub(crate) _loaded: bool,                // if the project is loaded
+}
+
+pub enum FindCriteria{
+    Location(Location),
+    Name(String),
+}
+
+impl FindCriteria{
+    pub const fn location(l: Location) -> Self{ FindCriteria::Location(l) }
+    pub const fn path(path: PathBuf) -> Self{ FindCriteria::Location(Location::Path { path }) }
+    pub const fn name(n: String) -> Self{ FindCriteria::Name(n) }
 }
 
 impl CachedProject{
-    pub(super) fn __load_project<L>(&mut self, loader: &L)
+    pub(crate) fn __load_project<L>(&mut self, loader: &L)
     where
         L: ProjectLoader,
     {
@@ -68,6 +81,13 @@ impl CachedProject{
 
     pub fn get_location(&self) -> Location {
         self._data.location.clone()
+    }
+
+    pub(crate) fn match_criteria(&self, find_criteria: &FindCriteria) -> bool{
+        match find_criteria{
+            FindCriteria::Location(local) => self._data.location == *local,
+            FindCriteria::Name(name) => self._name == *name,
+        }
     }
 }
 
