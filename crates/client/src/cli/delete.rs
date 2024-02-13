@@ -13,7 +13,9 @@ pub struct DelStruct{
 
 impl DelStruct{
     pub fn run(self, _args: Arguments, mut handler: SystemHandler) -> Result<()> {
-        Err(anyhow!("not implemented lmao"))
+        handler.remove_project(self.name)?;
+        handler.commit_manager()?;
+        Ok(())
     }
 }
 
