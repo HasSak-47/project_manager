@@ -25,7 +25,7 @@ impl NewStruct{
         path.set_extension("toml");
 
         if path.exists(){
-            anyhow!("status.toml already exists try using init instead!");
+            return Err(anyhow!("status.toml already exists try using init instead!"));
         }
         Ok(Location::Path{path})
     }
