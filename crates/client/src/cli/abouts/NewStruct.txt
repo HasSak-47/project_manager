@@ -1,0 +1,1 @@
+Creates a status.toml and adds it to the manager.

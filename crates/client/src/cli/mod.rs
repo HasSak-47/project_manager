@@ -14,7 +14,7 @@ use init::InitStruct;
 
 use std::path::PathBuf;
 
-use crate::SystemHandler;
+use crate::{SystemHandler, VERSION};
 use self::{
     delete::DelStruct,
     new::NewStruct,
@@ -25,15 +25,10 @@ use self::{
 #[derive(Parser, Debug)]
 #[clap(author="Daniel", version, about)]
 pub struct Arguments{
-    #[clap(short = 'V', long)]
-    version: bool,
     #[clap(short, long)]
     verbose: bool,
     #[clap(long)]
     debug: bool,
-
-    #[clap(long)]
-    manager_path: Option<PathBuf>,
 
     #[command(subcommand)]
     tree: Option<Tree>,
@@ -73,9 +68,6 @@ pub fn cli(handler: SystemHandler) -> Result<()>
 {
     // set up stuff
     let args = Arguments::parse();
-    if args.version{
-        println!("version: {}", env!("CARGO_PKG_VERSION"));
-    }
     if args.tree.is_none(){
         return Ok(());
     }

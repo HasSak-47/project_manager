@@ -7,6 +7,8 @@ use anyhow::{Result, anyhow};
 
 mod cli;
 
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 #[derive(Debug)]
 pub struct SystemLoader{
     manager_path: PathBuf,

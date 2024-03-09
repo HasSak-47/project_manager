@@ -1,11 +1,13 @@
 use std::env::current_dir;
-
 use crate::SystemHandler;
 
 use super::Arguments;
 use clap::Args;
-use project_manager_api::config::project::Feature;
-use anyhow::Result;
+use project_manager_api::{
+    config::project::Feature,
+    FindCriteria
+};
+use anyhow::{anyhow, Result};
 
 #[derive(Args, Debug, Clone)]
 pub struct AddFeat{
@@ -18,22 +20,25 @@ pub struct AddFeat{
 }
 
 impl AddFeat{
-    pub fn run(self, _params: Arguments, handler: SystemHandler) -> Result<()> {
-        // let f = Feature::new(self.name, self.priority, self.difficulty);
+    pub fn run(self, _params: Arguments, mut handler: SystemHandler) -> Result<()> {
         let feat = Feature::new(self.name.clone(), self.priority, self.difficulty);
+        let mut path = current_dir()?;
+        path.push("status");
+        path.set_extension("toml");
 
-        let path = current_dir()?;
 
-        /*
+        handler.load_projects();
+        let project = handler.find_project_mut(&FindCriteria::path(path))?;
+        let name = project.get_name().clone();
+
+
         if self.r#type == "done"{
             project.add_done(feat);
         }
         else{
             project.add_todo(feat);
         }
-
-        project.write_project_to_dir(path)?;
-        */
+        handler.commit_project(&name)?;
 
         Ok(())
     }

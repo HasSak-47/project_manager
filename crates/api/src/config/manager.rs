@@ -32,8 +32,9 @@ impl Default for Location{ fn default() -> Self { Self::Other(String::new()) } }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct ProjectData{
-    pub location: Location,
     pub last_updated: Option<u64>,
+    pub location   : Location,
+    pub description: Option<String>,
     pub subprojects: Option<Vec<String>>, // Vector of the name of the projects
 }
 
