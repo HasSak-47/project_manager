@@ -1,0 +1,1 @@
+In an existing project directory with an status.toml, makes the manager start tracking that status.toml.

@@ -7,14 +7,17 @@ use clap::Args;
 use project_manager_api::config::manager::Location;
 use anyhow::{Result, anyhow};
 
+use crate::VERSION;
+
 #[derive(Args, Debug, Clone)]
+#[clap(about = include_str!("abouts/NewStruct.txt").trim_end())]
 pub struct NewStruct{
     name: String,
     #[arg(short, long)]
     path: Option<PathBuf>,
     #[arg(short, long, default_value = "0.0.0")]
     version: String,
-    #[arg(short, long, default_value = "0.1.1")]
+    #[arg(short, long, default_value = VERSION)]
     edition: String,
 }
 
