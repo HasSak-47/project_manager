@@ -113,17 +113,6 @@ impl PrintProject{
     }
 }
 
-fn print(projects: Vec<&mut CachedProject>){
-    let mut max_len = 0usize;
-    for p in &projects{
-        let l = p.get_name().len();
-        if l > max_len {max_len = l}
-    }
-    for p in projects{
-        println!("{:1$}", p.get_name(), max_len);
-    }
-}
-
 fn print_random(projects: Vec<&mut CachedProject>){
     let i = random::<usize>() % projects.len();
     println!("{}", projects[i].get_name());

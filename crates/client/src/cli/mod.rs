@@ -5,6 +5,7 @@ mod delete;
 mod init;
 mod new;
 mod mark_feature;
+mod utils;
 
 
 use anyhow::{Result, anyhow};

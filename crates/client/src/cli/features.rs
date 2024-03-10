@@ -1,7 +1,6 @@
-use std::env::current_dir;
 use crate::SystemHandler;
 
-use super::Arguments;
+use super::{utils::find_local_status, Arguments};
 use clap::Args;
 use project_manager_api::{
     config::project::Feature,
@@ -22,9 +21,7 @@ pub struct AddFeat{
 impl AddFeat{
     pub fn run(self, _params: Arguments, mut handler: SystemHandler) -> Result<()> {
         let feat = Feature::new(self.name.clone(), self.priority, self.difficulty);
-        let mut path = current_dir()?;
-        path.push("status");
-        path.set_extension("toml");
+        let path = find_local_status()?;
 
 
         handler.load_projects();
