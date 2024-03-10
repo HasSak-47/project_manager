@@ -1,4 +1,4 @@
-use std::io::{BufRead, BufReader, Read};
+use std::{fmt::Display, io::{BufRead, BufReader, Read}};
 use serde::{Deserialize, Serialize};
 use anyhow::Result;
 
@@ -16,7 +16,32 @@ impl Feature{
     pub fn new(name: String, priority: f64, difficulty: f64) -> Self {
         Feature {name, priority, difficulty, ..Default::default()}
     }
+
+    // writes in the formatter the feature and its children 
+    // the deep paramenter contains how many spaces to add to the output
+    fn format(&self, deep: usize, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result{
+        for _ in 0..deep{
+            write!(f, " ")?;
+        }
+
+        write!(f, "{}: {:.2}\n", self.name, self.difficulty)?;
+        if let Some(ref d) = self.done{
+            for feat in d{
+                feat.format(deep + 1, f)?;
+            }
+        }
+
+        Ok(())
+    }
 }
+
+impl Display for Feature{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.format(0, f)
+    }
+}
+
+
 #[derive(Deserialize, Serialize, Debug, Default, Clone)]
 pub struct ProjectInfo{
     pub name: String,
