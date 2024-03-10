@@ -126,9 +126,28 @@ impl PrintProjects {
             projects.reverse();
         }
 
+        let mut buffer = Vec::new();
+        let mut max = 0usize;
         for p in projects{
-            println!("{}", make_pretty(p, padding));
+            let c = format!("{}", make_pretty(p, padding));
+            if c.len() > max {max = c.len()}
+            buffer.push(c);
         }
+        max += 4;
+
+        let width = unsafe {
+            let mut buffer = libc::winsize{ws_col: 0, ws_row: 0, ws_xpixel: 0, ws_ypixel: 0};
+            libc::ioctl(0, libc::TIOCGWINSZ, &mut buffer);
+            buffer.ws_col
+        } as usize / max;
+
+
+        for (i, p) in buffer.into_iter().enumerate(){
+            print!("{:width$}", p, width = max);
+            if i % width == width - 1 {println!();}
+        }
+        println!();
+
         Ok(())
     }
     

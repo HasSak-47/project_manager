@@ -9,6 +9,7 @@ rand = "0.8.5"
 anyhow = "1.0.79"
 thiserror = "1.0.57"
 project_manager_api = {path = "../api"}
+libc = "0.2.153"
 
 [dependencies.clap]
 version  = "4.0"
