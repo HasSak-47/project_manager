@@ -97,3 +97,8 @@ difficulty = 0.1
 name = "rework file interaction"
 priority = 1.0
 difficulty = 1.0
+
+[[done]]
+name = "a way to edit features"
+priority = 0.6
+difficulty = 0.1
