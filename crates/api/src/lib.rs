@@ -51,12 +51,16 @@ where
 
     pub fn load_projects(&mut self) {
         for proj in self._projects.values_mut(){
-            proj.__load_project(&self._loader);
+            proj.load_project(&self._loader);
         } 
     }
 
+    pub fn get_loader(&self) -> &Loader{
+        &self._loader
+    }
+
     pub fn load_project(&mut self, p : &mut CachedProject) {
-        p.__load_project(&self._loader);
+        p.load_project(&self._loader);
     }
 
     #[allow(dead_code)]
