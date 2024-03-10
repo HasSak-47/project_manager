@@ -1,9 +1,9 @@
 
-use std::{env::current_dir, process};
+use std::process;
 
 use crate::SystemHandler;
 
-use super::Arguments;
+use super::{utils::find_local_status, Arguments};
 use clap::Args;
 use anyhow::Result;
 use project_manager_api::FindCriteria;
@@ -17,10 +17,11 @@ pub struct GitStruct{
 
 impl GitStruct{
     pub fn run(self, _args: Arguments, mut handler: SystemHandler) -> Result<()>{
-        let mut status = current_dir()?;
-        status.push("status.toml");
+        let status = find_local_status()?;
         let current_project = handler.find_project_mut(&FindCriteria::path(status))?;
+
         let mut child = process::Command::new("git").args(self.args).spawn()?;
+
         child.wait()?;
         current_project.update()?;
         handler.commit_manager()?;
