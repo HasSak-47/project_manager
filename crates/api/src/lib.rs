@@ -55,9 +55,8 @@ where
         } 
     }
 
-    pub fn get_loader(&self) -> &Loader{
-        &self._loader
-    }
+    pub fn get_loader(&self) -> &Loader{ &self._loader }
+    pub fn get_loader_mut(&mut self) -> &mut Loader { &mut self._loader }
 
     pub fn load_project(&mut self, p : &mut CachedProject) {
         p.load_project(&self._loader);

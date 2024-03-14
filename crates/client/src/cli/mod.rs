@@ -8,6 +8,8 @@ mod mark_feature;
 mod utils;
 
 
+use std::path::PathBuf;
+
 use anyhow::{Result, anyhow};
 use clap::{Subcommand, Parser, Args};
 
@@ -26,6 +28,8 @@ pub struct Arguments{
     verbose: bool,
     #[clap(long)]
     debug: bool,
+    #[clap(long)]
+    manager_path: Option<PathBuf>,
 
     #[command(subcommand)]
     tree: Option<Tree>,
@@ -63,8 +67,7 @@ enum Tree{
     Git(GitStruct),
 }
 
-pub fn cli(handler: SystemHandler) -> Result<()>
-{
+pub fn cli(mut handler: SystemHandler) -> Result<()> {
     // set up stuff
     let args = Arguments::parse();
     if args.tree.is_none(){
@@ -72,6 +75,10 @@ pub fn cli(handler: SystemHandler) -> Result<()>
     }
 
     let tree = args.tree.clone().unwrap();
+    if args.manager_path.is_some(){
+        let path = args.manager_path.clone().unwrap();
+        handler.get_loader_mut().set_path(path);
+    }
     use Tree as TR;
 
     match tree{
