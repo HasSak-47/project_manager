@@ -1,91 +1,84 @@
-use async_std::task::block_on;
+use std::collections::HashMap;
 
-use anyhow::anyhow;
 use js_sys::Promise;
 use wasm_bindgen::prelude::*;
 use project_manager_api::{config::manager::Location, FindCriteria, ProjectLoader, ProjectsHandler};
-use wasm_bindgen_futures::JsFuture;
 
 #[wasm_bindgen]
 extern {
     #[wasm_bindgen(js_namespace = console)]
     fn log(s: &str);
     fn fetch(url: &str) -> Promise;
+    #[wasm_bindgen(js_namespace = blob)]
+    fn text() -> String;
 }
 
 #[wasm_bindgen]
 pub struct WebReader{
-    manager_url: String,
+    manager: String,
+    projects: HashMap<String, String>,
 }
 
-fn blocked_fetch(url: &str) -> String{
-    let promise = fetch(url);
-    let future = JsFuture::from(promise);
-    let mut result = String::new();
-    let ptr = &mut result as *mut String;
-    // this may be a bad idea
-    block_on( unsafe { async move {
-        match future.await{
-            Ok(value) => {
-                let value = value.as_string().unwrap_throw();
-                *ptr = value;
-            },
-            Err(err) => {
-                log(&format!("Error: {:?}", err));
-            }
-        }
-    }});
-    result
+#[wasm_bindgen]
+pub struct WebHandler{
+    handler: ProjectsHandler<WebReader>,
 }
 
 #[wasm_bindgen]
 impl WebReader{
-    pub fn new(manager_url: String) -> Self{
-        Self{ manager_url }
+    pub fn new() -> Self{
+        WebReader{
+            manager: String::new(),
+            projects: HashMap::new(),
+        }
+    }
+
+    pub fn set_manager(&mut self, manager: String) {
+        self.manager = manager;
+    }
+
+    pub fn set_project(&mut self, project: String, toml: String) {
+        self.projects.insert(project, toml);
     }
 }
 
-impl ProjectLoader for WebReader{
-    fn write_project(&mut self, _data: String, _location: &Location) -> anyhow::Result<()> {
-        Err(anyhow!("Cannot write project"))
+#[wasm_bindgen]
+impl WebHandler{
+    pub fn new(reader: WebReader) -> Self{
+        let handler = ProjectsHandler::init(reader).unwrap();
+        WebHandler{handler}
     }
 
-    fn write_manager(&mut self, _data: String) -> anyhow::Result<()> {
-        Err(anyhow!("Cannot write manager"))
+    pub fn get_completion(&mut self, name: String) -> f64 {
+        self.handler.find_project_mut(&FindCriteria::Name(name)).unwrap().get_completion()
     }
+}
 
-    fn get_project(&self, location: &Location) -> anyhow::Result<String> {
-        Ok(blocked_fetch(&location.to_string()))
-    }
-
+impl ProjectLoader for WebReader {
     fn get_manager(&self) -> anyhow::Result<String> {
-        Ok(blocked_fetch(&self.manager_url))
+        Ok(self.manager.clone())
+    }
+    
+    fn get_project(&self, location: &Location) -> anyhow::Result<String> {
+        if let Location::Other(ref loc) = location {
+            match self.projects.get(loc) {
+                Some(toml) => Ok(toml.clone()),
+                None => Err(anyhow::anyhow!("Project not found")),
+            }
+        } else {
+            Err(anyhow::anyhow!("Project not found"))
+        }
     }
 
     fn ensure_existance(&mut self) -> anyhow::Result<()> {
         Ok(())
     }
-}
 
-#[wasm_bindgen]
-pub struct WebProjectsHandler{
-    _handler: ProjectsHandler<WebReader>,
-}
-
-#[wasm_bindgen]
-impl WebProjectsHandler{
-    pub fn init(reader: WebReader) -> Option<WebProjectsHandler> {
-        let _handler = ProjectsHandler::init(reader).unwrap_throw();
-        Some(Self{ _handler })
+    fn write_manager(&mut self, data: String) -> anyhow::Result<()> {
+        Err(anyhow::anyhow!("You can't write to the web"))
     }
 
-    pub fn load_projects(&mut self){
-        self._handler.load_projects();
-    }
-
-    pub fn get_project_completion(&mut self, name: String) -> f64{
-        let proj = self._handler.find_project_mut(&FindCriteria::name(name)).unwrap_throw();
-        proj.get_completion_mut()
+    fn write_project(&mut self, data: String, location: &Location) -> anyhow::Result<()> {
+        Err(anyhow::anyhow!("You can't write to the web"))
     }
 }
-
