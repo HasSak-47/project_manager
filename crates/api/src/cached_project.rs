@@ -1,7 +1,7 @@
 
 use std::{path::PathBuf, time::{UNIX_EPOCH, Duration, SystemTime}};
 
-use crate::{config::project::Feature, ProjectsHandler};
+use crate::config::project::Feature;
 
 use super::config::{project::Project, manager::{ProjectData, Location}};
 use super::ProjectLoader;
@@ -133,8 +133,10 @@ impl CachedProject{
 pub fn format_project(p: &CachedProject) -> String {
     let name = p.get_name();
     let comp = p.get_completion();
+    let path = p._data.location.to_string();
     let mut buffer = String::new();
     buffer += &format!("{}: {:.2}%\n", name, comp * 100.);
+    buffer += &format!("Path: {}\n", path);
     p._proj.as_ref().and_then(|p| {
         // prints feature tree
         let todo_vec = p.todo.as_ref().and_then(|v| Some(v.clone())).unwrap_or(Vec::new());

@@ -16,7 +16,7 @@ use clap::{Subcommand, Parser, Args};
 use print::PrintStruct;
 use init::InitStruct;
 
-use crate::SystemHandler;
+use crate::{SystemHandler, SystemLoader};
 use self::{
     delete::DelStruct, features::AddFeat, git::GitStruct, mark_feature::MarkFeature, new::NewStruct
 };
@@ -67,7 +67,7 @@ enum Tree{
     Git(GitStruct),
 }
 
-pub fn cli(mut handler: SystemHandler) -> Result<()> {
+pub fn cli() -> Result<()> {
     // set up stuff
     let args = Arguments::parse();
     if args.tree.is_none(){
@@ -75,10 +75,26 @@ pub fn cli(mut handler: SystemHandler) -> Result<()> {
     }
 
     let tree = args.tree.clone().unwrap();
-    if args.manager_path.is_some(){
-        let path = args.manager_path.clone().unwrap();
-        handler.get_loader_mut().set_path(path);
+
+    let mut loader = SystemLoader::new();
+    loader.manager_path = if args.manager_path.is_some(){
+        if args.debug{
+            println!("setting path to: {:?}", args.manager_path.clone().unwrap());
+        }
+        args.manager_path.clone().unwrap()
     }
+    else{
+        let mut dir = dirs::data_dir().unwrap();
+        dir.push("project_manager");
+        dir.push("projects");
+        dir.set_extension("toml");
+        dir
+    };
+    if args.debug{
+        println!("handler path: {:?}", loader.manager_path);
+    }
+    let handler = SystemHandler::init(loader)?;
+
     use Tree as TR;
 
     match tree{

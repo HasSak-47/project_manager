@@ -17,6 +17,13 @@ pub struct SystemLoader{
 impl SystemLoader {
     pub fn new() -> Self{ Self{manager_path: PathBuf::new()} }
     pub fn set_path(&mut self, path: PathBuf)  {self.manager_path = path}
+
+    pub fn get_path(path: &PathBuf) -> PathBuf {
+        let mut p = path.clone();
+        p.push("status");
+        p.set_extension("toml");
+        p
+    }
 }
 
 impl ProjectLoader for SystemLoader{
@@ -30,9 +37,7 @@ impl ProjectLoader for SystemLoader{
 
     fn get_project(&self, location: &Location) -> Result<String> {
         if let Location::Path { path } = location{
-            let mut path = path.clone();
-            path.push("status");
-            path.set_extension("toml");
+            let path = Self::get_path(path);
             let mut file = File::open(path)?;
             let mut buf = String::new();
             file.read_to_string(&mut buf)?;
@@ -51,6 +56,7 @@ impl ProjectLoader for SystemLoader{
 
     fn write_project(&mut self, data: String, location: &Location) -> Result<()> {
         if let Location::Path { path } = location{
+            let path = Self::get_path(path);
             println!("writing to...: {}", path.display());
             let mut writer = BufWriter::new(File::create(&path)?);
             writer.write_all(data.as_bytes())?;
@@ -67,13 +73,6 @@ impl ProjectLoader for SystemLoader{
 pub type SystemHandler = ProjectsHandler<SystemLoader>;
 
 fn main() -> Result<()>{
-    let mut loader = SystemLoader::new();
-    let mut dir = dirs::data_dir().unwrap();
-    dir.push("project_manager");
-    dir.push("projects");
-    dir.set_extension("toml");
-    loader.manager_path = dir;
-    let handler = SystemHandler::init(loader)?;
-    cli(handler)?;
+    cli()?;
     Ok(())
 }
