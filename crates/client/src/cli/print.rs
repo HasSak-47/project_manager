@@ -94,7 +94,6 @@ fn make_pretty(project: &CachedProject, padding: usize) -> String {
         if path.starts_with(&home){
             path = path.strip_prefix(home).unwrap().to_path_buf();
             // removes status.toml
-            path.pop();
             processed_path.push_str("~/");
             processed_path.push_str(path.to_str().unwrap());
         }
