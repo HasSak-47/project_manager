@@ -16,7 +16,7 @@ pub struct PrintStruct{
     #[command(subcommand)]
     print: Option<PrintEnum>,
     #[clap(short, long)]
-    not_pretty : bool
+    not_pretty : bool,
 }
 
 #[derive(Args, Debug, Default, Clone)]
@@ -42,8 +42,10 @@ struct PrintProjects{
     #[clap(value_enum, long, default_value = "progress")]
     sort_by: SortBy,
     #[clap(value_enum, long)]
-    reversed: bool
+    reversed: bool,
 
+    #[clap(short, long)]
+    path: bool,
 }
 
 #[derive(ValueEnum, Default, Debug, Clone)]
@@ -104,7 +106,7 @@ fn make_pretty(project: &CachedProject, padding: usize) -> String {
 
 
 impl PrintProjects {
-    fn run(&self, mut handler: SystemHandler, args: Arguments, print_args: &PrintStruct) -> Result<()>{
+    fn run(&self, mut handler: SystemHandler, _args: Arguments, print_args: &PrintStruct) -> Result<()>{
         handler.load_projects();
         let mut projects = handler.get_projects_mut();
         let mut padding = 0usize;
@@ -126,21 +128,32 @@ impl PrintProjects {
             projects.reverse();
         }
 
-        let terminal = unsafe {
-            let isatty = libc::isatty(STDOUT_FILENO);
-            isatty == 1
-        };
-
+        let terminal = unsafe { libc::isatty(STDOUT_FILENO) == 1 };
         if !print_args.not_pretty && terminal{
-            PrintProjects::print_pretty(projects, padding);
-        }
-        else{
-            for p in projects{
-                let path = p.get_location().to_string();
-                println!("{path}");
+            if !self.path{
+                PrintProjects::print_pretty(projects, padding);
+            }
+            else{
+                for p in projects{
+                    println!("{}", p.get_name());
+                }
             }
         }
-
+        else{
+            if !self.path{
+                for p in projects{
+                    let path = p.get_location().to_string();
+                    let name = p.get_name();
+                    println!("{name},{path}");
+                }
+            }
+            else{
+                for p in projects{
+                    let name = p.get_name();
+                    println!("{name}");
+                }
+            }
+        }
 
         Ok(())
     }

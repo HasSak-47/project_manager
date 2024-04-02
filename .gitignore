@@ -2,6 +2,7 @@ target/
 Cargo.lock
 *.bk
 .nogit
+tmp
 
 
 # Added by cargo
