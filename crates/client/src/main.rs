@@ -30,11 +30,15 @@ impl ProjectLoader for SystemLoader{
 
     fn get_project(&self, location: &Location) -> Result<String> {
         if let Location::Path { path } = location{
+            let mut path = path.clone();
+            path.push("status");
+            path.set_extension("toml");
             let mut file = File::open(path)?;
             let mut buf = String::new();
             file.read_to_string(&mut buf)?;
             return Ok(buf);
         }
+        else{}
         Err(anyhow!("Project at {location} was not found!"))
     }
 

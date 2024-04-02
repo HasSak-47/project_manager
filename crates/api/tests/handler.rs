@@ -18,7 +18,9 @@ impl ProjectLoader for TestLoader{
     }
 
     fn get_project(&self, location: &Location) -> ProjectResult<String> {
-        let path = get_path(location)?;
+        let mut path : PathBuf = get_path(location)?;
+        path.push("status");
+        path.set_extension("toml");
         let mut file = File::open(path).unwrap();
         let mut buf = String::new();
         file.read_to_string(&mut buf);
