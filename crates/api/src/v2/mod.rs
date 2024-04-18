@@ -27,3 +27,13 @@ impl Location{
         }
     }
 }
+use project::*;
+use manager::*;
+pub struct Handler{
+    pub project_handler: ProjectHandler,
+    pub manager_handler: ManagerHandler,
+
+    pub manager: Manager,
+    pub projects: Vec<Project>,
+}
+
