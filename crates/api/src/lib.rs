@@ -145,6 +145,18 @@ where
         Ok(())
     }
 
+    pub fn add_cached_project(&mut self, project: CachedProject) -> Result<()>{
+        if self._projects.contains_key(&project._name){
+            return Err(anyhow!("Project {} is already managed!", project._name));
+        }
+        if self._projects.iter().any(|(_, p)| &p._data.location == &project._data.location){
+            return Err(anyhow!("Project with location {} is already managed!", project._data.location));
+        }
+
+        self._projects.insert(project._name.clone(), project);
+        Ok(())
+    }
+
     pub fn add_project(&mut self, name: String, location: Location) -> Result<()>{
         if self._projects.contains_key(&name){
             return Err(anyhow!("Project {name} is already managed!"));
@@ -171,6 +183,14 @@ where
     pub fn find_project_mut(&mut self, find_criteria: &FindCriteria) -> Result<&mut CachedProject>{
         self._projects
             .iter_mut()
+            .map(|(_,c)| c)
+            .find(|c| c.match_criteria(&find_criteria))
+            .ok_or(anyhow!("project with criteria ({find_criteria:#?}) was not found!"))
+    }
+
+    pub fn get_project(&self, find_criteria: &FindCriteria) -> Result<&CachedProject>{
+        self._projects
+            .iter()
             .map(|(_,c)| c)
             .find(|c| c.match_criteria(&find_criteria))
             .ok_or(anyhow!("project with criteria ({find_criteria:#?}) was not found!"))

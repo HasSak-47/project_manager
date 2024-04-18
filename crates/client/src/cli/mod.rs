@@ -1,4 +1,5 @@
 mod print;
+mod rename;
 mod git;
 mod features;
 mod delete;
