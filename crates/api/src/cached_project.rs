@@ -39,6 +39,14 @@ impl FindCriteria{
 }
 
 impl CachedProject{
+    pub fn rename(&mut self, new_name: String){
+        self._name = new_name.clone();
+        if let Some(ref mut p) = self._proj{
+            p.project.name = new_name;
+        }
+    }
+
+
     pub fn load_project<L>(&mut self, loader: &L)
     where
         L: ProjectLoader,
