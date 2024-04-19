@@ -1,8 +1,10 @@
+use std::fmt::Debug;
+
 use super::Location;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct Feature{
     name: String,
     description: String,
@@ -22,6 +24,7 @@ impl Feature{
 
 // the status of the project
 #[allow(dead_code)]
+#[derive(Debug, Default)]
 pub struct ProjectStatus{
     pub name: String,
     pub description: String,
@@ -57,7 +60,7 @@ impl ProjectStatus{
         Ok(())
     }
 
-    fn get_features_difficulty<S>(v: Option<&Vec<Feature>>, selector: S) -> usize
+    fn get_features_difficulty<S>(v: Option<&Vec<Feature>>, selector: &S) -> usize
     where
         S: Fn(&Feature) -> Option<&Vec<Feature>>
     {
@@ -69,14 +72,14 @@ impl ProjectStatus{
         let mut d = 0;
         for f in v{
             d += f.difficulty as usize;
-            d += ProjectStatus::get_features_difficulty(selector(f), &selector);
+            d += ProjectStatus::get_features_difficulty(selector(f), selector);
         }
 
         d
     }
 
-    pub fn get_todo_difficulty(&self) -> usize{ ProjectStatus::get_features_difficulty(Some(&self.todo), |f| Some(&f.todo)) }
-    pub fn get_done_difficulty(&self) -> usize{ ProjectStatus::get_features_difficulty(Some(&self.done), |f| Some(&f.done)) }
+    pub fn get_todo_difficulty(&self) -> usize{ ProjectStatus::get_features_difficulty(Some(&self.todo), &|f| Some(&f.todo)) }
+    pub fn get_done_difficulty(&self) -> usize{ ProjectStatus::get_features_difficulty(Some(&self.done), &|f| Some(&f.done)) }
 
     pub fn get_completion(&self) -> f64{
         let todo = self.get_todo_difficulty();
@@ -88,14 +91,13 @@ impl ProjectStatus{
         done as f64 / total as f64
     }
 
-    fn add_to(v: &mut Vec<Feature>, f: Feature){ v.push(f); }
-
-
+    // fn add_to(v: &mut Vec<Feature>, f: Feature){ v.push(f); }
 }
 
 
 // info on the project
 #[allow(dead_code)]
+#[derive(Debug, Default, Clone)]
 pub struct ProjectInfo{
     pub name: String,
     pub location: Location,
@@ -104,24 +106,45 @@ pub struct ProjectInfo{
 }
 
 // the project inside the manager
+#[derive(Debug, Default)]
 pub struct Project{
     pub info: ProjectInfo,
     pub status: Option<Box<ProjectStatus>>, // the project may not be loaded
 }
 
+impl Project{
+    pub fn unload(&mut self) {
+        self.status = None;
+    }
+
+    pub fn load<R: Reader>(&mut self, reader: &R) -> Result<()>{
+        if !self.is_loaded(){
+            self.status = Some(Box::new(reader.read(&self.info.location)?));
+        }
+        Ok(())
+    }
+
+    pub fn is_loaded(&self) -> bool{ self.status.is_some() }
+}
+
 pub trait Writer{
-    fn write_status(&mut self, location: &Location, man: &ProjectStatus) -> Result<()>;
-    fn write_info  (&mut self, location: &Location, man: &ProjectInfo) -> Result<()>;
+    fn write(&mut self, location: &Location, prj: &ProjectStatus) -> Result<()>;
 }
 
 pub trait Reader{
-    fn read_status(&self, location: &Location) -> Result<ProjectStatus>;
-    fn read_info  (&self, location: &Location) -> Result<ProjectInfo>;
+    fn read(&self, location: &Location) -> Result<ProjectStatus>;
 }
 
+#[derive(Default)]
 pub struct ProjectHandler{
     writer: Option<Box<dyn Writer>>,
     reader: Option<Box<dyn Reader>>,
+}
+
+impl Debug for ProjectHandler{
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result{
+        write!(f, "ProjectHandler{{ writer: {}, reader: {}, }}", self.writer.is_some(), self.reader.is_some())
+    }
 }
 
 impl ProjectHandler{
@@ -129,37 +152,27 @@ impl ProjectHandler{
     pub fn set_writer(&mut self, writer: Box<dyn Writer>){ self.writer = Some(writer); }
     pub fn set_reader(&mut self, reader: Box<dyn Reader>){ self.reader = Some(reader); }
 
-    pub fn write_status(&mut self, project: &mut Project) -> Result<()> {
+    pub fn write(&mut self, project: &Project) -> Result<()> {
         match &mut self.writer{
             Some(s) => {
                 let status = match &project.status{
                     Some(s) => s,
                     None => return Err(anyhow::anyhow!("there is no project status")),
                 };
-                s.write_status(&project.info.location, &status)?;
+                s.write(&project.info.location, &status)?;
             },
             None => return Err(anyhow::anyhow!("there is no project writer")),
         }
         Ok(())
     }
 
-    pub fn read_status(&self, location: Location) -> Result<ProjectStatus> {
+    pub fn read(&self, project: &mut Project) -> Result<()> {
         match &self.reader {
-            Some(s) => s.read_status(&location),
-            None => return Err(anyhow::anyhow!("there is no project reader")),
-        }
-    }
+            Some(s) => {
+                project.status = Some(Box::new(s.read(&project.info.location)?));
 
-    pub fn write_info(&mut self, project: &mut Project) -> Result<()> {
-        match &mut self.writer{
-            Some(s) => s.write_info(&project.info.location, &project.info),
-            None => return Err(anyhow::anyhow!("there is no project writer")),
-        }
-    }
-
-    pub fn read_info(&self, location: Location) -> Result<ProjectInfo> {
-        match &self.reader {
-            Some(s) => s.read_info(&location),
+                Ok(())
+            },
             None => return Err(anyhow::anyhow!("there is no project reader")),
         }
     }
