@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, rc::Rc};
 
 use super::Location;
 use anyhow::{anyhow, Result};
@@ -137,8 +137,8 @@ pub trait Reader{
 
 #[derive(Default)]
 pub struct ProjectHandler{
-    writer: Option<Box<dyn Writer>>,
-    reader: Option<Box<dyn Reader>>,
+    writer: Option<Rc<dyn Writer>>,
+    reader: Option<Rc<dyn Reader>>,
 }
 
 impl Debug for ProjectHandler{
@@ -149,8 +149,8 @@ impl Debug for ProjectHandler{
 
 impl ProjectHandler{
     pub fn new() -> Self{ ProjectHandler{ writer: None, reader: None, } }
-    pub fn set_writer(&mut self, writer: Box<dyn Writer>){ self.writer = Some(writer); }
-    pub fn set_reader(&mut self, reader: Box<dyn Reader>){ self.reader = Some(reader); }
+    pub fn set_writer(&mut self, writer: Rc<dyn Writer>){ self.writer = Some(writer); }
+    pub fn set_reader(&mut self, reader: Rc<dyn Reader>){ self.reader = Some(reader); }
 
     pub fn write(&mut self, project: &Project) -> Result<()> {
         match &mut self.writer{
