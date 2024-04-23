@@ -1,11 +1,10 @@
-use std::path::{Path, PathBuf};
+pub mod manager;
+pub mod project;
 
+use std::{path::{Path, PathBuf}, rc::Rc};
 use anyhow::{Result, anyhow};
-mod manager;
-mod project;
 
-#[derive(Debug, Clone)]
-pub enum Location{
+#[derive(Debug, Clone)] pub enum Location{
     Path(PathBuf),
     Url(String),
 }
@@ -48,26 +47,26 @@ impl Handler{
     pub fn set_project_writer<Writer>(&mut self, writer: Writer)
     where
         Writer: project::Writer + 'static
-    { self.project_handler.set_writer(Box::new(writer)); }
+    { self.project_handler.set_writer(Rc::new(writer)); }
 
     pub fn set_project_reader<Reader: project::Reader>(&mut self, reader: Reader)
     where
         Reader: project::Writer + 'static
-    { self.project_handler.set_reader(Box::new(reader)); }
+    { self.project_handler.set_reader(Rc::new(reader)); }
 
 
-    pub fn set_manager_writer<Writer: manager::ManagerWriter>(&mut self, writer: Writer)
+    pub fn set_manager_writer<Writer: manager::Writer>(&mut self, writer: Writer)
     where
         Writer: project::Writer + 'static
-    { self.manager_handler.set_writer(Box::new(writer)); }
+    { self.manager_handler.set_writer(Rc::new(writer)); }
 
-    pub fn set_manager_reader<Reader: manager::ManagerReader>(&mut self, reader: Reader)
+    pub fn set_manager_reader<Reader: manager::Reader>(&mut self, reader: Reader)
     where
         Reader: project::Writer + 'static
-    { self.manager_handler.set_reader(Box::new(reader)); }
+    { self.manager_handler.set_reader(Rc::new(reader)); }
 
     pub fn init(&mut self) -> Result<()>{
-        self.manager = self.manager_handler.read_manager()?;
+        self.manager = self.manager_handler.read()?;
         self._inited = true;
         Ok(())
     }
