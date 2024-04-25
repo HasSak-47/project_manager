@@ -1,11 +1,10 @@
 use std::path::PathBuf;
 
-use crate::SystemHandler;
 
 use super::{utils::find_local_status, Arguments};
 use clap::Args;
-use project_manager_api::config::manager::Location;
 use anyhow::{Result, anyhow};
+use project_manager_api::{Handler, Location};
 
 use crate::VERSION;
 
@@ -28,12 +27,12 @@ impl NewStruct{
         if path.exists(){
             return Err(anyhow!("status.toml already exists try using init instead!"));
         }
-        Ok(Location::Path{path})
+        Ok(Location::path(path))
     }
 
     fn validate_path(&self) -> bool { true }
 
-    pub fn run(self, _args: Arguments, mut handler: SystemHandler) -> Result<()> {
+    pub fn run(self, _args: Arguments, mut handler: Handler) -> Result<()> {
 
         if self.validate_path() {
             handler.new_project(self.name.clone(), self.get_location()?)?;

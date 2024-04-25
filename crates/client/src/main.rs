@@ -1,48 +1,70 @@
 #![allow(unused_import_braces)]
 
-use std::{path::PathBuf, fs::File, io::{BufReader, Read, BufWriter, Write}};
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+use std::{fs::File, io::{BufReader, BufWriter, Read, Write}, path::{Path, PathBuf}};
 use cli::cli;
-use anyhow::{Result, anyhow};
-use project_manager_api::{manager, project, Handler};
+use anyhow::Result;
+use project_manager_api::{
+    Location,
+    project,
+    manager,
+};
+
 
 mod cli;
 
-pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+#[derive(Debug, Default)]
+struct ProjectTOML{ } 
 
-#[derive(Debug, Clone)]
-pub struct LinuxManager{
-    manager_path: PathBuf,
-}
+#[derive(Debug, Default)]
+struct ManagerTOML{
+    path: PathBuf,
+} 
 
-impl manager::Writer for LinuxManager{
-    fn write(&mut self, man: &manager::Manager) -> Result<()> {
-        Err(anyhow!("not implemented!"))
+impl ProjectTOML{
+    fn get_status(path: &Path) -> PathBuf{
+        path.to_path_buf().join("status.toml")
     }
 }
 
-impl manager::Reader for LinuxManager{
+impl project::IO for ProjectTOML{
+    fn read(&self, location: &Location) -> Result<project::ProjectStatus>{
+        let path = Self::get_status(location.get_path()?);
+        let file = File::open(path)?;
+        let mut reader = BufReader::new(file);
+        let mut content = String::new();
+        reader.read_to_string(&mut content)?;
+        Ok(toml::from_str(&content)?)
+    }
+
+    fn write(&mut self, location: &Location, prj: &project::ProjectStatus) -> Result<()>{
+        let path = Self::get_status(location.get_path()?);
+        let file = File::create(path)?;
+        let mut writer = BufWriter::new(file);
+        writer.write_all(toml::to_string(prj)?.as_bytes())?;
+        Ok(())
+    }
+}
+
+impl manager::IO for ManagerTOML {
+    fn write(&mut self, manger: &manager::Manager) -> Result<()>{
+        let file = File::create(&self.path)?;
+        let mut writer = BufWriter::new(file);
+        writer.write_all(toml::to_string(manger)?.as_bytes())?;
+        Ok(())
+    }
+
     fn read(&self) -> Result<manager::Manager> {
-        Err(anyhow!("not implemented!"))
-    }
-}
-
-#[derive(Default)]
-pub struct LinuxProject{}
-
-impl project::Writer for LinuxProject{
-    fn write(&mut self, location: &project_manager_api::Location, prj: &project::ProjectStatus) -> Result<()> {
-        Err(anyhow!("not implemented!"))
-    }
-}
-
-impl project::Reader for LinuxProject {
-    fn read(&self, location: &project_manager_api::Location) -> Result<project::ProjectStatus> {
-        Err(anyhow!("not implemented!"))
+        let file = File::open(&self.path)?;
+        let mut reader = BufReader::new(file);
+        let mut content = String::new();
+        reader.read_to_string(&mut content)?;
+        Ok(toml::from_str(&content)?)
     }
 }
 
 fn main() -> Result<()>{
-
     cli()?;
     Ok(())
 }
