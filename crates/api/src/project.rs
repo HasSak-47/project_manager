@@ -29,19 +29,33 @@ impl Feature{
     }
 }
 
+/**
+ * this data is just for decoration
+ */
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct ProjectData{
+    pub name: String,
+    pub description: Option<String>,
+}
+
+
 // the status of the project
-#[allow(dead_code)]
+// this is what the file will contain
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct ProjectStatus{
-    pub name: String,
-    pub description: String,
+    pub project: ProjectData,
     pub todo: Vec<Feature>,
     pub done: Vec<Feature>,
 }
 
 impl ProjectStatus{
     pub fn new(name: String, description: String) -> Self {
-        ProjectStatus{name, description, todo: Vec::new(), done: Vec::new()}
+        ProjectStatus{
+            project: ProjectData{
+                name, description: Some(description),
+            },
+            ..Default::default()
+        }
     }
 
     pub fn add_todo(&mut self, feature: Feature){ self.todo.push(feature); }
@@ -115,6 +129,7 @@ pub struct ProjectInfo{
 // the project that is loaded in memory
 // it has an info and a status
 // the status may not be loaded
+// and may be too big to be in the stack
 // therefore it is a box
 #[derive(Debug, Default, Clone)]
 pub struct Project{

@@ -1,104 +1,18 @@
 [project]
 name = "Project Manager"
-version = "11"
-edition = "10"
+description = "A simple project manager for keeping track of projects and tasks"
 
 [[todo]]
 name = "redo get project config"
 priority = 1
-difficulty = 2
-
-[[todo.todo]]
-name = "create subprojects"
-priority = 3
-difficulty = 8
-
-[[todo]]
-name = "cli system"
-priority = 8
-difficulty = 5
-
-[[todo.done]]
-name = "print percentajes"
-priority = 2
 difficulty = 1
-
-[[todo.done]]
-name = "print all"
-priority = 2
-difficulty = 1
-
-[[todo.done]]
-name = "print random"
-priority = 2
-difficulty = 1
-
-[[todo.todo]]
-name = "print options"
-priority = 2
-difficulty = 5
-
-[[todo]]
-name = "improve subfeature implementation"
-priority = 1
-difficulty = 6
-
-[[todo.done]]
-name = "feats can have done and todo subfeats"
-priority = 1
-difficulty = 6
-
-[[todo]]
-name = "split project into api and client"
-priority = 2
-difficulty = 1
-
-[[todo.done]]
-name = "split project into different crates"
-priority = 2
-difficulty = 1
-
-[[todo.todo]]
-name = "make the api wasm compatible"
-priority = 2
-difficulty = 1
-
-[[todo]]
-name = "rework error system"
-priority = 4
-difficulty = 6
-
-[[todo]]
-name = "test feature"
-priority = 1
-difficulty = 1
+todo = []
+done = []
 
 [[done]]
-name = "read project"
-priority = 10
-difficulty = 2
-
-[[done.done]]
-name = "read subfeat"
-priority = 10
-difficulty = 2
-
-[[done]]
-name = "project status"
+name = "create project config"
 priority = 1
 difficulty = 1
+todo = []
+done = []
 
-[[done.done]]
-name = "calculate % done"
-priority = 4
-difficulty = 1
-
-[[done]]
-name = "rework file interaction"
-priority = 10
-difficulty = 10
-
-[[done]]
-name = "a way to edit features"
-priority = 6
-difficulty = 1

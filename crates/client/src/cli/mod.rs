@@ -3,7 +3,7 @@ mod print;
 // mod git;
 // mod features;
 // mod delete;
-// mod init;
+mod init;
 // mod new;
 // mod mark_feature;
 // mod utils;
@@ -14,6 +14,7 @@ use std::path::PathBuf;
 use anyhow::{Result, anyhow};
 use clap::{Subcommand, Parser, Args};
 
+use init::InitStruct;
 use project_manager_api::Handler;
 
 use crate::{ManagerTOML, ProjectTOML};
@@ -50,7 +51,7 @@ impl NotDone{
 enum Tree{
     // Daemon(DaemonStruct),
     Print(PrintStruct),
-    // Init(InitStruct),
+    Init(InitStruct),
     // Delete(DelStruct),
     // New(NewStruct),
 
@@ -115,7 +116,7 @@ pub fn cli() -> Result<()> {
 
     match tree{
         TR::Print(p) => p.run(args, handler)?,
-        // TR::Init(i) => i.run(args, handler)?,
+        TR::Init(i) => i.run(args, handler)?,
         // TR::Delete(d) => d.run(args, handler)?,
         // TR::New(n) => n.run(args, handler)?,
         // TR::AddFeat(f) => f.run(args, handler)?,
