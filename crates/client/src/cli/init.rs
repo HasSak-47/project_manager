@@ -25,6 +25,7 @@ impl InitStruct{
         let mut status_path = path.clone();
         status_path.push("status");
         status_path.set_extension("toml");
+
         let mut project = Project::default();
         project.info.name = name.clone();
         project.status = Some(Box::new(
@@ -33,6 +34,7 @@ impl InitStruct{
 
         handler.init_project(project)?;
         handler.commit_project(name)?;
+        handler.commit_manager()?;
 
         Ok(())
     }

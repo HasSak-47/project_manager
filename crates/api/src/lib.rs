@@ -169,8 +169,6 @@ impl Handler{
         Ok(())
     }
 
-
-
     /**
      * writes a project to its location
      */
@@ -187,6 +185,13 @@ impl Handler{
             let _ = self.commit_project(&p.project.info.name);
         } Ok(())
         
+    }
+
+    /**
+    writes the manager to its location
+    */
+    pub fn commit_manager(&mut self) -> Result<()>{
+        self.manager_handler.write(&self.manager)
     }
 
     /**
@@ -228,7 +233,7 @@ impl Handler{
 
     /**
     Searches for a project in the cache
-     */
+    */
     fn find_project_mut<F: Finder>(&mut self, finder: F) -> Result<&mut ProjectInfo>
     {
         let project = self.manager.projects
@@ -241,12 +246,14 @@ impl Handler{
 
     /**
     adds project to the database
+    also loads the status.toml
     */
     pub fn init_project(&mut self, mut project: Project) -> Result<()>{
         self.project_handler.read(&mut project)?;
         let name = project.info.name.clone();
-        let cached_proj = CachedProject { project, ..Default::default() };
 
+        self.manager.projects.insert(name.clone(), project.info.clone());
+        let cached_proj = CachedProject { project, ..Default::default() };
         self.projects.insert(name, cached_proj);
         Ok(())
     }

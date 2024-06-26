@@ -6,13 +6,8 @@ description = "A simple project manager for keeping track of projects and tasks"
 name = "redo get project config"
 priority = 1
 difficulty = 1
-todo = []
-done = []
 
 [[done]]
 name = "create project config"
 priority = 1
 difficulty = 1
-todo = []
-done = []
-
