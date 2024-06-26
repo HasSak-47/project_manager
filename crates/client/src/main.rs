@@ -51,7 +51,8 @@ impl manager::IO for ManagerTOML {
     fn write(&mut self, manger: &manager::Manager) -> Result<()>{
         let file = File::create(&self.path)?;
         let mut writer = BufWriter::new(file);
-        writer.write_all(toml::to_string(manger)?.as_bytes())?;
+        let tomldata = toml::to_string(manger).unwrap();
+        writer.write_all(tomldata.as_bytes())?;
         Ok(())
     }
 
