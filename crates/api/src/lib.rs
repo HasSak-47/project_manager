@@ -21,6 +21,15 @@ pub trait Finder{
     fn matches(&self, project: &ProjectInfo) -> bool;
 }
 
+impl<T> Finder for &T
+where
+    T : Finder
+{
+    fn matches(&self, project: &ProjectInfo) -> bool {
+        (*self).matches(project)
+    }
+}
+
 impl Finder for String{
     fn matches(&self, project: &ProjectInfo) -> bool{
         project.name == *self

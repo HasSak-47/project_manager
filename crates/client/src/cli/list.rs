@@ -103,6 +103,31 @@ fn make_pretty(project: &ProjectInfo, padding: usize) -> String {
     format!("\x1b[1;34m{name:<width$}\x1b[0m @ {processed_path}", width = padding)
 }
 
+fn print_pretty(projects: &Vec<ProjectInfo>, padding: usize){
+    let mut buffer = Vec::new();
+    let mut max = 0usize;
+    for p in projects{
+        let c = format!("{}", make_pretty(p, padding));
+        if c.len() > max {max = c.len()}
+        buffer.push(c);
+    }
+    max += 4;
+
+    let width = unsafe {
+        let mut buffer = libc::winsize{ws_col: 0, ws_row: 0, ws_xpixel: 0, ws_ypixel: 0};
+        libc::ioctl(0, libc::TIOCGWINSZ, &mut buffer);
+        buffer.ws_col
+    } as usize / max;
+
+
+    for (i, p) in buffer.into_iter().enumerate(){
+        print!("{:width$}", p, width = max);
+        if i % width == width - 1 {println!();}
+    }
+    println!();
+
+}
+
 impl ListProjects {
     fn run(&self, handler: Handler, _args: Arguments, print_args: &ListStruct) -> Result<()>{
         let mut projects = handler.get_projects_info();
@@ -120,7 +145,7 @@ impl ListProjects {
         let terminal = unsafe { libc::isatty(STDOUT_FILENO) == 1 };
         if !print_args.not_pretty && terminal{
             if !self.path{
-                ListProjects::print_pretty(&projects, padding);
+                print_pretty(&projects, padding);
             }
             else{
                 for p in projects{
@@ -146,52 +171,24 @@ impl ListProjects {
 
         Ok(())
     }
-
-    fn print_pretty(projects: &Vec<ProjectInfo>, padding: usize){
-        let mut buffer = Vec::new();
-        let mut max = 0usize;
-        for p in projects{
-            let c = format!("{}", make_pretty(p, padding));
-            if c.len() > max {max = c.len()}
-            buffer.push(c);
-        }
-        max += 4;
-
-        let width = unsafe {
-            let mut buffer = libc::winsize{ws_col: 0, ws_row: 0, ws_xpixel: 0, ws_ypixel: 0};
-            libc::ioctl(0, libc::TIOCGWINSZ, &mut buffer);
-            buffer.ws_col
-        } as usize / max;
-
-
-        for (i, p) in buffer.into_iter().enumerate(){
-            print!("{:width$}", p, width = max);
-            if i % width == width - 1 {println!();}
-        }
-        println!();
-
-    }
     
 }
-// 
-// impl ListProject{
-//     fn print(&self, mut handler: Handler){ let project = handler.find_project_mut(&FindCriteria::Name(self.name.clone()));
-//         // match project {
-//         //     Some(mut s) => {
-//         //         s.get_completion_mut();
-//         //         s.load_project(loader);
-//         //         if !self.toml{ println!("{}", format_project(&s)); }
-//         //         else{ panic!("I can not print project toml!!"); }
-//         //     }
-//         //     None => println!("project not found"),
-//         // }
-//     }
-// }
-// 
-// fn print_random(projects: Vec<&mut ProjectStatus>){
-//     let i = random::<usize>() % projects.len();
-//     println!("{}", projects[i].get_name());
-// }
+
+impl ListProject{
+    fn run(&self, mut handler: Handler, _args: Arguments, _ps : &ListStruct) -> Result<()>{
+        handler.load_projects()?;
+        match handler.get_project(&self.name){
+            Ok(project) => {
+                println!("{project:?}");
+            },
+            Err(_) => {
+                println!("project \"{}\" not found\n", self.name);
+            }
+        }
+        Ok(())
+
+    }
+}
 
 impl ListPercentaje{
     fn run(&self, mut handler: Handler, _args: Arguments, _ps : &ListStruct) -> Result<()>{
@@ -207,31 +204,6 @@ impl ListPercentaje{
 
         Ok(())
     }
-    // fn print(&self, mut handler: Handler, args : Arguments) -> Result<()>{
-    //     let mut max_len = 0usize;
-    //     let projects = handler.get_cached_projects();
-    //     for p in &projects{
-    //         let l = p.get_name().len();
-    //         if l > max_len {max_len = l}
-    //     }
-
-    //     for project in &mut projects{
-    //         if project.cache_completion().is_err() && args.verbose && args.debug{
-    //             println!("project: {project:#?} could not be loaded");
-    //         }
-    //     }
-
-    //     let mut filtered : Vec<_> = projects.iter().filter(|p| {
-    //         self.min as f64 <= p.get_completion() * 100. &&
-    //             p.get_completion() * 100. <= self.max as f64}).collect();
-    //     
-    //     filtered.sort_by(|a, b| b.get_completion().total_cmp(&a.get_completion()) );
-
-    //     for p in filtered{
-    //         println!("{:2$} {:>7.2}%", p.get_name(), 100. * p.get_completion(), max_len + 4);
-    //     }
-    //     Ok(())
-    // }
 }
 
 impl ListStruct{
@@ -249,6 +221,7 @@ impl ListStruct{
         match option{
             PE::Projects(p) => p.run(handler, args, &self),
             PE::Percentajes(p) => p.run(handler, args, &self),
+            PE::Project(p) => p.run(handler, args, &self),
             _ => {Ok(())},
         }
     }
