@@ -11,15 +11,15 @@ use anyhow::{anyhow, Result};
 
 // this looks like shit
 #[derive(Args, Debug, Default, Clone)]
-pub struct PrintStruct{
+pub struct ListStruct{
     #[command(subcommand)]
-    print: Option<PrintEnum>,
+    print: Option<ListEnum>,
     #[clap(short, long)]
     not_pretty : bool,
 }
 
 #[derive(Args, Debug, Default, Clone)]
-struct PrintPercentaje{
+struct ListPercentaje{
     #[clap(short, long, default_value = "0")]
     min: u8,
     #[clap(short = 'M', long, default_value = "100")]
@@ -29,7 +29,7 @@ struct PrintPercentaje{
 }
 
 #[derive(Args, Debug, Default, Clone)]
-struct PrintProject{
+struct ListProject{
     name: String,
     #[clap(short, long)]
     toml: bool,
@@ -37,7 +37,7 @@ struct PrintProject{
 }
 
 #[derive(Args, Default, Debug, Clone)]
-struct PrintProjects{
+struct ListProjects{
     #[clap(value_enum, long, default_value = "progress")]
     sort_by: SortBy,
     #[clap(value_enum, long)]
@@ -60,11 +60,11 @@ enum SortBy{
 
 
 #[derive(Subcommand, Default, Debug, Clone)]
-enum PrintEnum{
-    Percentajes(PrintPercentaje),
+enum ListEnum{
+    Percentajes(ListPercentaje),
     Random,
-    Project(PrintProject),
-    Projects(PrintProjects),
+    Project(ListProject),
+    Projects(ListProjects),
     Broken,
     #[default]
     #[clap(skip)]
@@ -103,8 +103,8 @@ fn make_pretty(project: &ProjectInfo, padding: usize) -> String {
     format!("\x1b[1;34m{name:<width$}\x1b[0m @ {processed_path}", width = padding)
 }
 
-impl PrintProjects {
-    fn run(&self, handler: Handler, _args: Arguments, print_args: &PrintStruct) -> Result<()>{
+impl ListProjects {
+    fn run(&self, handler: Handler, _args: Arguments, print_args: &ListStruct) -> Result<()>{
         let mut projects = handler.get_projects_info();
         let mut padding = 0usize;
         for (_, p) in &handler.projects{
@@ -120,7 +120,7 @@ impl PrintProjects {
         let terminal = unsafe { libc::isatty(STDOUT_FILENO) == 1 };
         if !print_args.not_pretty && terminal{
             if !self.path{
-                PrintProjects::print_pretty(&projects, padding);
+                ListProjects::print_pretty(&projects, padding);
             }
             else{
                 for p in projects{
@@ -174,7 +174,7 @@ impl PrintProjects {
     
 }
 // 
-// impl PrintProject{
+// impl ListProject{
 //     fn print(&self, mut handler: Handler){ let project = handler.find_project_mut(&FindCriteria::Name(self.name.clone()));
 //         // match project {
 //         //     Some(mut s) => {
@@ -193,8 +193,8 @@ impl PrintProjects {
 //     println!("{}", projects[i].get_name());
 // }
 
-impl PrintPercentaje{
-    fn run(&self, mut handler: Handler, _args: Arguments, _ps : &PrintStruct) -> Result<()>{
+impl ListPercentaje{
+    fn run(&self, mut handler: Handler, _args: Arguments, _ps : &ListStruct) -> Result<()>{
         handler.load_projects()?;
         let projects = handler.get_cached_projects();
         
@@ -234,18 +234,18 @@ impl PrintPercentaje{
     // }
 }
 
-impl PrintStruct{
+impl ListStruct{
     pub fn run(self, args: Arguments, handler: Handler) -> Result<()> {
         let option = if self.print.is_none(){
             if args.debug{
                 println!("no subcommand given defaulting to projects");
             }
-            PrintEnum::Projects(PrintProjects::default() )
+            ListEnum::Projects( ListProjects::default() )
         }
         else{
             self.print.clone().unwrap()
         };
-        use PrintEnum as PE;
+        use ListEnum as PE;
         match option{
             PE::Projects(p) => p.run(handler, args, &self),
             PE::Percentajes(p) => p.run(handler, args, &self),

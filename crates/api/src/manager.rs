@@ -5,8 +5,17 @@ use super::project::*;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
+use crate::current_edition;
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct ManagerInfo{
+    #[serde(default = "current_edition")]
+    pub edition: String,
+}
+
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Manager{
+    info: ManagerInfo,
     #[serde(default)] 
     pub projects: HashMap<String, ProjectInfo>,
 }
