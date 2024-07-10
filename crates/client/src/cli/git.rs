@@ -1,8 +1,8 @@
 
-use std::{env::current_dir, os::unix::process::CommandExt, path::PathBuf, process::{Child, Command}, time::{SystemTime, UNIX_EPOCH}};
+use std::{env::current_dir, process::{Command}, time::{SystemTime, UNIX_EPOCH}};
 
 use anyhow::Result;
-use project_manager_api::{manager::Manager, project::{ProjectInfo, ProjectStatus}, CachedProject, Handler, Location};
+use project_manager_api::{Handler, Location};
 use super::Arguments;
 use clap::Args;
 
