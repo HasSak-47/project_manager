@@ -1,9 +1,9 @@
-use libc::STDOUT_FILENO;
-use project_manager_api::{project::{Feature, ProjectInfo}, CachedProject, Handler, Location};
-use super::{utils::current_project_mut, Arguments};
-use clap::{Subcommand, Args, ValueEnum};
 
-use anyhow::{anyhow, Result};
+use project_manager_api::{project::{Feature}, Handler};
+use super::{utils::current_project_mut, Arguments};
+use clap::{Args};
+
+use anyhow::{Result};
 
 #[derive(Args, Debug, Clone)]
 pub struct AddFeat{
