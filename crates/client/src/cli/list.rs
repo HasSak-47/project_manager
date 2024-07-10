@@ -1,10 +1,8 @@
-#![allow(unused_import_braces)]
 use std::path::PathBuf;
 
 use libc::STDOUT_FILENO;
-use project_manager_api::{manager::Manager, project::{ProjectInfo, ProjectStatus}, CachedProject, Handler, Location};
+use project_manager_api::{project::ProjectInfo, CachedProject, Handler, Location};
 use super::Arguments;
-use rand::random;
 use clap::{Subcommand, Args, ValueEnum};
 
 use anyhow::{anyhow, Result};
