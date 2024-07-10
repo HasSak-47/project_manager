@@ -130,7 +130,7 @@ impl Handler{
 
     /**
      * gets a project from the cache
-     * if the project is not in the cache it loads it
+     * if the project status is not in the cache it loads it
      */
     pub fn get_project_mut<F: Finder>(&mut self, req: F) -> Result<&mut Project> {
         let project_info = &mut self.find_project_mut(req)?.clone();

@@ -22,10 +22,6 @@ impl InitStruct{
         let path = self.path.unwrap_or(current_dir().unwrap());
         let name = self.name.unwrap_or(path.file_name().unwrap().to_str().unwrap().to_string());
 
-        let mut status_path = path.clone();
-        status_path.push("status");
-        status_path.set_extension("toml");
-
         let mut project = Project::default();
         project.info.name = name.clone();
         project.info.location = Location::Path(path);

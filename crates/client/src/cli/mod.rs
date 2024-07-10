@@ -1,7 +1,7 @@
 mod list;
 // mod rename;
 mod git;
-// mod features;
+mod features;
 // mod delete;
 mod init;
 mod new;
@@ -14,6 +14,7 @@ use std::path::PathBuf;
 use anyhow::{Result, anyhow};
 use clap::{Subcommand, Parser, Args};
 
+use features::AddFeat;
 use git::GitStruct;
 use init::InitStruct;
 use new::NewStruct;
@@ -25,6 +26,22 @@ use self::{
     list::ListStruct,
 //     delete::DelStruct, features::AddFeat, git::GitStruct, mark_feature::MarkFeature, new::NewStruct
 };
+
+pub mod utils{
+    use std::env::current_dir;
+
+    use project_manager_api::{project::Project, Handler, Location};
+
+    pub fn current_project(handler: &Handler) -> anyhow::Result<&Project>{
+        let cwd = current_dir().unwrap();
+        handler.get_project(Location::Path(cwd))
+    }
+
+    pub fn current_project_mut(handler: &mut Handler) -> anyhow::Result<&mut Project>{
+        let cwd = current_dir().unwrap();
+        handler.get_project_mut(Location::Path(cwd))
+    }
+}
 
 #[derive(Parser, Debug)]
 #[clap(author="Daniel", version, about)]
@@ -59,7 +76,7 @@ enum Tree{
 
     // SetParent(NotDone),
     // SetSubproject(NotDone),
-    // AddFeat(AddFeat),
+    AddFeat(AddFeat),
     // AddSubFeat(NotDone),
 
     // Tui(NotDone),
@@ -121,7 +138,7 @@ pub fn cli() -> Result<()> {
         TR::Init(i) => i.run(args, handler)?,
         // TR::Delete(d) => d.run(args, handler)?,
         TR::New(n) => n.run(args, handler)?,
-        // TR::AddFeat(f) => f.run(args, handler)?,
+        TR::AddFeat(f) => f.run(args, handler)?,
         TR::Git(g) => g.run(args, handler)?,
         // TR::MarkFeature(f) => f.run(args, handler)?,
         _ => NotDone::default().run(args, handler)?,
