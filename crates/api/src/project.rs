@@ -148,7 +148,12 @@ pub struct ProjectInfo{
     #[serde(default)] 
     pub status: Option<Location>, 
     #[serde(default)] 
-    pub last_update: Option<usize>, // timestamp
+    /** last update is the unix timestamp */
+    pub last_update: Option<usize>, 
+
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub sub_projects: Vec<String>,
 }
 
 // the project that is loaded in memory
