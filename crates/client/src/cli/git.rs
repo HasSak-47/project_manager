@@ -1,12 +1,11 @@
 
-use std::process;
+use std::{env::current_dir, os::unix::process::CommandExt, path::PathBuf, process::{Child, Command}, time::{SystemTime, UNIX_EPOCH}};
 
-use crate::SystemHandler;
-
-use super::{utils::find_local_status, Arguments};
-use clap::Args;
 use anyhow::Result;
-use project_manager_api::FindCriteria;
+use project_manager_api::{manager::Manager, project::{ProjectInfo, ProjectStatus}, CachedProject, Handler, Location};
+use super::Arguments;
+use clap::Args;
+
 
 #[derive(Args, Debug, Default, Clone)]
 #[clap(about = include_str!("abouts/GitStruct.txt").trim_end())]
@@ -16,15 +15,14 @@ pub struct GitStruct{
 }
 
 impl GitStruct{
-    pub fn run(self, _args: Arguments, mut handler: SystemHandler) -> Result<()>{
-        let status = find_local_status()?;
-        let current_project = handler.find_project_mut(&FindCriteria::path(status))?;
+    pub fn run(self, _args: Arguments, mut handler: Handler) -> Result<()>{
+        let cwd = Location::Path( current_dir().unwrap() );
+        let project = handler.get_project_mut(cwd)?;
+        let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
+        project.info.last_update = Some(now.as_secs() as usize);
 
-        let mut child = process::Command::new("git").args(self.args).spawn()?;
+        Command::new("git").args(self.args).spawn()?.wait()?;
 
-        child.wait()?;
-        current_project.update()?;
-        handler.commit_manager()?;
         Ok(())
     }
 }

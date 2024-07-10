@@ -1,6 +1,6 @@
 mod list;
 // mod rename;
-// mod git;
+mod git;
 // mod features;
 // mod delete;
 mod init;
@@ -14,6 +14,7 @@ use std::path::PathBuf;
 use anyhow::{Result, anyhow};
 use clap::{Subcommand, Parser, Args};
 
+use git::GitStruct;
 use init::InitStruct;
 use new::NewStruct;
 use project_manager_api::Handler;
@@ -67,7 +68,7 @@ enum Tree{
 
     // MarkFeature(MarkFeature),
 
-    // Git(GitStruct),
+    Git(GitStruct),
 }
 
 impl Arguments {
@@ -121,7 +122,7 @@ pub fn cli() -> Result<()> {
         // TR::Delete(d) => d.run(args, handler)?,
         TR::New(n) => n.run(args, handler)?,
         // TR::AddFeat(f) => f.run(args, handler)?,
-        // TR::Git(g) => g.run(args, handler)?,
+        TR::Git(g) => g.run(args, handler)?,
         // TR::MarkFeature(f) => f.run(args, handler)?,
         _ => NotDone::default().run(args, handler)?,
     }
