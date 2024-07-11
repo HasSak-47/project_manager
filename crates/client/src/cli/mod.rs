@@ -2,7 +2,7 @@ mod list;
 // mod rename;
 mod git;
 mod features;
-// mod delete;
+mod delete;
 mod init;
 mod new;
 // mod mark_feature;
@@ -14,19 +14,16 @@ use std::path::PathBuf;
 use anyhow::{Result, anyhow};
 use clap::{Subcommand, Parser, Args};
 
-use features::AddFeat;
-use git::GitStruct;
-use init::InitStruct;
-use new::NewStruct;
+use self::{
+    delete::DelStruct, features::AddFeat, git::GitStruct,
+    init::InitStruct, new::NewStruct, list::ListStruct,
+};
+
 use project_manager_api::Handler;
 
 use crate::{ManagerTOML, ProjectTOML};
 
-use self::{
-    list::ListStruct,
-//     delete::DelStruct, features::AddFeat, git::GitStruct, mark_feature::MarkFeature, new::NewStruct
-};
-
+#[allow(dead_code)]
 pub mod utils{
     use std::env::current_dir;
 
@@ -71,7 +68,7 @@ enum Tree{
     // Daemon(DaemonStruct),
     List(ListStruct),
     Init(InitStruct),
-    // Delete(DelStruct),
+    Delete(DelStruct),
     New(NewStruct),
 
     // SetParent(NotDone),
@@ -136,7 +133,7 @@ pub fn cli() -> Result<()> {
     match tree{
         TR::List(l) => l.run(args, handler)?,
         TR::Init(i) => i.run(args, handler)?,
-        // TR::Delete(d) => d.run(args, handler)?,
+        TR::Delete(d) => d.run(args, handler)?,
         TR::New(n) => n.run(args, handler)?,
         TR::AddFeat(f) => f.run(args, handler)?,
         TR::Git(g) => g.run(args, handler)?,
