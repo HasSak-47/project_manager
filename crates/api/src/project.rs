@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 pub struct Feature{
     name: String,
     #[serde(default)] 
+    #[serde(skip_serializing_if = "String::is_empty")]
     description: String,
     priority: u8,
     difficulty: u8,
