@@ -118,8 +118,8 @@ impl ProjectStatus{
         d
     }
 
-    pub fn get_todo_difficulty(&self) -> usize{ ProjectStatus::get_features_difficulty(Some(&self.todo), &|f| Some(&f.todo)) }
-    pub fn get_done_difficulty(&self) -> usize{ ProjectStatus::get_features_difficulty(Some(&self.done), &|f| Some(&f.done)) }
+    pub fn get_todo_difficulty(&self) -> usize { ProjectStatus::get_features_difficulty(Some(&self.todo), &|f| Some(&f.todo)) }
+    pub fn get_done_difficulty(&self) -> usize { ProjectStatus::get_features_difficulty(Some(&self.done), &|f| Some(&f.done)) }
 
     pub fn get_completion(&self) -> f64{
         let todo = self.get_todo_difficulty();
@@ -135,7 +135,7 @@ impl ProjectStatus{
 }
 
 
-// info on the project that is stored in the manager and project
+/** info on the project that is stored in the manager and project */
 #[allow(dead_code)]
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct ProjectInfo{
@@ -178,6 +178,10 @@ impl Project{
     }
 
     pub fn is_loaded(&self) -> bool{ self.status.is_some() }
+
+    pub fn add_subproject(&mut self, project: &Project) {
+        self.info.sub_projects.push(project.info.name.clone());
+    }
 }
 
 pub trait IO{

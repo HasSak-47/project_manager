@@ -5,7 +5,7 @@ use project_manager_api::{project::ProjectInfo, Handler, Location};
 use super::Arguments;
 use clap::{Subcommand, Args, ValueEnum};
 
-use anyhow::{Result};
+use anyhow::Result;
 
 // this looks like shit
 #[derive(Args, Debug, Default, Clone)]
@@ -147,7 +147,7 @@ impl ListProjects {
             }
             else{
                 for p in projects{
-                    println!("{}", p.name);
+                    println!("{}", p.location.to_string());
                 }
             }
         }
