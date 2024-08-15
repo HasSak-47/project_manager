@@ -5,8 +5,8 @@ mod features;
 mod delete;
 mod init;
 mod new;
-mod parentchilds;
-// mod mark_feature;
+mod done;
+mod mark_feature;
 // mod utils;
 
 
@@ -78,10 +78,10 @@ enum Tree{
     // AddSubFeat(NotDone),
 
     // Tui(NotDone),
-    // DoneFeat(NotDone),
-    // Update(NotDone),
+    DoneFeat(NotDone),
+    Update(NotDone),
 
-    // MarkFeature(MarkFeature),
+    MarkFeature(MarkFeature),
 
     Git(GitStruct),
 }
