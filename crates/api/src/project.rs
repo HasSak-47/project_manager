@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 #[allow(dead_code)]
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Feature{
-    name: String,
+    pub name: String,
     #[serde(default)] 
     #[serde(skip_serializing_if = "String::is_empty")]
     description: String,
