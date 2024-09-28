@@ -1,325 +1,144 @@
-pub mod manager;
-pub mod project;
+use std::{collections::HashMap, path::PathBuf, time::{self, Duration}};
 
-use std::{collections::HashMap, path::{Path, PathBuf}};
-use serde::{Serialize, Deserialize};
-use anyhow::{anyhow, Ok, Result};
-
-pub fn current_edition() -> String {
-    return env!("CARGO_PKG_VERSION").to_string();
-}
-
-#[derive(Debug, Clone, PartialEq, Eq,
-         Serialize, Deserialize)]
-#[serde(tag = "loc_type", content = "location")]
-pub enum Location{
-    Path(PathBuf),
-    Url(String),
-}
-
-pub trait Finder{
-    fn matches(&self, project: &ProjectInfo) -> bool;
-}
-
-impl<T> Finder for &T
-where
-    T : Finder
-{
-    fn matches(&self, project: &ProjectInfo) -> bool {
-        (*self).matches(project)
-    }
-}
-
-impl Finder for String{
-    fn matches(&self, project: &ProjectInfo) -> bool{
-        project.name == *self
-    }
-}
-
-impl Finder for Location{
-    fn matches(&self, project: &ProjectInfo) -> bool{
-        project.location == *self
-    }
-}
-
-
-impl Default for Location{ fn default() -> Self{ Location::Path(PathBuf::new()) } }
-
-impl Location{
-    pub fn path<P : AsRef<Path>>(path: P) -> Self{ Location::Path(path.as_ref().to_path_buf()) }
-    pub fn url<S: AsRef<str>>(url: S) -> Self{ Location::Url(url.as_ref().to_string()) }
-
-    pub fn get_path(&self) -> Result<&Path>{
-        match self{
-            Location::Path(path) => Ok(path.as_path()),
-            _ => Err(anyhow!("Location is not a path!!")),
-        }
-    }
-
-    pub fn get_url(&self) -> Result<&str>{
-        match self{
-            Location::Url(url) => Ok(url.as_str()),
-            _ => Err(anyhow!("Location is not a url!!")),
-        }
-    }
-
-    pub fn to_string(&self) -> String{
-        match self{
-            Location::Path(path) => path.to_string_lossy().to_string(),
-            Location::Url(url) => url.clone(),
-        }
-    }
-}
-
-
-use project::*;
-use manager::*;
+use thiserror::Error;
 
 #[derive(Debug, Default, Clone)]
-pub struct CachedProject{
-    pub project: Project,
+struct Description {
+    name       : String,
+    description: String,
+    priority   : f64,
+    difficulty : f64,
+    due_date   : Option<time::Instant>,
 
-    pub todo: Option<usize>,
-    pub done: Option<usize>,
+    tags       : Vec<String>,
 }
 
-#[derive(Debug, Default)]
-pub struct Handler{
-    pub project_handler: ProjectHandler,
-    pub manager_handler: ManagerHandler,
-    pub manager: Manager,
-    pub projects: HashMap<String, CachedProject>,
-    _inited: bool,
+#[derive(Debug, Default, Clone)]
+struct TaskTable{
+    desc: Description,
+    done: bool,
+
+    // minimun time needed to perform the task
+    min_time   : time::Duration,
+
+    id : usize,
+    parent_task: Option<usize>,
+    project    : Option<usize>,
 }
 
-impl Handler{
-    pub fn new() -> Self{ Self::default() }
+#[derive(Debug, Clone)]
+enum Location{
+    Path(PathBuf),
+    Git(String),
+}
 
-    // setup functions
-    pub fn set_project_io<IO>(&mut self, io: IO)
-    where
-        IO: project::IO+ 'static
-    { self.project_handler.set_io(Box::new(io)); }
+#[derive(Debug, Default, Clone)]
+struct Project{
+    desc: Description,
+    last_worked: Option<time::Instant>,
+    location: Option<Location>,
+    parent: Option<usize>,
+}
 
-    pub fn set_manager_io<IO>(&mut self, io: IO)
-    where
-        IO: manager::IO+ 'static { self.manager_handler.set_io(Box::new(io)); }
-
-    /**
-     loads the manager
-     */
-    pub fn init(&mut self) -> Result<()>{
-        self.manager = self.manager_handler.read()?;
-        self._inited = true;
-        Ok(())
-    }
-
-    /**
-     gets a project from the project cache
-     */
-    pub fn get_project<F: Finder>(&self, req: F) -> Result<&Project>
-    {
-        let project_info = &self.find_project(req)?;
-
-        self.projects
-            .get(&project_info.name)
-            .and_then(|p| Some(&p.project))
-            .ok_or(anyhow!("Project {} isn't loaded!", project_info.name))
-    }
-
-
-    /**
-     * gets a project from the cache
-     * if the project status is not in the cache it loads it
-     */
-    pub fn get_project_mut<F: Finder>(&mut self, req: F) -> Result<&mut Project> {
-        let project_info = &mut self.find_project_mut(req)?.clone();
-
-        // there is already a project in the cache
-        if self.projects.contains_key(&project_info.name){
-            return Ok(&mut self.projects.get_mut(&project_info.name).unwrap().project);
-        }
-
-        // there is no project in the cache
-        // and it starts loading it and insert it into the cache
-        let mut project = Project{
-            info: project_info.clone(),
-            ..Default::default()
-        };
-        self.project_handler.read(&mut project)?;
-        self.projects.insert(project_info.name.clone(), CachedProject::new(project));
-        self.projects
-            .get_mut(&project_info.name)
-            .and_then(|p| Some(&mut p.project))
-            .ok_or(anyhow!("ProjectHandler::get_project_mut Project {} wasn't found loaded!", project_info.name))
-    }
-
-    /**
-     * Load all projects in the manager to the cache
-     */
-    pub fn load_projects(&mut self) -> Result<()>{
-        let names : Vec<String> = self.manager.projects
-            .iter()
-            .map(|(_, p)| p.name.clone())
-            .collect();
-        for name in names{
-            let _ = self.get_project_mut(name);
-        }
-        Ok(())
-    }
-
-    /**
-      load projects with status to the cache
-     */
-
-    pub fn load_projects_with_status(&mut self) -> Result<()>{
-        let names : Vec<String> = self.manager.projects
-            .iter()
-            .map(|(_, p)| p.name.clone())
-            .collect();
-        for name in names{
-            self.get_project_mut(name)?;
-        }
-        Ok(())
-    }
-
-    /**
-     * writes a project to its location
-     */
-    pub fn commit_project<S: AsRef<str>>(&mut self, name: S) -> Result<()> {
-        let name = name.as_ref().to_string();
-        let project = self.get_project(name)?.clone();
-        self.project_handler.write(&project)?;
-        Ok(())
-    }
-
-
-    pub fn commit_projects(&mut self) -> Result<()>{
-        for (_, p) in self.projects.clone(){
-            let _ = self.commit_project(&p.project.info.name);
-        } Ok(())
-        
-    }
-
-    /**
-    writes the manager to its location
-    */
-    pub fn commit_manager(&mut self) -> Result<()>{
-        self.manager_handler.write(&self.manager)
-    }
-
-    /**
-     * returns a copy of all cached projects
-     */
-    pub fn get_cached_projects(&mut self) -> Vec<CachedProject>{
-        self.projects.iter().map(|(_, p)| p.clone()).collect()
-    }
-
-    /**
-     * gets all projects info in the manager
-     */
-    pub fn get_projects_info(&self) -> Vec<ProjectInfo>{
-        self.manager.projects.iter().map(|(_, p)| p.clone()).collect()
-    }
-
-    pub fn act_on_project<F>(&mut self, f: F) -> Result<()>
-    where 
-        F: Fn(&mut Project) -> Result<()>
-    {
-        for (_, p) in self.projects.iter_mut(){
-            f(&mut p.project)?;
-        } 
-        Ok(())
-    }
-
-
-    fn find_project<F>(&self, finder: F) -> Result<&ProjectInfo>
-    where
-        F: Finder
-    {
-        let project = self.manager.projects
-            .iter()
-            .find(|(_, p)| finder.matches(&p))
-            .and_then(|(_, p)| Some(p))
-            .ok_or(anyhow!("Handler::find_project Project not found!"))?;
-        Ok(project)
-    }
-
-    /**
-    Searches for a project in the cache
-    */
-    fn find_project_mut<F: Finder>(&mut self, finder: F) -> Result<&mut ProjectInfo>
-    {
-        let project = self.manager.projects
-            .iter_mut()
-            .find(|(_, p)| finder.matches(&p))
-            .and_then(|(_, p)| Some(p))
-            .ok_or(anyhow!("Handler::find_project_mut Project not found!"))?;
-        Ok(project)
-    }
-
-    /**
-    creates a status.toml in the location with an empty toml
-    adds project to the database
-    */
-    pub fn new_project(&mut self, project: Project) -> Result<()>{
-        self.project_handler.write(&project)?;
-        let name = project.info.name.clone();
-
-        self.manager.projects.insert(name.clone(), project.info.clone());
-        let cached_proj = CachedProject { project, ..Default::default() };
-        self.projects.insert(name, cached_proj);
-        Ok(())
-    }
-
-    /**
-    adds project to the database
-    also loads the status.toml
-    */
-    pub fn init_project(&mut self, mut project: Project) -> Result<()>{
-        self.project_handler.read(&mut project)?;
-        let name = project.info.name.clone();
-
-        self.manager.projects.insert(name.clone(), project.info.clone());
-        let cached_proj = CachedProject { project, ..Default::default() };
-        self.projects.insert(name, cached_proj);
-        Ok(())
-    }
-
-    pub fn project_add_subproject<F: Finder>(&mut self, parent: F, child: F) -> Result<()>{
-        let child_name = self.find_project(child)?.name.clone();
-        let parent_name = {
-            let parent_pro = self.find_project_mut(parent)?;
-            parent_pro.sub_projects.push(child_name);
-            parent_pro.name.clone()
-        };
-
-        self.commit_project(parent_name)?;
-        Ok(())
+impl Project {
+    fn new(desc: Description) -> Self{
+        Self {desc, last_worked: None, location: None, parent: None}
     }
 }
 
-impl CachedProject{
-    pub fn get_name(&self) -> &String{ &self.project.info.name }
-    pub fn get_location(&self) -> &Location { &self.project.info.location}
+#[derive(Debug, Default, Clone)]
+struct ProjectTable{
+    desc: Description,
+    last_worked: Option<time::Instant>,
+    location: Option<Location>,
 
-    pub fn new(project: Project) -> Self{
-        let mut nw = Self{
-            project,
-            ..Default::default()
-        };
+    id    : usize,
+    parent: Option<usize>,
+}
 
-        nw.todo = nw.project.status.as_ref().and_then(|x| Some(x.get_todo_difficulty()));
-        nw.done = nw.project.status.as_ref().and_then(|x| Some(x.get_done_difficulty()));
+#[derive(Debug, Default, Clone)]
+struct Pool{
+    tasks: Vec<TaskTable>,
+    projects: Vec<ProjectTable>,
+}
 
-        nw
+#[derive(Debug, )]
+struct ProjectManager<'a>{
+    pool: &'a mut Pool,
+    project_id: usize,
+}
+
+#[derive(Debug, )]
+struct TaskManager<'a>{
+    pool: &'a mut Pool,
+    task_id: usize,
+}
+
+#[derive(Debug, Error)]
+enum PoolError{
+    #[error("project \"{name}\" was not found ")]
+    ProjectNotFound{ name: String }
+}
+
+#[allow(dead_code)]
+impl Pool{
+    pub fn new() -> Self{
+        return Self {
+            tasks: Vec::new(),
+            projects: Vec::new(),
+        }
     }
 
-    pub fn get_completion(&self) -> f64{
-        let todo = self.todo.unwrap_or(0) as f64;
-        let done = self.done.unwrap_or(0) as f64;
-        let total = todo + done;
-        if total == 0.0 { return 0.0; }
-        done / total
+    pub fn new_project(&mut self, desc: Description) -> Result<ProjectManager, PoolError>{
+        let id = self.projects.last().and_then(|s| Some(s.id)).unwrap_or(self.projects.len());
+        let project = ProjectTable{
+            desc, id,
+            parent: None,
+            location: None,
+            last_worked: None,
+        };
+        self.projects.push(project);
+
+        Ok(ProjectManager { pool: self, project_id: id })
+    }
+
+    pub fn new_task(&mut self, desc: Description, done: bool) -> Result<TaskManager, PoolError>{
+        let id = self.tasks.last().and_then(|s| Some(s.id)).unwrap_or(self.tasks.len());
+        let task = TaskTable{
+            desc, id, done,
+            min_time: Duration::from_secs(60 * 60),
+            parent_task: None,
+            project: None,
+        };
+        self.tasks.push(task);
+
+        Ok(TaskManager{ pool: self, task_id: id })
+    }
+
+    fn search_project_id(&mut self, name: String) -> Result<usize, PoolError>{
+        return self.projects
+            .iter()
+            .find(|p| p.desc.name == name)
+            .and_then(|p| Some(p.id))
+            .ok_or(PoolError::ProjectNotFound { name });
+    }
+
+    pub fn search_project(&mut self, name: String) -> Result<ProjectManager, PoolError>{
+        let project_id = self.search_project_id(name)?;
+        Ok(ProjectManager { pool: self, project_id })
+    }
+}
+
+#[allow(dead_code)]
+impl<'a> ProjectManager<'a> {
+    pub fn set_parent(&mut self, name: String) -> Result<(), PoolError>{
+        let project_id = self.pool.search_project_id(name)?;
+        self.pool.projects[self.project_id].parent = Some(project_id);
+        Ok(())
+    }
+
+    pub fn set_description(&mut self, desc: String) -> Result<(), PoolError>{
+        self.pool.projects[self.project_id].desc.description = desc;
+        Ok(())
     }
 }
