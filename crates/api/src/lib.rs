@@ -1,53 +1,66 @@
-use std::{collections::HashMap, path::PathBuf, time::{self, Duration}};
+pub mod project;
+pub mod task;
 
+use std::{path::PathBuf, time::{self, Duration}};
+
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-#[derive(Debug, Default, Clone)]
-struct Description {
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct Description {
     name       : String,
     description: String,
     priority   : f64,
     difficulty : f64,
-    due_date   : Option<time::Instant>,
 
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    due_date   : Option<String>,
+
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     tags       : Vec<String>,
 }
 
-#[derive(Debug, Default, Clone)]
-struct TaskTable{
-    desc: Description,
-    done: bool,
 
-    // minimun time needed to perform the task
-    min_time   : time::Duration,
-
-    id : usize,
-    parent_task: Option<usize>,
-    project    : Option<usize>,
-}
-
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 enum Location{
     Path(PathBuf),
     Git(String),
 }
 
 #[derive(Debug, Default, Clone)]
-struct Project{
+pub struct Project{
     desc: Description,
     last_worked: Option<time::Instant>,
     location: Option<Location>,
-    parent: Option<usize>,
+    parent: Option<String>,
 }
 
+#[allow(dead_code)]
 impl Project {
     fn new(desc: Description) -> Self{
         Self {desc, last_worked: None, location: None, parent: None}
     }
+
+    fn location(mut self, location: Location) -> Self {
+        self.location = Some(location);
+        return self;
+    }
+
+    fn parent(mut self, parent: String) -> Self {
+        self.parent = Some(parent);
+        return self;
+    }
+    
+    fn last_worked(mut self, last_worked: time::Instant) -> Self {
+        self.last_worked = Some(last_worked);
+        return self;
+    }
 }
 
 #[derive(Debug, Default, Clone)]
-struct ProjectTable{
+pub struct ProjectTable{
     desc: Description,
     last_worked: Option<time::Instant>,
     location: Option<Location>,
@@ -56,28 +69,33 @@ struct ProjectTable{
     parent: Option<usize>,
 }
 
+use crate::task::TaskTable;
+
 #[derive(Debug, Default, Clone)]
-struct Pool{
+pub struct Pool{
     tasks: Vec<TaskTable>,
     projects: Vec<ProjectTable>,
 }
 
 #[derive(Debug, )]
-struct ProjectManager<'a>{
+pub struct ProjectManager<'a>{
     pool: &'a mut Pool,
     project_id: usize,
 }
 
 #[derive(Debug, )]
-struct TaskManager<'a>{
+pub struct TaskManager<'a>{
     pool: &'a mut Pool,
     task_id: usize,
 }
 
 #[derive(Debug, Error)]
-enum PoolError{
+pub enum PoolError{
     #[error("project \"{name}\" was not found ")]
-    ProjectNotFound{ name: String }
+    ProjectNotFound{ name: String },
+
+    #[error("task \"{name}\" was not found ")]
+    TaskNotFound{ name: String },
 }
 
 #[allow(dead_code)]
@@ -89,26 +107,29 @@ impl Pool{
         }
     }
 
-    pub fn new_project(&mut self, desc: Description) -> Result<ProjectManager, PoolError>{
+    pub fn new_project(&mut self, proj: Project) -> Result<ProjectManager, PoolError>{
         let id = self.projects.last().and_then(|s| Some(s.id)).unwrap_or(self.projects.len());
         let project = ProjectTable{
-            desc, id,
-            parent: None,
-            location: None,
-            last_worked: None,
+            desc: proj.desc,
+            parent: proj.parent.and_then(|p| self.search_project_id(p).ok() ),
+            location: proj.location,
+            last_worked: proj.last_worked,
+            id,
         };
         self.projects.push(project);
 
         Ok(ProjectManager { pool: self, project_id: id })
     }
 
-    pub fn new_task(&mut self, desc: Description, done: bool) -> Result<TaskManager, PoolError>{
+    pub fn new_task(&mut self, task: Task) -> Result<TaskManager, PoolError>{
         let id = self.tasks.last().and_then(|s| Some(s.id)).unwrap_or(self.tasks.len());
         let task = TaskTable{
-            desc, id, done,
-            min_time: Duration::from_secs(60 * 60),
-            parent_task: None,
-            project: None,
+            desc: task.desc,
+            done: task.done,
+            min_time: task.min_time,
+            parent_task: task.parent_task.and_then(|p| self.search_task_id(p).ok()),
+            project: task.project.and_then(|p| self.search_project_id(p).ok()),
+            id,
         };
         self.tasks.push(task);
 
@@ -123,9 +144,22 @@ impl Pool{
             .ok_or(PoolError::ProjectNotFound { name });
     }
 
+    fn search_task_id(&mut self, name: String) -> Result<usize, PoolError>{
+        return self.tasks
+            .iter()
+            .find(|p| p.desc.name == name)
+            .and_then(|p| Some(p.id))
+            .ok_or(PoolError::TaskNotFound { name });
+    }
+
     pub fn search_project(&mut self, name: String) -> Result<ProjectManager, PoolError>{
         let project_id = self.search_project_id(name)?;
         Ok(ProjectManager { pool: self, project_id })
+    }
+
+    pub fn search_task(&mut self, name: String) -> Result<TaskManager, PoolError>{
+        let task_id = self.search_project_id(name)?;
+        Ok(TaskManager { pool: self, task_id })
     }
 }
 
