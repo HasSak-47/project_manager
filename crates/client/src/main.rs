@@ -4,11 +4,9 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 use std::{fs::File, io::{BufReader, BufWriter, Read, Write}, path::{Path, PathBuf}};
 use cli::cli;
-use anyhow::{Result};
+use anyhow::Result;
 use project_manager_api::{
-    Location,
-    project,
-    manager,
+    Pool,
 };
 
 
