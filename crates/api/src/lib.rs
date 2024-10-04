@@ -4,6 +4,7 @@ pub mod task;
 use std::{path::PathBuf, time::{self, Duration}};
 
 use serde::{Deserialize, Serialize};
+use task::Task;
 use thiserror::Error;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -122,18 +123,8 @@ impl Pool{
     }
 
     pub fn new_task(&mut self, task: Task) -> Result<TaskManager, PoolError>{
-        let id = self.tasks.last().and_then(|s| Some(s.id)).unwrap_or(self.tasks.len());
-        let task = TaskTable{
-            desc: task.desc,
-            done: task.done,
-            min_time: task.min_time,
-            parent_task: task.parent_task.and_then(|p| self.search_task_id(p).ok()),
-            project: task.project.and_then(|p| self.search_project_id(p).ok()),
-            id,
-        };
-        self.tasks.push(task);
-
-        Ok(TaskManager{ pool: self, task_id: id })
+        todo!("do this well mate");
+        Ok(TaskManager{ pool: self, task_id: 0 })
     }
 
     fn search_project_id(&mut self, name: String) -> Result<usize, PoolError>{
