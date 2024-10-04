@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 pub mod project;
 pub mod task;
 
@@ -108,26 +109,21 @@ impl Pool{
         }
     }
 
-    pub fn new_project(&mut self, proj: Project) -> Result<ProjectManager, PoolError>{
-        let id = self.projects.last().and_then(|s| Some(s.id)).unwrap_or(self.projects.len());
-        let project = ProjectTable{
-            desc: proj.desc,
-            parent: proj.parent.and_then(|p| self.search_project_id(p).ok() ),
-            location: proj.location,
-            last_worked: proj.last_worked,
-            id,
-        };
-        self.projects.push(project);
-
-        Ok(ProjectManager { pool: self, project_id: id })
+    pub fn new_project(&mut self, project: Project) -> Result<ProjectManager, PoolError>{
+        let entry = ProjectTable::from_project(project, self);
+        let project_id = entry.id;
+        self.projects.push(entry);
+        return Ok(ProjectManager{ pool: self, project_id });
     }
 
     pub fn new_task(&mut self, task: Task) -> Result<TaskManager, PoolError>{
-        todo!("do this well mate");
-        Ok(TaskManager{ pool: self, task_id: 0 })
+        let table_entry = TaskTable::from_task(task, self);
+        let id = table_entry.id;
+        self.tasks.push(table_entry);
+        Ok(TaskManager{ pool: self, task_id: id })
     }
 
-    fn search_project_id(&mut self, name: String) -> Result<usize, PoolError>{
+    fn search_project_id(&self, name: String) -> Result<usize, PoolError>{
         return self.projects
             .iter()
             .find(|p| p.desc.name == name)
@@ -135,11 +131,11 @@ impl Pool{
             .ok_or(PoolError::ProjectNotFound { name });
     }
 
-    fn search_task_id(&mut self, name: String) -> Result<usize, PoolError>{
+    fn search_task_id(&self, name: String) -> Result<usize, PoolError>{
         return self.tasks
             .iter()
-            .find(|p| p.desc.name == name)
-            .and_then(|p| Some(p.id))
+            .find(|t| t.desc.name == name)
+            .and_then(|t| Some(t.id))
             .ok_or(PoolError::TaskNotFound { name });
     }
 
@@ -149,13 +145,16 @@ impl Pool{
     }
 
     pub fn search_task(&mut self, name: String) -> Result<TaskManager, PoolError>{
-        let task_id = self.search_project_id(name)?;
-        Ok(TaskManager { pool: self, task_id })
+        let task_id = self.search_task_id(name)?;
+        Ok(TaskManager { pool: self, task_id})
     }
 }
 
 #[allow(dead_code)]
 impl<'a> ProjectManager<'a> {
+    pub fn get_table_mut(&mut self) -> &mut ProjectTable{
+        return &mut self.pool.projects[self.project_id];
+    }
     pub fn set_parent(&mut self, name: String) -> Result<(), PoolError>{
         let project_id = self.pool.search_project_id(name)?;
         self.pool.projects[self.project_id].parent = Some(project_id);
