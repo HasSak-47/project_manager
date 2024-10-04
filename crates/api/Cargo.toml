@@ -1,11 +1,14 @@
 [package]
 name    = "project_manager_api"
-version = "0.4.1"
+version = "0.5.1"
 edition = "2021"
 
 [dependencies]
 anyhow = "1.0.79"
 thiserror = "1.0.57"
+
+[dependencies.ly]
+path = "../../../ly-rlib"
 
 [dependencies.serde]
 version  = "1.0"
