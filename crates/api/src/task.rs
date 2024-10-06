@@ -25,8 +25,8 @@ pub struct TaskTable{
 impl TaskTable {
     pub(crate) fn from_task(task: Task, pool: &Pool)-> Self{
         let id = pool.tasks.last().and_then(|s| Some(s.id)).unwrap_or(pool.tasks.len());
-        let parent_task = task.parent_task.and_then(|p| pool.search_task_id(p).ok() );
-        let project = task.project.and_then(|p| pool.search_project_id(p).ok() );
+        let parent_task = if !task.parent_task.is_empty() { pool.search_task_id(task.parent_task).ok() } else { None };
+        let project = if !task.project.is_empty() { pool.search_task_id(task.project).ok() } else { None };
 
         return Self{
             desc: task.desc,
