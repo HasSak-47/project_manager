@@ -15,8 +15,8 @@ pub struct Description {
     difficulty : f64,
 
     #[serde(default)]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    due_date   : Option<String>,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    due_date   : String,
 
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
