@@ -9,6 +9,7 @@ use crate::*;
 #[derive(Debug, Default, Clone)]
 pub struct ProjectTable{
     pub(crate) desc: Description,
+    // pass to SystemTime
     pub(crate) last_worked: Option<time::Instant>,
     pub(crate) location: Option<Location>,
 
@@ -24,7 +25,7 @@ impl ProjectTable {
         let parent = if project.parent.is_empty() {
             None
         }else{
-            pool.search_project_id(project.parent).ok()
+            pool.search_project_id(&project.parent).ok()
         };
         return ProjectTable{
             desc: project.desc,
@@ -37,9 +38,11 @@ impl ProjectTable {
     pub fn from_project_result(project: Project, pool: &Pool) -> Result<Self, PoolError>{
         let id = pool.projects.last().and_then(|s| Some(s.id)).unwrap_or(pool.projects.len());
         let parent = if !project.parent.is_empty() {
-            Some(pool.search_project_id(project.parent)?)
+            Some(pool.search_project_id(&project.parent)?)
         }
-        else { None };
+        else {
+            None
+        };
         return Ok(ProjectTable{
             desc: project.desc,
             location: project.location,
