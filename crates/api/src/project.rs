@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use super::Location;
 use ly::proc::builder;
 use serde::{Deserialize, Serialize};
@@ -10,7 +12,8 @@ pub struct ProjectTable{
     pub(crate) last_worked: Option<time::Instant>,
     pub(crate) location: Option<Location>,
 
-    pub(crate) id    : usize,
+    #[builder_skip]
+    pub(crate) id: usize,
     #[builder(ty = String)]
     pub(crate) parent: Option<usize>,
 }
