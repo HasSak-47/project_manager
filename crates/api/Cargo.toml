@@ -8,7 +8,8 @@ anyhow = "1.0.79"
 thiserror = "1.0.57"
 
 [dependencies.ly]
-path = "../../../ly-rlib"
+git = "https://github.com/HasSak-47/ly-rustlib"
+branch = "stable"
 
 [dependencies.serde]
 version  = "1.0"
