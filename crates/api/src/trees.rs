@@ -69,14 +69,10 @@ impl ProjectTree {
         let mut projects = Vec::new();
         let mut tasks = Vec::new();
 
-        let last_worked = if self.last_worked.is_empty(){ None }
-        else{
-            Some(Instant::now())
-        };
         projects.push(Project::new()
             .parent(parent)
             .desc(self.desc.clone())
-            .last_worked(last_worked)
+            .last_worked(self.last_worked)
             .location(self.location.clone())
         );
         for task in self.tasks{
@@ -89,7 +85,6 @@ impl ProjectTree {
             projects.append(&mut cp);
             tasks.append(&mut cv);
         }
-        
         return (projects, tasks);
     }
 
