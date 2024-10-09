@@ -1,19 +1,22 @@
 use std::error::Error;
 
 use super::Location;
+use chrono::Timelike;
 use ly::proc::builder;
 use serde::{Deserialize, Serialize};
 use crate::*;
 
-#[builder(name = Project)]
+
+#[builder(name = Project, pass = derive(Debug))]
 #[derive(Debug, Default, Clone)]
 pub struct ProjectTable{
     pub(crate) desc: Description,
-    // pass to SystemTime
-    pub(crate) last_worked: Option<time::Instant>,
+
+    #[builder(ty=String)]
+    pub(crate) last_worked: Option<Timestamp>,
     pub(crate) location: Option<Location>,
 
-    #[builder_skip]
+    #[builder(skip)]
     pub(crate) id: usize,
     #[builder(ty = String)]
     pub(crate) parent: Option<usize>,
@@ -30,7 +33,9 @@ impl ProjectTable {
         return ProjectTable{
             desc: project.desc,
             location: project.location,
-            last_worked: project.last_worked,
+            last_worked: Some(chrono::DateTime::parse_from_str(&project.last_worked, "")
+                .and_then(|d| Ok( SystemTime::UNIX_EPOCH + Duration::from_secs( d.second() as u64 ) ))
+                .unwrap_or(Timestamp::now())),
             parent, id,
         };
     }
@@ -46,7 +51,10 @@ impl ProjectTable {
         return Ok(ProjectTable{
             desc: project.desc,
             location: project.location,
-            last_worked: project.last_worked,
+            last_worked: Some(chrono::DateTime::parse_from_str(&project.last_worked, "")
+                .and_then(|d| Ok( SystemTime::UNIX_EPOCH + Duration::from_secs( d.second() as u64 ) ))
+                .map_err(PoolError::from_error)?
+            ),
             parent, id,
         });
     }
