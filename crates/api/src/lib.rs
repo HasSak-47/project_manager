@@ -3,35 +3,19 @@ pub mod task;
 pub mod trees;
 pub mod desc;
 
-use std::{path::PathBuf, time::{self, Duration, SystemTime}};
+use std::{marker::PhantomData, path::PathBuf, time::{self, Duration, SystemTime}};
+
+use crate::task::*;
+use crate::project::*;
+use crate::desc::*;
 
 use serde::{Deserialize, Serialize};
 use task::{Task, TaskTable};
 use thiserror::Error;
 use trees::ProjectTree;
 use ly::log::prelude::*;
-use ly::macro_log;
 
 type Timestamp = SystemTime;
-
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
-pub struct Description {
-    name       : String,
-    #[serde(default)]
-    #[serde(skip_serializing_if = "String::is_empty")]
-    description: String,
-    priority   : f64,
-    difficulty : f64,
-
-    #[serde(default)]
-    #[serde(skip_serializing_if = "String::is_empty")]
-    due_date   : String,
-
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    tags       : Vec<String>,
-}
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Location{
@@ -39,8 +23,12 @@ pub enum Location{
     Git(String),
 }
 
-use crate::task::*;
-use crate::project::*;
+#[derive(Debug, )]
+pub struct Manager<'a, T>{
+    pool: &'a mut Pool,
+    id: usize,
+    t: PhantomData<T>,
+}
 
 #[derive(Debug, Default, Clone)]
 pub struct Pool{
@@ -48,17 +36,14 @@ pub struct Pool{
     projects: Vec<ProjectTable>,
 }
 
-#[derive(Debug, )]
-pub struct ProjectManager<'a>{
-    pool: &'a mut Pool,
-    project_id: usize,
+impl<'a, T> Manager<'a, T> {
+    fn new(id: usize, pool: &'a mut Pool) -> Self{
+        Self {id, pool, t: PhantomData}
+    }
 }
 
-#[derive(Debug, )]
-pub struct TaskManager<'a>{
-    pool: &'a mut Pool,
-    task_id: usize,
-}
+pub type ProjectManager<'a> = Manager<'a, ProjectTable>;
+pub type TaskManager<'a> = Manager<'a, TaskTable>;
 
 #[derive(Debug, Error)]
 pub enum PoolError{
@@ -76,6 +61,9 @@ pub enum PoolError{
 
     #[error("{other}")]
     Other{other: String},
+
+    #[error("unknown")]
+    Unknown,
 }
 
 impl PoolError{
@@ -94,18 +82,18 @@ impl Pool{
     }
 
     pub fn new_project(&mut self, project: Project) -> Result<ProjectManager, PoolError>{
-        let entry = ProjectTable::from_project(project, self);
-        let project_id = entry.id;
+        let entry = ProjectTable::from_project(project, self)?;
+        let id = entry.id;
         self.projects.push(entry);
 
-        return Ok(ProjectManager{ pool: self, project_id });
+        Ok(Manager::new(id, self))
     }
 
     pub fn new_task(&mut self, task: Task) -> Result<TaskManager, PoolError>{
-        let table_entry = TaskTable::from_task(task, self);
+        let table_entry = TaskTable::from_task(task, self)?;
         let id = table_entry.id;
         self.tasks.push(table_entry);
-        Ok(TaskManager{ pool: self, task_id: id })
+        Ok(Manager::new(id, self))
     }
 
     fn search_project_id(&self, name: &String) -> Result<usize, PoolError>{
@@ -131,30 +119,26 @@ impl Pool{
     }
 
     pub fn search_project(&mut self, name: &String) -> Result<ProjectManager, PoolError>{
-        let project_id = self.search_project_id(name)?;
-        Ok(ProjectManager { pool: self, project_id })
+        let id = self.search_project_id(name)?;
+        Ok(Manager::new( id, self))
     }
 
     pub fn search_task(&mut self, name: &String, project: &String) -> Result<TaskManager, PoolError>{
-        let task_id = self.search_task_id(name, project)?;
-        Ok(TaskManager { pool: self, task_id})
+        let id = self.search_task_id(name, project)?;
+        Ok(Manager::new( id, self))
     }
     
-    pub fn load() -> Result<Self, PoolError>{
-        return Err(PoolError::LoadingError);
-    }
-
     pub fn add_project_tree(&mut self, tree: ProjectTree) -> Result<(), PoolError>{
         let (projects, tasks) = tree.flatten();
         if projects.is_empty(){
             return Err(PoolError::PassedEmptyProject);
         }
         for project in projects{
-            let project = ProjectTable::from_project_result(project, self)?;
+            let project = ProjectTable::from_project(project, self)?;
             self.projects.push(project);
         }
         for task in tasks{
-            let task = TaskTable::from_task_result(task, self)?;
+            let task = TaskTable::from_task(task, self)?;
             self.tasks.push(task);
         }
         return Ok(());
@@ -164,16 +148,16 @@ impl Pool{
 #[allow(dead_code)]
 impl<'a> ProjectManager<'a> {
     pub fn get_table_mut(&mut self) -> &mut ProjectTable{
-        return &mut self.pool.projects[self.project_id];
+        return &mut self.pool.projects[self.id];
     }
     pub fn set_parent(&mut self, name: String) -> Result<(), PoolError>{
         let project_id = self.pool.search_project_id(&name)?;
-        self.pool.projects[self.project_id].parent = Some(project_id);
+        self.pool.projects[self.id].parent = Some(project_id);
         Ok(())
     }
 
     pub fn set_description(&mut self, desc: String) -> Result<(), PoolError>{
-        self.pool.projects[self.project_id].desc.description = desc;
+        self.pool.projects[self.id].desc.description = desc;
         Ok(())
     }
 }
