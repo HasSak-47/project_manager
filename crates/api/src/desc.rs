@@ -1,8 +1,9 @@
-use std::time::SystemTime;
 use ly::proc::builder;
 use serde::{Deserialize, Serialize};
 
-
+use crate::Database;
+use crate::Result;
+use crate::DatabaseError;
 
 #[builder(name = Descriptor, pass = derive(Debug, Default, Clone, Serialize, Deserialize))]
 #[derive(Debug, Default, Clone)]
@@ -24,8 +25,6 @@ pub struct Description{
     pub(crate) tags       : Vec<String>,
 }
 
-use crate::{Pool, PoolError};
-
 #[derive(Debug, Default, Clone, Copy)]
 pub struct TagTask{
     tag: usize,
@@ -39,7 +38,7 @@ pub struct TagProject{
 }
 
 impl Description {
-    pub fn from_descriptor(des: Descriptor, pool: &Pool) -> Result<Self, PoolError>{
-        return Err(PoolError::Unknown);
+    pub fn from_descriptor(des: Descriptor, db: &Database) -> Result<Self>{
+        return Err(DatabaseError::Unknown);
     }
 }
