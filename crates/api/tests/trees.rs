@@ -13,6 +13,7 @@ fn test_tree_serde() -> Result<()>{
     let ansi = ANSI::new();
     log::set_logger(ansi);
     log::set_level(log::Level::Log);
+
     let tree : ProjectTree = serde_json::from_str(TEST_TREE)?;
     let mut pool = Pool::new();
     pool.add_project_tree(tree);
