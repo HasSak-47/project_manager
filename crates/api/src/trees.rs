@@ -1,11 +1,11 @@
 use std::time::{Duration, Instant};
 use serde::{Deserialize, Serialize};
-use crate::{project::Project, task::Task, Description, Location};
+use crate::{project::Project, task::Task, desc::{Description, Descriptor}, Location, PoolError};
 
 // how at worst tasks and projects will look like
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct TaskTree{
-    pub desc: Description,
+    pub desc: Descriptor,
     pub done: bool,
 
     // minimun time needed to perform the task min_time   : time::Duration,
@@ -19,7 +19,7 @@ pub struct TaskTree{
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct ProjectTree{
-    pub desc: Description,
+    pub desc: Descriptor,
 
     #[serde(default)]
     #[serde(skip_serializing_if = "String::is_empty")]
@@ -65,13 +65,14 @@ impl TaskTree{
     }
 }
 impl ProjectTree {
-    fn _flatten(self, parent: String) -> (Vec<Project>, Vec<Task>){
+    fn _flatten(self, parent: String) -> Result<(Vec<Project>, Vec<Task>), PoolError>{
         let mut projects = Vec::new();
         let mut tasks = Vec::new();
+        let name = self.desc.name.clone();
 
         projects.push(Project::new()
             .parent(parent)
-            .desc(self.desc.clone())
+            .desc(self.desc)
             .last_worked(self.last_worked)
             .location(self.location.clone())
         );
@@ -81,14 +82,14 @@ impl ProjectTree {
         }
 
         for child in self.childs{
-            let (mut cp, mut cv) = child._flatten(self.desc.name.clone());
+            let (mut cp, mut cv) = child._flatten(name.clone())?;
             projects.append(&mut cp);
             tasks.append(&mut cv);
         }
-        return (projects, tasks);
+        return Ok((projects, tasks));
     }
 
-    pub fn flatten(self) -> (Vec<Project>, Vec<Task>){
+    pub fn flatten(self) -> Result<(Vec<Project>, Vec<Task>), PoolError>{
         return self._flatten(String::new());
     }
 }
