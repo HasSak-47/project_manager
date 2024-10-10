@@ -10,9 +10,9 @@ pub struct Description{
     pub(crate) name       : String,
     #[builder(pass = serde(default))]
     #[builder(pass = serde(skip_serializing_if = "String::is_empty"))]
-    pub(crate) escription: String,
-    pub(crate) riority   : f64,
-    pub(crate) ifficulty : f64,
+    pub(crate) description: String,
+    pub(crate) priority   : f64,
+    pub(crate) difficulty : f64,
 
     #[builder(pass = serde(default))]
     #[builder(pass = serde(skip_serializing_if = "String::is_empty"))]
@@ -26,13 +26,7 @@ pub struct Description{
 
 use crate::{Pool, PoolError};
 
-impl Description {
-    pub fn from_descriptor(des: Descriptor, pool: &Pool) -> Result<Self, PoolError>{
-        return Err(PoolError::Unknown);
-    }
-}
-
-
+#[derive(Debug, Default, Clone, Copy)]
 pub struct TagTask{
     tag: usize,
     task: usize,
@@ -42,4 +36,10 @@ pub struct TagTask{
 pub struct TagProject{
     tag: usize,
     proj: usize,
+}
+
+impl Description {
+    pub fn from_descriptor(des: Descriptor, pool: &Pool) -> Result<Self, PoolError>{
+        return Err(PoolError::Unknown);
+    }
 }
