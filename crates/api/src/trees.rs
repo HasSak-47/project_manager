@@ -1,6 +1,6 @@
 use std::time::{Duration, Instant};
 use serde::{Deserialize, Serialize};
-use crate::{project::Project, task::Task, desc::{Description, Descriptor}, Location, PoolError};
+use crate::{project::Project, task::Task, desc::{Description, Descriptor}, Location, Result};
 
 // how at worst tasks and projects will look like
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -65,7 +65,7 @@ impl TaskTree{
     }
 }
 impl ProjectTree {
-    fn _flatten(self, parent: String) -> Result<(Vec<Project>, Vec<Task>), PoolError>{
+    fn _flatten(self, parent: String) -> Result<(Vec<Project>, Vec<Task>)>{
         let mut projects = Vec::new();
         let mut tasks = Vec::new();
         let name = self.desc.name.clone();
@@ -89,7 +89,7 @@ impl ProjectTree {
         return Ok((projects, tasks));
     }
 
-    pub fn flatten(self) -> Result<(Vec<Project>, Vec<Task>), PoolError>{
+    pub fn flatten(self) -> Result<(Vec<Project>, Vec<Task>)>{
         return self._flatten(String::new());
     }
 }
