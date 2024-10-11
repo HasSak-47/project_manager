@@ -27,29 +27,3 @@ pub struct TaskTable{
     pub(crate) id : usize,
 }
 
-impl TaskTable {
-    pub(crate) fn from_task(task: Task, db: &Database)-> Result<Self> {
-        let id = db.search_entry_id(&task)?;
-
-        let parent_task = if !task.parent_task.is_empty() {
-            Some(db.search_entry_id(&task.parent_task)?)
-        }
-        else {
-            None
-        };
-
-        let project = if !task.project.is_empty() {
-            Some(db.search_entry_id(&task.project)?)
-        }
-        else {
-            None
-        };
-
-        return Ok(Self{
-            desc: Description::from_descriptor( task.desc, db )?,
-            done: task.done,
-            min_time: task.min_time,
-            id, parent_task, project,
-        });
-    }
-}
