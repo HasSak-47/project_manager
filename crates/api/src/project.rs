@@ -1,5 +1,4 @@
 use super::Location;
-use chrono::Timelike;
 use ly::proc::builder;
 use serde::{Deserialize, Serialize};
 use crate::*;
@@ -14,6 +13,9 @@ pub struct ProjectTable{
 
     #[builder(ty=String)]
     pub(crate) last_worked: Option<Timestamp>,
+
+    #[builder(init = Location::Other)]
+    #[builder(pass = serde(default = "Location::default"))]
     pub(crate) location: Location,
 
     #[builder(skip)]
@@ -21,6 +23,5 @@ pub struct ProjectTable{
     #[builder(ty = String)]
     pub(crate) parent: Option<usize>,
 }
-
 
 use crate::Result;
