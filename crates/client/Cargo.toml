@@ -12,6 +12,9 @@ thiserror = "1.0.57"
 project_manager_api = {path = "../api"}
 libc = "0.2.153"
 
+[dependencies.ly]
+path = "../../../ly-rlib"
+
 [dependencies.clap]
 version  = "4.0"
 features = ["derive"]
