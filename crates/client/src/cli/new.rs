@@ -4,7 +4,7 @@ use super::Arguments;
 use clap::Args;
 
 use anyhow::Result;
-use project_manager_api::{project::{Project, ProjectStatus}, Handler, Location};
+use project_manager_api::{desc::Descriptor, project::Project, Database, Location};
 
 use crate::VERSION;
 
@@ -21,20 +21,16 @@ pub struct NewStruct{
 }
 
 impl NewStruct{
-    pub fn run(self, _args: Arguments, mut handler: Handler) -> Result<()> {
-        let name = self.name;
+    pub fn run(self, _args: Arguments, mut db: Database) -> Result<()> {
         let path = self.path.unwrap_or(current_dir().unwrap());
+        let p = Project::new()
+            .desc(Descriptor::new()
+                  .name(self.name)
+                  .version(self.version))
+            .location(Location::Path(path));
 
-        let mut project = Project::default();
-        project.info.name = name.clone();
-        project.info.location = Location::Path(path);
-        project.status = Some(Box::new(
-            ProjectStatus::new(name.clone(), String::new())
-        ));
 
-        handler.new_project(project).unwrap();
-        handler.commit_project(name).unwrap();
-        handler.commit_manager().unwrap();
+        db.new_project(p)?;
 
         Ok(())
     }
