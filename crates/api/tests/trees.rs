@@ -1,8 +1,8 @@
 use ly::log::{self, write::ANSI};
 use ly::macro_error;
 use ly::macro_log;
-use project_manager_api::{DatabaseBuilder, DatabaseReader, DatabaseWriter};
-use project_manager_api::{trees::ProjectTree, Database};
+use pm_api::project::Project;
+use project_manager_api::{Database, DatabaseBuilder, DatabaseReader, DatabaseWriter};
 use serde;
 use anyhow::Result;
 
@@ -30,12 +30,12 @@ fn test_tree_serde() -> Result<()>{
     log::set_logger(ansi);
     log::set_level(log::Level::Log);
 
-    let tree : ProjectTree = serde_json::from_str(TEST_TREE)?;
+    let tree : Project = serde_json::from_str(TEST_TREE)?;
     let mut pool = DatabaseBuilder::new()
         .set_reader(ReaderWriter{})
         .set_writer(ReaderWriter{})
         .build();
-    pool.add_project_tree(tree)?;
+    pool.add_full_project(tree)?;
 
     Ok(())
 }

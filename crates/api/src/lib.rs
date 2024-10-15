@@ -14,7 +14,6 @@ use ly::{log::prelude::*, proc::builder};
 use project::{Project, ProjectTable};
 use tags::{Tag, TagTable};
 use task::{Task, TaskTable};
-use trees::ProjectTree;
 
 pub type Timestamp = SystemTime;
 
@@ -112,8 +111,8 @@ impl Database{
                 .and_then(|p| Ok(p.id))?, self))
     }
 
-    pub fn build_project_tree(&self) -> Result<ProjectTree>{ Err(DatabaseError::NotImplemented) }
-    pub fn add_project_tree(&mut self, tree: ProjectTree) -> Result<()>{ Err(DatabaseError::NotImplemented) }
+    pub fn build_project(&self) -> Result<Project>{ Err(DatabaseError::NotImplemented) }
+    pub fn add_full_project(&mut self, _: Project) -> Result<()>{ Err(DatabaseError::NotImplemented) }
 
     pub fn load_data(&mut self) -> Result<()>{
         self.projects = self.reader.read_all_projects()?;
