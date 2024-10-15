@@ -37,35 +37,3 @@ pub struct TaskTable{
     tags: Vec<Tag>,
 
 }
-
-impl Task{
-    fn _flatten(self, parent: String) -> Vec<Task>{
-        let mut v = Vec::new();
-
-        v.push(Task::new()
-            .parent(parent).clone()
-            .desc(self.desc.clone())
-            .project(self.project.clone())
-            .done(self.done)
-            .min_time(self.min_time)
-        );
-        for child in self.childs{
-            v.push(Task::new()
-                .parent((&child.desc.name).clone())
-                .project(self.project.clone())
-                .desc(child.desc.clone())
-                .done(child.done)
-                .min_time(child.min_time)
-            );
-
-            let mut c = child._flatten(self.desc.name.clone());
-            v.append(&mut c);
-        }
-        
-        return v;
-    }
-
-    pub fn flatten(self) -> Vec<Task>{
-        return self._flatten(String::new());
-    }
-}
