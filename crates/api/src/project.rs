@@ -10,15 +10,15 @@ pub struct ProjectTable{
     #[builder(ty = Descriptor)]
     pub(crate) desc: Description,
 
+    #[builder(skip)]
+    pub(crate) id: usize,
+
     #[builder(ty=String)]
     pub(crate) last_worked: Option<Timestamp>,
 
     #[builder(init = Location::Other)]
     #[builder(pass = serde(default = "Location::default"))]
     pub(crate) location: Location,
-
-    #[builder(skip)]
-    pub(crate) id: usize,
 
     #[builder(ty = String, init = String::new())]
     #[builder(pass = serde(default = "String::new"))]
