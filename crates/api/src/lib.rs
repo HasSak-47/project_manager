@@ -15,8 +15,6 @@ use project::{Project, ProjectTable};
 use tags::{Tag, TagOtherTable, TagTable};
 use task::{Task, TaskTable};
 
-pub type Timestamp = SystemTime;
-
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub enum Location{
     Path(PathBuf),
@@ -220,6 +218,12 @@ impl Database{
     }
 }
 
+impl Manager<'_, Project>{
+    pub fn get_table(&self) -> &ProjectTable{
+        &self.pool.projects[self.id]
+    }
+}
+
 pub trait DatabaseReader where Self: 'static {
     fn read_all_projects(&self) -> Result<Vec<ProjectTable>>;
     fn read_all_tasks(&self) -> Result<Vec<TaskTable>>;
@@ -238,17 +242,18 @@ pub struct Manager<'a, T>{
     t: PhantomData<T>,
 }
 
+pub struct ManagerMut<'a, T>{
+    pool: &'a mut Database,
+    id: usize,
+    t: PhantomData<T>,
+}
+
 impl<'a, T> Manager<'a, T> {
     fn new(id: usize, pool: &'a Database) -> Self{
         Self {id, pool, t: PhantomData}
     }
 }
 
-pub struct ManagerMut<'a, T>{
-    pool: &'a mut Database,
-    id: usize,
-    t: PhantomData<T>,
-}
 
 impl<'a, T> ManagerMut<'a, T> {
     fn new(id: usize, pool: &'a mut Database) -> Self{

@@ -8,22 +8,22 @@ use crate::desc::{Descriptor, Description};
 #[derive(Debug, Default, Clone)]
 pub struct ProjectTable{
     #[builder(ty = Descriptor)]
-    pub(crate) desc: Description,
+    pub desc: Description,
 
     #[builder(skip)]
-    pub(crate) id: usize,
+    pub id: usize,
 
     #[builder(ty=String)]
-    pub(crate) last_worked: Option<Timestamp>,
+    pub last_worked: Option<chrono::NaiveDate>,
 
     #[builder(init = Location::Other)]
     #[builder(pass = serde(default = "Location::default"))]
-    pub(crate) location: Location,
+    pub location: Location,
 
     #[builder(ty = String, init = String::new())]
     #[builder(pass = serde(default = "String::new"))]
     #[builder(pass = serde(skip_serializing_if = "String::is_empty"))]
-    pub(crate) parent: Option<usize>,
+    pub parent: Option<usize>,
 
     #[builder(skip_table)]
     #[builder(pass = serde(skip_serializing_if = "Vec::is_empty"))]
