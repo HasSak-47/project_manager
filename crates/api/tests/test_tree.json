@@ -2,13 +2,19 @@
     "desc": {
         "name": "root",
         "priority" : 64,
-        "difficulty" : 64,
-        "tags" : ["NOT IMPLEMENTED"]
+        "difficulty" : 64
     },
     "location": "Other",
-    "last_worked": "NOT IMPLEMENTED",
-    "childs" : [
-    ],
+    "last_worked": "15 10 2024",
+    "childs" : [{
+        "desc": {
+            "name": "child",
+            "priority" : 64,
+            "difficulty" : 64
+        },
+        "location": "Other",
+        "last_worked": "15 10 2024"
+    }],
     "tasks" : [
     ]
 }
