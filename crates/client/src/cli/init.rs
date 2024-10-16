@@ -4,7 +4,7 @@ use super::Arguments;
 use clap::Args;
 
 use anyhow::Result;
-use project_manager_api::{desc::Descriptor, project::Project, Database, Location};
+use project_manager_api::{project::Project, Database, Location};
 
 /**
 The project already has a status.toml in it's path
@@ -29,14 +29,10 @@ impl InitStruct{
         let mut buf = String::new();
         file.read_to_string(&mut buf)?;
 
-        let tree: project_manager_api::trees::ProjectTree = toml::from_str(&buf)?;
-        db.build_project_tree();
+        let proj: Project = toml::from_str(&buf)?;
+        proj.location(Location::Path(status_path));
 
-        let project = Project::new()
-            .location(Location::Path(path))
-            .desc(Descriptor::new().name(name));
-
-        db.new_project(project)?;
+        db.add_full_project(proj)?;
         db.write_data()?;
 
         Ok(())
