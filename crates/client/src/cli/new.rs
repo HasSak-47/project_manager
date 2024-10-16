@@ -46,14 +46,11 @@ impl NewStruct{
         let mut file = File::create(&status_path)?;
         let _ = log!("created status file");
         let s = toml::to_string(&p).unwrap();
-        let _ = log!("parsed project data");
 
         file.write(s.as_bytes())?;
 
         db.add_full_project(p)?;
         db.write_data()?;
-
-
 
         Ok(())
     }
