@@ -7,7 +7,7 @@ edition = "2021"
 dirs = "1.0"
 rand = "0.8.5"
 anyhow = "1.0.79"
-toml = "0.4.2"
+toml = "0.8.19"
 thiserror = "1.0.57"
 project_manager_api = {path = "../api"}
 libc = "0.2.153"
