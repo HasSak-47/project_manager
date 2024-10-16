@@ -20,11 +20,12 @@ pub struct TaskTable{
     #[builder(skip)]
     pub(crate) id : usize,
 
-    #[builder(ty = String, init = String::new())]
-    pub(crate) project: Option<usize>,
+
+    #[builder(skip)]
+    pub(crate) parent : Option<usize>,
 
     #[builder(ty = String, init = String::new())]
-    pub(crate) parent : Option<usize>,
+    pub(crate) project: Option<usize>,
 
     #[builder(skip_table)]
     #[builder(pass = serde(skip_serializing_if = "Vec::is_empty"))]
