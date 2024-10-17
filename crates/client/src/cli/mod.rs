@@ -1,7 +1,7 @@
 mod list;
 // mod rename;
 // mod git;
-// mod features;
+mod features;
 // mod delete;
 mod init;
 mod new;
@@ -17,7 +17,7 @@ use clap::{Subcommand, Parser, Args};
 
 use self::{
     // delete::DelStruct,
-    // features::AddFeat,
+    features::AddFeat,
     // git::GitStruct,
     init::InitStruct,
     new::NewStruct,
@@ -59,7 +59,7 @@ enum Tree{
 
     // SetParent(NotDone),
     // SetSubproject(NotDone),
-    // AddFeat(AddFeat),
+    AddFeat(AddFeat),
     // AddSubFeat(NotDone),
 
     // Tui(NotDone),
@@ -101,7 +101,7 @@ pub fn cli(mut db: Database) -> anyhow::Result<()> {
         TR::Init(i) => i.run(args, db)?,
         TR::New(n)  => n.run(args, db)?,
         // TR::Delete(d) => d.run(args, db)?,
-        // TR::AddFeat(f) => f.run(args, db)?,
+        TR::AddFeat(f) => f.run(args, db)?,
         // TR::Git(g) => g.run(args, db)?,
         // TR::MarkFeature(f) => f.run(args, db)?,
         _ => NotDone::default().run(args, db)?,

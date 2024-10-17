@@ -1,31 +1,37 @@
 
-use project_manager_api::{project::{Feature}, Handler};
-use super::{utils::current_project_mut, Arguments};
-use clap::{Args};
+use crate::utils::*;
+use clap::Args;
 
-use anyhow::{Result};
+use anyhow::{anyhow, Result};
+use project_manager_api::{desc::Descriptor, task::Task, Database};
+
+use super::Arguments;
 
 #[derive(Args, Debug, Clone)]
 pub struct AddFeat{
     name: String,
-    priority: u8,
-    difficulty: u8,
+    priority: f64,
+    difficulty: f64,
 
     #[clap(short, default_value = "todo")]
     r#type : String,
 }
 
 impl AddFeat{
-    pub fn run(self, _params: Arguments, mut handler: Handler) -> Result<()> {
-        let feature = Feature::new(self.name, "".to_string(), self.priority, self.difficulty);
-        let status = current_project_mut(&mut handler)?.status.as_mut().unwrap();
-        if self.r#type == "todo"{
-            status.add_todo(feature);
-        }
-        else{
-            status.add_done(feature);
-        }
-        
+    pub fn run(self, _params: Arguments, mut db: Database) -> Result<()> {
+        let project = db.get_all_projects()
+            .iter()
+            .find(|p| p.get_table().desc.name == self.name)
+            .ok_or(anyhow!("could not find project"))?;
+        let table = project.get_table();
+
+        let task = Task::new()
+            .desc(Descriptor::new()
+                .name(self.name)
+                .priority(self.priority)
+                .difficulty(self.difficulty)
+            ).project(table.desc.name.clone());
+
         Ok(())
     }
 }
