@@ -6,7 +6,7 @@ use clap::Args;
 use anyhow::Result;
 use project_manager_api::{desc::Descriptor, project::Project, Database, Location};
 
-use crate::VERSION;
+use crate::{utils::exists, VERSION};
 use ly::log::prelude::*;
 
 #[derive(Args, Debug, Clone)]
@@ -23,15 +23,18 @@ pub struct NewStruct{
 
 impl NewStruct{
     pub fn run(self, _args: Arguments, mut db: Database) -> Result<()> {
-        let path = self.path.unwrap_or(current_dir().unwrap());
+        let mut path = self.path.unwrap_or(current_dir().unwrap());
 
         let _ = log!("creating project at {}", path.display());
 
-        let mut status_path = path.clone();
-        status_path.push("status");
-        status_path.set_extension("toml");
+        path.push("status");
+        path.set_extension("toml");
 
-        let _ = log!("with status at {}", status_path.display());
+        let _ = log!("with status at {}", path.display());
+
+        if exists(&db, path.clone()){
+            return Ok(());
+        }
 
 
         let p = Project::new()
@@ -40,10 +43,10 @@ impl NewStruct{
                   .version(self.version)
                   .edition(self.edition)
             )
-            .location(Location::Path(path));
+            .location(Location::Path(path.clone()));
         let _ = log!("created project {p:?}");
 
-        let mut file = File::create(&status_path)?;
+        let mut file = File::create(&path)?;
         let _ = log!("created status file");
         let s = toml::to_string(&p).unwrap();
 

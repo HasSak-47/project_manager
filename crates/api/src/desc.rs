@@ -88,6 +88,6 @@ pub struct TagProject{
 
 impl Description {
     pub fn from_descriptor(des: Descriptor, db: &Database) -> Result<Self>{
-        return Err(DatabaseError::Unknown);
+        return Err(DatabaseError::other("Could not create Description form Descriptor"));
     }
 }
