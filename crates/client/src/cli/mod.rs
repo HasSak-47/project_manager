@@ -99,7 +99,7 @@ pub fn cli(mut db: Database) -> anyhow::Result<()> {
     match tree{
         TR::List(l) => l.run(args, db)?,
         TR::Init(i) => i.run(args, db)?,
-        TR::New(n) => n.run(args, db)?,
+        TR::New(n)  => n.run(args, db)?,
         // TR::Delete(d) => d.run(args, db)?,
         // TR::AddFeat(f) => f.run(args, db)?,
         // TR::Git(g) => g.run(args, db)?,

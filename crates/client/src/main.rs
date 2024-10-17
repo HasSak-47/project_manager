@@ -1,6 +1,6 @@
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-use std::{cell::RefCell, collections::HashMap, fs::{self, File, OpenOptions}, io::{Read, Write}, path::PathBuf, sync::Arc};
+use std::{cell::RefCell, fs::{self, File, OpenOptions}, io::{Read, Write}, path::PathBuf, sync::Arc};
 
 use cli::cli;
 use anyhow::Result;
@@ -10,17 +10,25 @@ use project_manager_api::{
 };
 
 mod cli;
+mod utils;
 use serde::{Deserialize, Serialize};
 use ly::log::prelude::*;
 
 #[derive(Debug, Default, Serialize, Deserialize)]
+struct Pair{
+    name: String,
+    loc: Location,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
 struct ManagerData{
-    data: HashMap<String, Location>,
+    #[serde(default = "Vec::new")]
+    data: Vec<Pair>,
 }
 
 #[derive(Debug, Clone)]
 struct Manager{
-    arc: Arc< RefCell< ManagerData >>,
+    arc: Arc< RefCell< ManagerData > >,
 }
 
 impl DatabaseReader for Manager{
@@ -28,13 +36,15 @@ impl DatabaseReader for Manager{
     fn read_all_projects(&self) -> DBResult<Vec<ProjectTable>> {
         let projects = &(self.arc.borrow()).data;
         let mut t_db = DatabaseBuilder::new().build();
-        for (_, loc) in projects{
+        for pair in projects{
+            let _name = pair.name.clone();
+            let loc = pair.loc.clone();
             if let Location::Path(p) = loc{
-                let mut file = File::open(&p).map_err(|_| DatabaseError::Unknown)?;
+                let mut file = File::open(&p).map_err(|_| DatabaseError::other("could not open file"))?;
                 let mut buf = String::new();
-                file.read_to_string(&mut buf).map_err(|_| DatabaseError::Unknown)?;
+                file.read_to_string(&mut buf).map_err(|_| DatabaseError::other(format!("could not read file {}", p.display())))?;
 
-                t_db.add_full_project(toml::from_str(&buf).map_err(|_| DatabaseError::Unknown)?)?;
+                t_db.add_full_project(toml::from_str(&buf).map_err(|_| DatabaseError::other("could not parse project"))?)?;
             }
         }
         let k : Vec<_> = t_db
@@ -57,7 +67,9 @@ impl DatabaseWriter for Manager{
         data.data.clear();
 
         for p in p{
-            data.data.insert(p.desc.name.clone(), p.location.clone());
+            let name = p.desc.name.clone();
+            let loc  = p.location.clone();
+            data.data.push(Pair {name, loc});
         }
         let _ = log!("database: {data:?}");
         let mut file = File::create(db_file()).unwrap();
@@ -84,12 +96,10 @@ fn db_file() -> PathBuf{
 }
 
 fn main() -> Result<()>{
-
     ly::log::set_logger(ANSI::new());
     ly::log::set_level(ly::log::Level::Log);
     let _ = log!("logger set to log");
     
-    let mut manager = ManagerData::default();
     let mut path = dirs::data_local_dir().unwrap();
     path.push("project_manager");
 
@@ -103,7 +113,11 @@ fn main() -> Result<()>{
     path.set_extension("toml");
 
     let _ = log!("opening file at {}", path.display());
-    let mut file = OpenOptions::new().read(true).write(true).create(true).open(path)?;
+    let mut file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .open(path)?;
 
     let _ = log!("reading file");
     let mut buf = Vec::new();
@@ -111,7 +125,7 @@ fn main() -> Result<()>{
     let _ = log!("read file");
 
     let buf = String::from_utf8(buf)?;
-    manager.data = toml::from_str(&buf)?;
+    let manager = toml::from_str(&buf)?;
 
     let manager = Manager{
         arc: Arc::new( RefCell::new( manager ) )
@@ -121,8 +135,6 @@ fn main() -> Result<()>{
         .set_writer(manager.clone())
         .set_reader(manager.clone())
         .build();
-
-
 
     cli(db)?;
     Ok(())
