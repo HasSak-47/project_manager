@@ -1,3 +1,4 @@
+#![allow(unused_imports)]
 use ly::log::{self, write::ANSI};
 use ly::macro_error;
 use ly::macro_log;
@@ -21,9 +22,9 @@ impl DatabaseReader for ReaderWriter {
 }
 
 impl DatabaseWriter for ReaderWriter {
-    fn write_all_tags(&mut self, v: &mut Vec<pm_api::tags::TagTable>) -> pm_api::Result<()> { Ok(()) }
-    fn write_all_tasks(&mut self, v: &mut Vec<pm_api::task::TaskTable>) -> pm_api::Result<()> { Ok(()) }
-    fn write_all_projects(&mut self, v: &mut Vec<pm_api::project::ProjectTable>) -> pm_api::Result<()> { Ok(()) }
+    fn write_all_tags(&mut self, _: &mut Vec<pm_api::tags::TagTable>) -> pm_api::Result<()> { Ok(()) }
+    fn write_all_tasks(&mut self, _: &mut Vec<pm_api::task::TaskTable>) -> pm_api::Result<()> { Ok(()) }
+    fn write_all_projects(&mut self, _: &mut Vec<pm_api::project::ProjectTable>) -> pm_api::Result<()> { Ok(()) }
 }
 
 #[test]
@@ -58,7 +59,8 @@ fn test_add_task() -> Result<()>{
     pool.add_full_project(project)?;
 
     let task: Task = serde_json::from_str(TEST_TASK)?;
-    pool.add_full_task(task);
+    println!("{task:?}");
+    pool.add_full_task(task)?;
 
     println!("{pool:?}");
     Ok(())
