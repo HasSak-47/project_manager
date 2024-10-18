@@ -23,7 +23,9 @@ struct Pair{
 #[derive(Debug, Default, Serialize, Deserialize)]
 struct ManagerData{
     #[serde(default = "Vec::new")]
-    data: Vec<Pair>,
+    projects: Vec<Pair>,
+    #[serde(default = "Vec::new")]
+    orphan_tasks: Vec<Task>,
 }
 
 #[derive(Debug, Clone)]
@@ -34,7 +36,7 @@ struct Manager{
 impl DatabaseReader for Manager{
     // hot hot garbage
     fn read_all_projects(&self) -> DBResult<Vec<ProjectTable>> {
-        let projects = &(self.arc.borrow()).data;
+        let projects = &(self.arc.borrow()).projects;
         let mut t_db = DatabaseBuilder::new().build();
         for pair in projects{
             let _name = pair.name.clone();
@@ -58,18 +60,25 @@ impl DatabaseReader for Manager{
         return Ok(k);
     }
 
-    fn read_all_tasks(&self) -> DBResult<Vec<TaskTable>> { Ok(Vec::new()) }
+    fn read_all_tasks(&self) -> DBResult<Vec<TaskTable>> {
+        let mut t_db = DatabaseBuilder::new().build();
+        let tasks = &(self.arc.borrow()).orphan_tasks;
+        for task in tasks{
+            t_db.add_full_task(task.clone())?;
+        }
+        Ok(Vec::new())
+    }
     fn read_all_tags(&self) -> DBResult<Vec<TagTable>> { Ok(Vec::new()) }
 }
 impl DatabaseWriter for Manager{
     fn write_all_projects(&mut self, p: &mut Vec<ProjectTable>) -> DBResult<()> { 
         let data = &mut *(*self.arc).borrow_mut();
-        data.data.clear();
+        data.projects.clear();
 
         for p in p{
             let name = p.desc.name.clone();
             let loc  = p.location.clone();
-            data.data.push(Pair {name, loc});
+            data.projects.push(Pair {name, loc});
         }
         let _ = log!("database: {data:?}");
         let mut file = File::create(db_file()).unwrap();
