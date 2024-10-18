@@ -19,18 +19,18 @@ pub struct AddFeat{
 
 impl AddFeat{
     pub fn run(self, _params: Arguments, mut db: Database) -> Result<()> {
-        let project = db.get_all_projects()
-            .iter()
+        let projects = db.get_all_projects();
+        let project = projects.iter()
             .find(|p| p.get_table().desc.name == self.name)
-            .ok_or(anyhow!("could not find project"))?;
-        let table = project.get_table();
+            .ok_or(anyhow!("could not find project"))?
+            .get_table();
 
         let task = Task::new()
             .desc(Descriptor::new()
                 .name(self.name)
                 .priority(self.priority)
                 .difficulty(self.difficulty)
-            ).project(table.desc.name.clone());
+            ).project(project.desc.name.clone());
 
         Ok(())
     }
