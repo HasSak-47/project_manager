@@ -154,12 +154,13 @@ impl Database{
         entry.parent = pa_id;
         entry.project = pr_id;
         entry.min_time = chrono::TimeDelta::minutes(t.min_time as i64);
-
-        for child in t.childs{
-            self.unravel_tasks(pt, tt, gt, child, Some(entry.id), pr_id)?;
-        }
+        let id = entry.id;
 
         tt.push(entry);
+        for child in t.childs{
+            self.unravel_tasks(pt, tt, gt, child, Some(id), pr_id)?;
+        }
+
         Ok(())
     }
 
@@ -170,20 +171,22 @@ impl Database{
         entry.parent = p_id;
         entry.location = p.location;
 
+        let id = entry.id;
+        pt.push(entry);
+
         for child in p.childs{
-            self.unravel_project(pt, tt, gt, child, Some(entry.id))?;
+            self.unravel_project(pt, tt, gt, child, Some(id))?;
         }
 
         for task in p.tasks{
-            self.unravel_tasks(pt, tt, gt, task, None, Some(entry.id))?;
+            self.unravel_tasks(pt, tt, gt, task, None, Some(id))?;
         }
-        pt.push(entry);
 
         return Ok(());
     }
 
-    fn project_offset(&self) -> usize { self.projects.last().and_then(|p| Some(p.id)).unwrap_or(self.projects.len()) }
-    fn task_offset(&self) -> usize { self.tasks.last().and_then(|p| Some(p.id)).unwrap_or(self.tasks.len()) }
+    fn project_offset(&self) -> usize { self.projects.last().and_then(|p| Some(p.id + 1)).unwrap_or(self.projects.len()) }
+    fn task_offset(&self) -> usize { self.tasks.last().and_then(|p| Some(p.id + 1)).unwrap_or(self.tasks.len()) }
 
     fn add_buffer(&mut self, pt: &mut Vec<ProjectTable>, tt: &mut Vec<TaskTable>, _: &mut Vec<TagTable>){
         self.projects.append(pt);
@@ -194,15 +197,27 @@ impl Database{
         let mut pt = Vec::new();
         let mut tt = Vec::new();
         let mut gt = Vec::new();
-        let pa_id = self.projects.iter().find(|p| p.desc.name == t.project).and_then(|p| Some(p.id));
 
-        self.unravel_tasks(&mut pt, &mut tt, &mut gt, t, pa_id, None)?;
+        let pa_id = if t.project.is_empty() {
+            None
+        } else {
+            Some(self.projects
+                .iter()
+                .find(|p| p.desc.name == t.project)
+                .and_then(|p| Some(p.id))
+                .ok_or(DatabaseError::NotFound)?
+            )
+        };
+
+        self.unravel_tasks(&mut pt, &mut tt, &mut gt, t, None, pa_id)?;
+
         let offset = self.task_offset();
         for task in &mut tt{
             task.parent.as_mut().and_then(|p| Some(*p += offset));
             task.id += offset;
         }
 
+        self.add_buffer(&mut pt, &mut tt, &mut gt);
         Ok(())
     }
 
