@@ -2,11 +2,13 @@ use ly::log::{self, write::ANSI};
 use ly::macro_error;
 use ly::macro_log;
 use pm_api::project::Project;
+use pm_api::task::Task;
 use project_manager_api::{Database, DatabaseBuilder, DatabaseReader, DatabaseWriter};
 use serde;
 use anyhow::Result;
 
-const TEST_TREE: &str = include_str!("./test_tree.json");
+const TEST_PROJECT: &str = include_str!("./test_project.json");
+const TEST_TASK: &str = include_str!("./test_task.json");
 use ly::log::prelude::*;
 
 struct ReaderWriter{ }
@@ -25,12 +27,12 @@ impl DatabaseWriter for ReaderWriter {
 }
 
 #[test]
-fn test_tree_serde() -> Result<()>{
+fn test_add_project() -> Result<()>{
     let ansi = ANSI::new();
     log::set_logger(ansi);
     log::set_level(log::Level::Log);
 
-    let tree : Project = serde_json::from_str(TEST_TREE)?;
+    let tree : Project = serde_json::from_str(TEST_PROJECT)?;
     let mut pool = DatabaseBuilder::new()
         .set_reader(ReaderWriter{})
         .set_writer(ReaderWriter{})
@@ -38,6 +40,26 @@ fn test_tree_serde() -> Result<()>{
     pool.add_full_project(tree)?;
 
     println!("{pool:?}");
+    Ok(())
+}
 
+#[test]
+fn test_add_task() -> Result<()>{
+    let ansi = ANSI::new();
+    log::set_logger(ansi);
+    log::set_level(log::Level::Log);
+
+    let project : Project = serde_json::from_str(TEST_PROJECT)?;
+    let mut pool = DatabaseBuilder::new()
+        .set_reader(ReaderWriter{})
+        .set_writer(ReaderWriter{})
+        .build();
+
+    pool.add_full_project(project)?;
+
+    let task: Task = serde_json::from_str(TEST_TASK)?;
+    pool.add_full_task(task);
+
+    println!("{pool:?}");
     Ok(())
 }
