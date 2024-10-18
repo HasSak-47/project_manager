@@ -1,4 +1,6 @@
-use std::{env::current_dir, fs::File, io::{BufReader, Read}, path::PathBuf};
+use std::{any::Any, env::current_dir, fs::File, io::{BufReader, Read}, path::PathBuf};
+
+use crate::Manager;
 
 use super::Arguments;
 use clap::Args;
@@ -23,6 +25,9 @@ impl InitStruct{
     pub fn run(self, _args: Arguments, mut db: Database) -> Result<()> {
         let path = self.path.unwrap_or(current_dir().unwrap());
         let _ = log!("path of the new project: {}", path.display());
+
+        let reader = db.get_reader_mut().as_mut();
+        reader = 
 
         let mut status_path = path.clone();
         status_path.push("status");

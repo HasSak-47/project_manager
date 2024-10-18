@@ -216,6 +216,14 @@ impl Database{
             .map(|p| Manager::new(p.id, self))
             .collect()
     }
+
+    pub fn get_writer_mut(&mut self) -> &mut Box<dyn DatabaseWriter>{
+        return &mut self.writer;
+    }
+
+    pub fn get_reader_mut(&mut self) -> &mut Box<dyn DatabaseReader>{
+        return &mut self.reader;
+    }
 }
 
 type ProjectManager<'a> = Manager<'a, Project>;
