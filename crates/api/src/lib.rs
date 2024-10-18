@@ -185,8 +185,18 @@ impl Database{
         return Ok(());
     }
 
-    fn project_offset(&self) -> usize { self.projects.last().and_then(|p| Some(p.id + 1)).unwrap_or(self.projects.len()) }
-    fn task_offset(&self) -> usize { self.tasks.last().and_then(|p| Some(p.id + 1)).unwrap_or(self.tasks.len()) }
+    fn project_offset(&self) -> usize {
+        self.projects
+            .last()
+            .and_then(|p| Some(p.id + 1))
+            .unwrap_or(self.projects.len())
+    }
+    fn task_offset(&self) -> usize {
+        self.tasks
+            .last()
+            .and_then(|p| Some(p.id + 1))
+            .unwrap_or(self.tasks.len())
+    }
 
     fn add_buffer(&mut self, pt: &mut Vec<ProjectTable>, tt: &mut Vec<TaskTable>, _: &mut Vec<TagTable>){
         self.projects.append(pt);
@@ -267,6 +277,13 @@ impl Database{
             .collect()
     }
 
+    pub fn get_all_tasks(&self) -> Vec<TaskManager>{
+        self.projects
+            .iter()
+            .map(|p| Manager::new(p.id, self))
+            .collect()
+    }
+
     pub fn get_writer_mut(&mut self) -> &mut Box<dyn DatabaseWriter>{
         return &mut self.writer;
     }
@@ -279,6 +296,9 @@ impl Database{
 type ProjectManager<'a> = Manager<'a, Project>;
 type ProjectManagerMut<'a> = ManagerMut<'a, Project>;
 
+type TaskManager<'a> = Manager<'a, Task>;
+type TaskManagerMut<'a> = ManagerMut<'a, Task>;
+
 impl<'a> ProjectManager<'a>{
     pub fn name(&self) -> &String{
         &self.get_table().desc.name
@@ -287,9 +307,17 @@ impl<'a> ProjectManager<'a>{
     pub fn location(&self) -> &Location{
         &self.get_table().location
     }
+
+    pub fn get_table(&self) -> &ProjectTable{
+        &self.pool.projects[self.id]
+    }
 }
 
-impl<'a> ProjectManager<'a>{
+impl<'a> TaskManager<'a>{
+    pub fn name(&self) -> &String{
+        &self.get_table().desc.name
+    }
+
     pub fn get_table(&self) -> &ProjectTable{
         &self.pool.projects[self.id]
     }
