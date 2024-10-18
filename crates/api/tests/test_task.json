@@ -8,6 +8,7 @@
     "min_tim": 15,
     "last_worked": "15 10 2024",
     "project": "root",
+    "done": false,
     "childs": [{
         "desc": {
             "name": "child_task",
