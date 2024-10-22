@@ -20,7 +20,6 @@ pub struct TaskTable{
     #[builder(skip)]
     pub(crate) id : usize,
 
-
     #[builder(skip)]
     pub(crate) parent : Option<usize>,
 
@@ -38,4 +37,8 @@ pub struct TaskTable{
     #[builder(pass = serde(default = "Vec::new"))]
     tags: Vec<Tag>,
 
+}
+
+impl TaskTable {
+    
 }

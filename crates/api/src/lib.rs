@@ -108,6 +108,26 @@ struct ProjectTree{
     childs: Vec<ProjectTree>,
 }
 
+#[derive(Debug)]
+struct TaskTree{
+    task: TaskTable,
+    childs: Vec<ProjectTree>,
+}
+
+impl TaskTree{
+    fn new(task: TaskTable) -> Self{ Self {task, childs: Vec::new()} }
+
+    fn into_project(self) -> Task{
+        let mut task = self.task.naive_task();
+        task.childs = self.childs
+            .into_iter()
+            .map(Self::into_project)
+            .collect();
+
+        return task;
+    }
+}
+
 impl ProjectTree{
     fn new(project: ProjectTable) -> Self{ Self {project, childs: Vec::new()} }
 
@@ -305,10 +325,39 @@ impl Database{
             .collect()
     }
 
-    pub fn build_trees(&self) -> Result<Vec<Project>>{
+    pub fn build_task_trees(&self, id: usize) -> Result<Task>{
+        let root = self.tasks.iter().find(|t| t.id == id).ok_or(DatabaseError::NotFound)?;
+        let buffer : Vec<_> = self.tasks.iter().filter(|t| t.id == id).collect();
+
+        fn search_in(table: &TaskTable, v: &mut Vec<TaskTree>) -> bool{
+            for root in v{
+                if root.project.id == table.parent.unwrap(){
+                    root.childs.push(TaskTree::new(table.clone()));
+                    return true;
+                }
+                let found = search_in(table, &mut root.childs);
+                if found {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        buffer.sort_by(|a, b| b.id.cmp(&a.id));
+        while buffer.len() != 0{
+            let top = buffer.pop().unwrap();
+            if !search_in(&top, &mut root) {
+                let error = format!("could not find parent ({}) project for {}", top.parent.unwrap(), top.desc.name);
+                return Err(DatabaseError::other(error));
+            }
+        }
+
+        return Ok(root);
+    }
+
+    pub fn build_project_trees(&self) -> Result<Vec<Project>>{
         let mut buffer = self.projects.clone();
         let mut roots = Vec::new();
-
 
         loop{
             let proj = buffer.iter().enumerate().find(|p| p.1.parent.is_none());
