@@ -347,7 +347,7 @@ impl Database{
         }
 
         return Ok(roots
-                  .into_iter()
+            .into_iter()
             .map(ProjectTree::into_project)
             .collect()
         );
