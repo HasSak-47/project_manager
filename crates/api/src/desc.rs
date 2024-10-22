@@ -15,9 +15,7 @@ fn default_version() -> String{
     return DEFAULT_VERSION.to_string();
 }
 
-const fn default_min_time() -> i64 {
-    30
-}
+const fn default_min_time() -> i64 { 30 }
 
 #[builder(name = Descriptor, pass = derive(Debug, Default, Clone, Serialize, Deserialize))]
 #[derive(Debug, Default, Clone)]
@@ -44,6 +42,7 @@ pub struct Description{
     #[builder(pass = serde(skip_serializing_if = "String::is_empty"))]
     pub due_date   : Option<chrono::NaiveDate>,
     
+    // minimun time in minutes
     #[builder(ty = i64)]
     #[builder(pass = serde(default= "default_min_time"))]
     pub min_time   :chrono::Duration,
@@ -89,5 +88,22 @@ pub struct TagProject{
 impl Description {
     pub fn from_descriptor(des: Descriptor, db: &Database) -> Result<Self>{
         return Err(DatabaseError::other("Could not create Description form Descriptor"));
+    }
+}
+impl Description {
+    pub fn naive_description(self) -> Descriptor{
+        Descriptor {
+            name: self.name,
+            description: self.description,
+            priority: self.priority,
+            difficulty: self.difficulty,
+            version: self.version,
+            edition: self.edition,
+            due_date: self.due_date
+                .and_then(|p| Some(p.format("%d %m %Y").to_string()))
+                .unwrap_or(String::new()),
+            min_time: self.min_time.num_minutes(),
+            tags: Vec::new()
+        }
     }
 }
