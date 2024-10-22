@@ -102,6 +102,27 @@ impl DatabaseBuilder{
     }
 }
 
+#[derive(Debug)]
+struct ProjectTree{
+    project: ProjectTable,
+    childs: Vec<ProjectTree>,
+}
+
+impl ProjectTree{
+    fn new(project: ProjectTable) -> Self{ Self {project, childs: Vec::new()} }
+
+    fn into_project(self) -> Project{
+        let mut project = self.project.naive_project();
+        project.childs = self.childs
+            .into_iter()
+            .map(Self::into_project)
+            .collect();
+
+        return project;
+    }
+}
+
+
 impl Database{
     pub fn search_project_id<P>(&self, p: P) -> Result<usize>
     where
@@ -285,15 +306,51 @@ impl Database{
     }
 
     pub fn build_trees(&self) -> Result<Vec<Project>>{
-        let mut roots = self.projects
-            .iter()
-            .filter(|p| p.parent.is_none());
+        let mut buffer = self.projects.clone();
+        let mut roots = Vec::new();
 
-        for root in &mut roots{
-            let childs = self.projects.iter().filter(|p| p.parent.is_some_and(|k| k == root.id));
+
+        loop{
+            let proj = buffer.iter().enumerate().find(|p| p.1.parent.is_none());
+            if let Some((i, _)) = proj {
+                roots.push(ProjectTree{
+                    project: buffer.remove(i),
+                    childs: Vec::new(),
+                });
+            }
+            else{
+                break;
+            }
         }
 
-        return Err(DatabaseError::NotImplemented);
+        fn search_in(table: &ProjectTable, v: &mut Vec<ProjectTree>) -> bool{
+            for root in v{
+                if root.project.id == table.parent.unwrap(){
+                    root.childs.push(ProjectTree::new(table.clone()));
+                    return true;
+                }
+                let found = search_in(table, &mut root.childs);
+                if found {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        buffer.sort_by(|a, b| b.id.cmp(&a.id));
+        while buffer.len() != 0{
+            let top = buffer.pop().unwrap();
+            if !search_in(&top, &mut roots) {
+                let error = format!("could not find parent ({}) project for {}", top.parent.unwrap(), top.desc.name);
+                return Err(DatabaseError::other(error));
+            }
+        }
+
+        return Ok(roots
+                  .into_iter()
+            .map(ProjectTree::into_project)
+            .collect()
+        );
     }
 
     pub fn get_writer_mut(&mut self) -> &mut Box<dyn DatabaseWriter>{

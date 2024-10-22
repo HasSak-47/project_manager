@@ -65,3 +65,25 @@ fn test_add_task() -> Result<()>{
     println!("{pool:?}");
     Ok(())
 }
+
+#[test]
+fn unfold() -> Result<()>{
+    let ansi = ANSI::new();
+    log::set_logger(ansi);
+    log::set_level(log::Level::Log);
+
+    let project : Project = serde_json::from_str(TEST_PROJECT)?;
+    let mut pool = DatabaseBuilder::new()
+        .set_reader(ReaderWriter{})
+        .set_writer(ReaderWriter{})
+        .build();
+
+    pool.add_full_project(project)?;
+
+    let task: Task = serde_json::from_str(TEST_TASK)?;
+    pool.add_full_task(task)?;
+
+    let trees = pool.build_trees()?;
+
+    Ok(())
+}
