@@ -32,9 +32,9 @@ struct ManagerData{
 struct Manager{
     arc: Arc< RefCell< ManagerData > >,
 }
-
 impl DatabaseReader for Manager{
-    // hot hot garbage
+    // hack: this creates a temporal database then adds all the projects and then copies the
+    // tables and returns them
     fn read_all_projects(&self) -> DBResult<Vec<ProjectTable>> {
         let projects = &(self.arc.borrow()).projects;
         let mut t_db = DatabaseBuilder::new().build();
@@ -75,11 +75,40 @@ impl DatabaseWriter for Manager{
         let data = &mut *(*self.arc).borrow_mut();
         data.projects.clear();
 
-        for p in p{
+        // hack: create temporal database that converts Vec<ProjectTable> into Vec<Project>
+        struct FakeReader{
+            tables: Vec<ProjectTable>,
+        }
+        impl DatabaseReader for FakeReader{
+            fn read_all_projects(&self) -> DBResult<Vec<ProjectTable>> {
+                Ok(self.tables.clone())
+            }
+
+            fn read_all_tags(&self) -> DBResult<Vec<TagTable>> {
+                Ok(Vec::new())
+            }
+            fn read_all_tasks(&self) -> DBResult<Vec<TaskTable>> {
+                Ok(Vec::new())
+            }
+        }
+
+        let fake = FakeReader {tables : p.clone()};
+        let temp_db = DatabaseBuilder::new().set_reader(fake).build();
+
+        let projects = temp_db.build_project_trees()?;
+
+        for p in projects{
             let name = p.desc.name.clone();
             let loc  = p.location.clone();
-            data.projects.push(Pair {name, loc});
+            data.projects.push(Pair {name, loc: loc.clone()});
+            if let Location::Path(path) = loc{
+                let mut file = File::create(&path).map_err(|other| DatabaseError::other(other.to_string()))?;
+                let toml = toml::to_string_pretty(&p).map_err(|other| DatabaseError::other(other.to_string()))?;
+                let _ = log!("toml: {toml}");
+                file.write_all(toml.as_bytes()).map_err(|other| DatabaseError::other(other.to_string()))?;
+            }
         }
+
         let _ = log!("database: {data:?}");
         let mut file = File::create(db_file()).unwrap();
         let tml = toml::to_string(data).unwrap();
@@ -106,8 +135,7 @@ fn db_file() -> PathBuf{
 
 fn main() -> Result<()>{
     ly::log::set_logger(ANSI::new());
-    ly::log::set_level(ly::log::Level::Log);
-    let _ = log!("logger set to log");
+    ly::log::set_level(ly::log::Level::Error);
     
     let mut path = dirs::data_local_dir().unwrap();
     path.push("project_manager");

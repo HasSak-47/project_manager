@@ -31,12 +31,12 @@ impl InitStruct{
         status_path.set_extension("toml");
 
         let _ = log!("path of the status file : {}", status_path.display());
-        let mut file = BufReader::new(File::open(status_path)?);
+        let mut file = BufReader::new(File::open(&status_path)?);
         let mut buf = String::new();
         file.read_to_string(&mut buf)?;
 
         let proj= toml::from_str::<Project>(&buf)?
-            .location(Location::Path(path));
+            .location(Location::Path(status_path));
 
         db.add_full_project(proj)?;
         db.write_data()?;
