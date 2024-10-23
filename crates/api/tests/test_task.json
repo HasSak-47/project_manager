@@ -1,17 +1,16 @@
 {
     "desc": {
-        "name": "root_task",
+        "name": "projectless_root_task",
         "priority" : 64,
         "difficulty" : 64
     },
     "location": "Other",
     "min_time": 15,
     "last_worked": "15 10 2024",
-    "project": "root",
     "done": false,
     "childs": [{
         "desc": {
-            "name": "child_task",
+            "name": "projectless_child_task",
             "priority" : 64,
             "difficulty" : 64
         },
