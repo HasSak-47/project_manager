@@ -1,20 +1,30 @@
 #![allow(unused_imports)]
+use std::fs::File;
+use std::io::{Read, Write};
+
+use project_manager_api as pm_api;
+
 use ly::log::{self, write::ANSI};
 use ly::macro_error;
 use ly::macro_log;
 use pm_api::project::Project;
 use pm_api::task::Task;
+<<<<<<< HEAD
 use project_manager_api::desc::{Description, Descriptor};
 use project_manager_api::{Database, DatabaseBuilder, DatabaseReader, DatabaseWriter};
+=======
+use pm_api::desc::Descriptor;
+use pm_api::{Database, DatabaseBuilder, DatabaseReader, DatabaseWriter};
+use rand::random;
+>>>>>>> dc7eaf5 (tests seems to be fineee)
 use serde;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 
 const TEST_PROJECT: &str = include_str!("./test_project.json");
 const TEST_TASK: &str = include_str!("./test_task.json");
 use ly::log::prelude::*;
 
 struct ReaderWriter{ }
-use project_manager_api as pm_api;
 
 impl DatabaseReader for ReaderWriter {
     fn read_all_tags(&self) -> pm_api::Result<Vec<pm_api::tags::TagTable>> { Ok(Vec::new()) }
@@ -113,4 +123,61 @@ fn stress_test() -> Result<()>{
 
 
     Ok(())
+}
+
+fn proc_task(depth: usize, max: usize) -> Task{
+    let mut task = Task::new().desc(Descriptor::new());
+    let child = rand10() + depth < 2 * max;
+    if child && depth < max{
+        let child_count : usize = rand10();
+        for _ in 0..child_count{
+            task.childs.push(proc_task(depth + 1, max));
+        }
+    }
+
+    return task;
+}
+
+fn proc_project(depth: usize, max: usize) -> Project{
+    let mut project = Project::new().desc(
+        Descriptor::new()
+    );
+    let child = rand10() + depth < 2 * max;
+    if child && depth < max{
+        let child_count : usize = rand10();
+        for _ in 0..child_count{
+            project.childs.push(proc_project(depth + 1, max));
+        }
+    }
+    let task = rand10() + depth < 2 * max;
+    if task && depth < max{
+        let task_count : usize = rand10();
+        for _ in 0..task_count{
+            project.tasks.push(proc_task(depth + 1, max));
+        }
+    }
+
+    return project;
+}
+
+#[test]
+fn proc_test() -> Result<()>{
+    let project = proc_project(0, 4);
+    let mut pool = DatabaseBuilder::new().build();
+    pool.add_full_project(project.clone())?;
+    let mut tree = pool.build_project_trees()?;
+    if tree.len() != 1{
+        return Err(anyhow!("project not returned"));
+    }
+    let returned_project = tree.pop().ok_or(anyhow!("how???"))?;
+    if project != returned_project {
+        println!("projects are different")
+    }
+
+
+    Ok(())
+}
+
+fn rand10() -> usize{
+    random::<usize>() % 10
 }

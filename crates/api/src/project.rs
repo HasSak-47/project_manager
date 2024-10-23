@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::*;
 use crate::desc::{Descriptor, Description};
 
-#[builder(name = Project, pass = derive(Debug, Default, Clone, Serialize, Deserialize))]
+#[builder(name = Project, pass = derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize))]
 #[derive(Debug, Default, Clone)]
 pub struct ProjectTable{
     #[builder(ty = Descriptor)]
