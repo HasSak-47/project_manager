@@ -40,5 +40,7 @@ pub struct TaskTable{
 }
 
 impl TaskTable {
-    
+    pub fn naive_task(self) -> Task{
+        todo!("todo task")
+    }    
 }
