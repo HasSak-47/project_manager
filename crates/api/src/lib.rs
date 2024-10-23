@@ -117,11 +117,11 @@ struct TaskTree{
 impl TaskTree{
     fn new(task: TaskTable) -> Self{ Self {task, childs: Vec::new()} }
 
-    fn into_project(self) -> Task{
+    fn into_task(self) -> Task{
         let mut task = self.task.naive_task();
         task.childs = self.childs
             .into_iter()
-            .map(Self::into_project)
+            .map(Self::into_task)
             .collect();
 
         return task;
@@ -144,6 +144,27 @@ impl ProjectTree{
 
 impl Database{
     // [boilerplate start]
+    pub fn get_all_projects(&self) -> Vec<ProjectManager>{
+        self.projects
+            .iter()
+            .map(|p| Manager::new(p.id, self))
+            .collect()
+    }
+
+    pub fn get_all_tasks(&self) -> Vec<TaskManager>{
+        self.projects
+            .iter()
+            .map(|p| Manager::new(p.id, self))
+            .collect()
+    }
+
+    pub fn get_all_tags(&self) -> Vec<Manager<TagTable>>{
+        self.tags
+            .iter()
+            .map(|p| Manager::new(p.id, self))
+            .collect()
+    }
+
     pub fn search_project_id<P>(&self, p: P) -> Result<usize>
     where
         P: FnMut(&&ProjectTable) -> bool,
@@ -329,20 +350,6 @@ impl Database{
         self.writer.write_all_tasks(&mut self.tasks)?;
         self.writer.write_all_tags(&mut self.tags)?;
         Ok(())
-    }
-
-    pub fn get_all_projects(&self) -> Vec<ProjectManager>{
-        self.projects
-            .iter()
-            .map(|p| Manager::new(p.id, self))
-            .collect()
-    }
-
-    pub fn get_all_tasks(&self) -> Vec<TaskManager>{
-        self.projects
-            .iter()
-            .map(|p| Manager::new(p.id, self))
-            .collect()
     }
 
     pub fn build_task_trees(&self, id: usize) -> Result<Task>{
