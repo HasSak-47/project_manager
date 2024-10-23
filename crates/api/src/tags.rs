@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 
 #[builder(name = Tag, pass = derive(Debug, Default, Serialize, Deserialize, Clone))]
+#[allow(dead_code)]
 #[derive(Debug, Default,)]
 pub struct TagTable{
     pub tag: String,
@@ -12,6 +13,7 @@ pub struct TagTable{
     pub id: usize,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Default, Clone)]
 pub struct TagOtherTable<Other>{
     pub o_id: usize,
