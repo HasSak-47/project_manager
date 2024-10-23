@@ -49,3 +49,24 @@ impl ProjectTable {
         }
     }
 }
+
+use super::{Manager, ManagerMut};
+
+pub type ProjectManager<'a> = Manager<'a, Project>;
+pub type ProjectManagerMut<'a> = ManagerMut<'a, Project>;
+
+impl<'a> ProjectManager<'a>{
+    pub fn name(&self) -> &String{
+        &self.get_table().desc.name
+    }
+
+    pub fn location(&self) -> &Location{
+        &self.get_table().location
+    }
+
+    pub fn get_table(&self) -> &ProjectTable{
+        &self.pool.projects[self.id]
+    }
+}
+
+use super::Result;
