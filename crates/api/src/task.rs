@@ -1,6 +1,4 @@
 use ly::proc::builder;
-use crate::*;
-
 use crate::desc::{Descriptor, Description};
 use serde::{Deserialize, Serialize};
 
