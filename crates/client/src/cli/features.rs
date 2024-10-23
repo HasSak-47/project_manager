@@ -1,11 +1,8 @@
-
 use std::env::current_dir;
-
-
 use clap::Args;
-
 use anyhow::{anyhow, Result};
 use project_manager_api::{desc::Descriptor, task::Task, Database, Location};
+use ly::log::prelude::*;
 
 use super::Arguments;
 
@@ -40,6 +37,7 @@ impl AddFeat{
         }else{
              "".to_string()
         };
+        let _ = log!("task project: {project}");
         let task = Task::new()
             .desc(Descriptor::new()
                 .name(self.name)
@@ -47,7 +45,12 @@ impl AddFeat{
                 .difficulty(self.difficulty)
             ).project(project);
 
-        db.add_full_task(task)?;
+        let task_id = db.add_full_task(task)?;
+        let _ = log!("task id: {task_id}");
+        let task_manager = db.search_task(|p| p.id == task_id)?;
+        let task = task_manager.get_table();
+        let _ = log!("task table: {task:?}");
+
         db.write_data()?;
         Ok(())
     }
