@@ -375,7 +375,7 @@ impl Database{
         }
 
         buffer.sort_by(|a, b| b.id.cmp(&a.id));
-        while buffer.len() != 0{
+        while buffer.len() > 0{
             let top = buffer.pop().unwrap();
             if top.parent.is_none(){
                 continue;
