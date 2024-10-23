@@ -406,6 +406,8 @@ impl Database{
     }
 
     pub fn build_project_trees(&self) -> Result<Vec<Project>>{
+        // NOTE: better than pure functional clone -> iter -> filter
+        // maybe clone -> iter -> map -> unzip would be better
         let mut buffer = self.projects.clone();
         let mut roots = Vec::new();
 
@@ -461,7 +463,7 @@ impl Database{
     }
 }
 
-use project::{ProjectManager};
+use project::ProjectManager;
 
 type TaskManager<'a> = Manager<'a, Task>;
 type TaskManagerMut<'a> = ManagerMut<'a, Task>;
