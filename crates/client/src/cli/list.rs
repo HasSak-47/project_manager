@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+
 
 use project_manager_api::Database;
 use super::Arguments;
@@ -66,14 +66,14 @@ enum ListEnum{
 }
 
 impl ListStruct{
-    pub fn run(self, args: Arguments, db: Database) -> Result<()> {
-        let option = if self.print.is_none(){
+    pub fn run(self, _args: Arguments, _db: Database) -> Result<()> {
+        let _option = if self.print.is_none(){
             ListEnum::Projects( ListProjects::default() )
         }
         else{
             self.print.clone().unwrap()
         };
-        use ListEnum as PE;
+        
         return Ok(())
     }
 }
