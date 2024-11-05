@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 #[builder(name = Tag, pass = derive(Debug, Default, Serialize, Deserialize, Clone))]
 #[allow(dead_code)]
-#[derive(Debug, Default,)]
+#[derive(Debug, Default, Clone)]
 pub struct TagTable{
     pub tag: String,
     #[builder(skip)]
