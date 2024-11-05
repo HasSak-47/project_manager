@@ -4,9 +4,10 @@ use super::Arguments;
 use clap::Args;
 
 use anyhow::Result;
+use thiserror::Error;
 use project_manager_api::{desc::Descriptor, project::Project, Database, Location};
 
-use crate::{utils::exists, VERSION};
+use crate::{utils::{exists_path, exists_name}, VERSION};
 use ly::log::prelude::*;
 
 #[derive(Args, Debug, Clone)]
@@ -21,6 +22,14 @@ pub struct NewStruct{
     edition: String,
 }
 
+#[derive(Debug, Error)]
+enum NewError{
+    #[error("Project already exist {0}")]
+    NameAlreadyUsed(String),
+    #[error("Path already used {0} try using init instead")]
+    PathAlreadyUsed(String)
+}
+
 impl NewStruct{
     pub fn run(self, _args: Arguments, mut db: Database) -> Result<()> {
         let mut path = self.path.unwrap_or(current_dir().unwrap());
@@ -32,8 +41,16 @@ impl NewStruct{
 
         let _ = log!("with status at {}", path.display());
 
-        if exists(&db, path.clone()){
-            return Ok(());
+        if exists_path(&db, path.clone()){
+            Err(
+                NewError::PathAlreadyUsed(path.clone().to_str().unwrap().to_string())
+            )?;
+        }
+
+        if exists_name(&db, &self.name){
+            Err(
+                NewError::NameAlreadyUsed(path.clone().to_str().unwrap().to_string())
+            )?;
         }
 
 

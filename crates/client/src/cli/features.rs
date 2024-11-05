@@ -37,6 +37,7 @@ impl AddFeat{
         }else{
              "".to_string()
         };
+
         let _ = log!("task project: {project}");
         let task = Task::new()
             .desc(Descriptor::new()
@@ -49,8 +50,9 @@ impl AddFeat{
         let _ = log!("task id: {task_id}");
         let task_manager = db.search_task(|p| p.id == task_id)?;
         let task = task_manager.get_table();
-        let _ = log!("task table: {task:?}");
+        let _ = log!("task table: {task:#?}");
 
+        let _ = log!("database before calling write: {db:#?}");
         db.write_data()?;
         Ok(())
     }

@@ -3,6 +3,7 @@
 use project_manager_api::Database;
 use super::Arguments;
 use clap::{Subcommand, Args, ValueEnum};
+use ly::log::prelude::*;
 
 use anyhow::Result;
 
@@ -52,6 +53,23 @@ enum SortBy{
     None,
 }
 
+impl ListProjects{
+    fn run(self, mut database: Database) -> Result<()>{
+        database.load_data()?;
+
+        let entries : Vec<_> = database.get_all_projects().into_iter().map(|p| (p.name().clone(), p.location().clone(), p.get_completion()) ).collect();
+        let _ = log!("entry count: {}", entries.len());
+        for (n, p, c) in entries{
+            let p = match p{
+                project_manager_api::Location::Path(p) => p.to_str().unwrap().to_string(),
+                _ => "Not here lmao".to_string(),
+            };
+            println!("{n} @ {p}: {c}");
+        }
+
+        Ok(())
+    }
+}
 
 #[derive(Subcommand, Default, Debug, Clone)]
 enum ListEnum{
@@ -66,15 +84,20 @@ enum ListEnum{
 }
 
 impl ListStruct{
-    pub fn run(self, _args: Arguments, _db: Database) -> Result<()> {
-        let _option = if self.print.is_none(){
+    pub fn run(self, _args: Arguments, db: Database) -> Result<()> {
+        let option = if self.print.is_none(){
             ListEnum::Projects( ListProjects::default() )
         }
         else{
             self.print.clone().unwrap()
         };
-        
-        return Ok(())
+
+        use ListEnum as LE;
+        return match option{
+            LE::Projects(p) => 
+                p.run(db),
+            _ => Ok(()),
+        }
     }
 }
 
