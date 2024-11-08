@@ -2,8 +2,6 @@ use ly::proc::builder;
 use crate::*;
 
 use crate::desc::{Descriptor, Description};
-
-use std::time::Duration;
 use serde::{Deserialize, Serialize};
 
 #[builder(name = Task, pass = derive(Debug, Default, Clone, Serialize, Deserialize))]
@@ -41,6 +39,13 @@ pub struct TaskTable{
 
 impl TaskTable {
     pub fn naive_task(self) -> Task{
-        todo!("todo task")
+        Task {
+            desc: self.desc.naive_description(),
+            done: self.done,
+            min_time: self.min_time.num_minutes() as u64,
+            project: String::new(),
+            childs: Vec::new(),
+            tags: Vec::new(),
+        }
     }    
 }
