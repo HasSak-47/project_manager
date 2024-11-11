@@ -4,6 +4,8 @@ use anyhow::{anyhow, Result};
 use project_manager_api::{desc::Descriptor, task::Task, Database, Location};
 use ly::log::prelude::*;
 
+use crate::utils::{load_database, save_database};
+
 use super::Arguments;
 
 #[derive(Args, Debug, Clone)]
@@ -22,7 +24,6 @@ pub struct AddFeat{
 impl AddFeat{
     pub fn run(self, _params: Arguments, mut db: Database) -> Result<()> {
         let mut cwd = current_dir()?;
-        db.load_data()?;
 
         cwd.push("status");
         cwd.set_extension("toml");
@@ -31,14 +32,13 @@ impl AddFeat{
             db.get_all_projects()
                 .iter()
                 .find(|p| *p.location() == cwd)
-                .ok_or(anyhow!("project not found"))
+                .ok_or(anyhow!("Project not found in database"))
                 .and_then(|p| Ok(p.name()))?
                 .clone()
         }else{
              "".to_string()
         };
 
-        let _ = log!("task project: {project}");
         let task = Task::new()
             .desc(Descriptor::new()
                 .name(self.name)
@@ -46,14 +46,8 @@ impl AddFeat{
                 .difficulty(self.difficulty)
             ).project(project);
 
-        let task_id = db.add_full_task(task)?;
-        let _ = log!("task id: {task_id}");
-        let task_manager = db.search_task(|p| p.id == task_id)?;
-        let task = task_manager.get_table();
-        let _ = log!("task table: {task:#?}");
-
-        let _ = log!("database before calling write: {db:#?}");
-        db.write_data()?;
+        db.add_full_task(task)?;
+        save_database(&db)?;
         Ok(())
     }
 }

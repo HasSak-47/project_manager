@@ -7,6 +7,3 @@ difficulty = 0.0
 version = "0.1.0"
 edition = "0.1.18"
 min_time = 0
-
-[location]
-Path = "/home/lilith/project_manager/status.toml"

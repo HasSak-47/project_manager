@@ -1,12 +1,13 @@
 use std::{env::current_dir, fs::File, io::{BufReader, Read}, path::PathBuf};
 
-
-
 use super::Arguments;
 use clap::Args;
 
 use anyhow::Result;
 use project_manager_api::{project::Project, Database, Location};
+
+use crate::
+    utils::{load_database, save_database};
 
 use ly::log::prelude::*;
 
@@ -38,8 +39,9 @@ impl InitStruct{
         let proj= toml::from_str::<Project>(&buf)?
             .location(Location::Path(status_path));
 
+        load_database(&mut db);
         db.add_full_project(proj)?;
-        db.write_data()?;
+        save_database(&db);
 
         Ok(())
     }

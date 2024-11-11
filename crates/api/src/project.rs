@@ -16,8 +16,8 @@ pub struct ProjectTable{
     #[builder(ty=String)]
     pub last_worked: Option<chrono::NaiveDate>,
 
-    #[builder(init = Location::Other)]
-    #[builder(pass = serde(default = "Location::default"))]
+    #[builder(init = Location::None)]
+    #[builder(pass = serde(skip))]
     pub location: Location,
 
     #[builder(ty = String, init = String::new())]

@@ -1,11 +1,9 @@
-#![allow(dead_code)]
-
 pub mod project;
 pub mod tags;
 pub mod task;
 pub mod desc;
 
-use std::{fmt::Display, marker::PhantomData, path::PathBuf};
+use std::{marker::PhantomData, path::PathBuf, time::SystemTime};
 
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -13,7 +11,7 @@ use thiserror::Error;
 use ly::{log::prelude::*, proc::builder};
 
 use project::{Project, ProjectTable};
-use tags::{TagOtherTable, TagTable};
+use tags::{Tag, TagOtherTable, TagTable};
 use task::{Task, TaskTable};
 
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
@@ -31,10 +29,7 @@ pub trait Idable{
     fn get_id(&mut self) -> usize;
 }
 
-#[allow(dead_code)]
 type TagProjectTable = TagOtherTable<ProjectTable>;
-
-#[allow(dead_code)]
 type TagTaskTable = TagOtherTable<TaskTable>;
 
 #[builder(name = DatabaseBuilder)]
@@ -46,29 +41,21 @@ pub struct Database{
     #[builder(skip)]
     tags    : Vec<TagTable>,
 
-    #[allow(dead_code)]
     #[builder(skip)]
     tag_pro : Vec<TagOtherTable<ProjectTable>>,
 
-    #[allow(dead_code)]
     #[builder(skip)]
     tag_task: Vec<TagOtherTable<TaskTable>>,
-}
 
-impl Clone for Database{
-    fn clone(&self) -> Self {
-        let mut db = DatabaseBuilder::new().build();
-        db.tasks = self.tasks.clone();
-        db.projects = self.projects.clone();
-        db.tags = self.tags.clone();
-
-        return db
-    }
+    #[builder(ty = Box<dyn DatabaseReader>, skip_setter, init = Box::new(UnimplementedReader))]
+    reader: Box<dyn DatabaseReader>,
+    #[builder(ty = Box<dyn DatabaseWriter>, skip_setter, init = Box::new(UnimplementedWriter))]
+    writer: Box<dyn DatabaseWriter>,
 }
 
 impl std::fmt::Debug for Database{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "projects: {:#?}, tasks{:#?}, tags {:#?},",    
+        write!(f, "projects: {:#?} tasks{:#?} tags {:#?}",    
             self.projects,
             self.tasks   ,
             self.tags    ,
@@ -80,30 +67,45 @@ struct UnimplementedReader;
 struct UnimplementedWriter;
 
 impl DatabaseReader for UnimplementedReader {
-    fn read(&self, _: &Database) -> Result<()> { Err(DatabaseError::NotImplemented) }
+    fn read_all_projects(&self) -> Result<Vec<ProjectTable>> { Err(DatabaseError::NotImplemented) }
+    fn read_all_tasks(&self) -> Result<Vec<TaskTable>> { Err(DatabaseError::NotImplemented) }
+    fn read_all_tags(&self) -> Result<Vec<TagTable>> { Err(DatabaseError::NotImplemented) }
 }
 
 impl DatabaseWriter for UnimplementedWriter {
-    fn write(&mut self, _: &mut Database) -> Result<()> {Err(DatabaseError::NotImplemented) }
+    fn write_all_projects(&mut self, _: &mut Vec<ProjectTable>) -> Result<()> {Err(DatabaseError::NotImplemented) }
+    fn write_all_tasks(&mut self, _: &mut Vec<TaskTable>) -> Result<()> {Err(DatabaseError::NotImplemented) }
+    fn write_all_tags(&mut self, _: &mut Vec<TagTable>) -> Result<()> {Err(DatabaseError::NotImplemented) }
 }
 
 impl DatabaseBuilder{
     pub fn build(self) -> Database{
         Database{
             projects: Vec::new(),
-            tags: Vec::new(), tasks: Vec::new(),
+            tags: Vec::new(),
+            tasks: Vec::new(),
             tag_pro: Vec::new(),
             tag_task: Vec::new(),
+            reader: self.reader,
+            writer: self.writer,
         }
+
     }
 
+    pub fn set_reader<R: DatabaseReader>(mut self, r: R) -> Self{
+        self.reader = Box::new(r);
+        return self;
+    }
+    pub fn set_writer<W: DatabaseWriter>(mut self, w: W) -> Self{
+        self.writer = Box::new(w);
+        return self;
+    }
 }
 
 #[derive(Debug)]
 struct ProjectTree{
     project: ProjectTable,
     childs: Vec<ProjectTree>,
-    tasks: Vec<Task>,
 }
 
 #[derive(Debug)]
@@ -114,6 +116,7 @@ struct TaskTree{
 
 impl TaskTree{
     fn new(task: TaskTable) -> Self{ Self {task, childs: Vec::new()} }
+
     fn into_task(self) -> Task{
         let mut task = self.task.naive_task();
         task.childs = self.childs
@@ -126,7 +129,7 @@ impl TaskTree{
 }
 
 impl ProjectTree{
-    fn new(project: ProjectTable) -> Self{ Self {project, childs: Vec::new(), tasks: Vec::new()} }
+    fn new(project: ProjectTable) -> Self{ Self {project, childs: Vec::new()} }
 
     fn into_project(self) -> Project{
         let mut project = self.project.naive_project();
@@ -194,12 +197,6 @@ impl Database{
             .and_then(|p| Ok(p.id))
     }
 
-    pub fn search_task<P>(&self, p: P) -> Result<TaskManager>
-    where
-        P: FnMut(&&TaskTable) -> bool {
-        self.search_task_id(p).and_then(|p| Ok(Manager::new(p, self)))
-    }
-
     pub fn search_project<P>(&self, p: P) -> Result<Manager<ProjectTable>>
     where
         P: FnMut(&&ProjectTable) -> bool
@@ -232,14 +229,7 @@ impl Database{
 
     pub fn build_project(&self) -> Result<Project>{ Err(DatabaseError::NotImplemented) }
 
-    fn unravel_tasks(&self,
-        pt: &mut Vec<ProjectTable>,
-        tt: &mut Vec<TaskTable>,
-        gt: &mut Vec<TagTable>,
-        t: Task,
-        pa_id: Option<usize>,
-        pr_id: Option<usize>
-    ) -> Result<()> {
+    fn unravel_tasks(&self, pt: &mut Vec<ProjectTable>, tt: &mut Vec<TaskTable>, gt: &mut Vec<TagTable>, t: Task, pa_id: Option<usize>, pr_id: Option<usize>) -> Result<()>{
         let mut entry = TaskTable::default();
         entry.id = tt.len();
         entry.desc = t.desc.into();
@@ -256,13 +246,7 @@ impl Database{
         Ok(())
     }
 
-    fn unravel_project(&self,
-        pt: &mut Vec<ProjectTable>,
-        tt: &mut Vec<TaskTable>,
-        gt: &mut Vec<TagTable>,
-        p: Project,
-        p_id : Option<usize>
-    ) -> Result<()> {
+    fn unravel_project(&self, pt: &mut Vec<ProjectTable>, tt: &mut Vec<TaskTable>, gt: &mut Vec<TagTable>, p: Project, p_id : Option<usize>) -> Result<()>{
         let mut entry = ProjectTable::default();
         entry.id = pt.len();
         entry.desc = p.desc.into();
@@ -289,7 +273,6 @@ impl Database{
             .and_then(|p| Some(p.id + 1))
             .unwrap_or(self.projects.len())
     }
-
     fn task_offset(&self) -> usize {
         self.tasks
             .last()
@@ -302,7 +285,7 @@ impl Database{
         self.tasks.append(tt);
     }
 
-    pub fn add_full_task(&mut self, t: Task) -> Result<usize>{
+    pub fn add_full_task(&mut self, t: Task) -> Result<()>{
         let mut pt = Vec::new();
         let mut tt = Vec::new();
         let mut gt = Vec::new();
@@ -326,12 +309,11 @@ impl Database{
             task.id += offset;
         }
 
-        let id = tt[0].id;
         self.add_buffer(&mut pt, &mut tt, &mut gt);
-        Ok(id)
+        Ok(())
     }
 
-    pub fn add_full_project(&mut self, p: Project) -> Result<usize>{
+    pub fn add_full_project(&mut self, p: Project) -> Result<()>{
         if !p.parent.is_empty(){
             return Err(DatabaseError::NotImplemented);
         }
@@ -352,18 +334,21 @@ impl Database{
             project.id += p_offset;
         }
 
-        let id = pt[0].id;
         self.add_buffer(&mut pt, &mut tt, &mut gt);
-        Ok(id)
+        Ok(())
     }
 
     pub fn load_data(&mut self) -> Result<()>{
-        self.reader.read(self)?;
+        self.projects = self.reader.read_all_projects()?;
+        self.tasks = self.reader.read_all_tasks()?;
+        self.tags = self.reader.read_all_tags()?;
         Ok(())
     }
 
     pub fn write_data(&mut self) -> Result<()>{
-        self.writer.write(self)?;
+        self.writer.write_all_projects(&mut self.projects)?;
+        self.writer.write_all_tasks(&mut self.tasks)?;
+        self.writer.write_all_tags(&mut self.tags)?;
         Ok(())
     }
 
@@ -390,7 +375,7 @@ impl Database{
         }
 
         buffer.sort_by(|a, b| b.id.cmp(&a.id));
-        while buffer.len() > 0{
+        while buffer.len() != 0{
             let top = buffer.pop().unwrap();
             if top.parent.is_none(){
                 continue;
@@ -407,17 +392,17 @@ impl Database{
         return Ok(root.into_task());
     }
 
-    // NOTE: should not be used in non local copies
-    pub fn __build_project_trees(mut self) -> Result<Vec<Project>>{
+    pub fn build_project_trees(&self) -> Result<Vec<Project>>{
+        let mut buffer = self.projects.clone();
         let mut roots = Vec::new();
 
         loop{
-            let proj = self.projects.iter().enumerate().find(|p| p.1.parent.is_none());
+            let proj = buffer.iter().enumerate().find(|p| p.1.parent.is_none());
             if let Some((i, _)) = proj {
-                let mut p = ProjectTree::new( self.projects.remove(i) );
-                self.__populate_project_tasks(&mut p)?;
-
-                roots.push(p);
+                roots.push(ProjectTree{
+                    project: buffer.remove(i),
+                    childs: Vec::new(),
+                });
             }
             else{
                 break;
@@ -438,9 +423,9 @@ impl Database{
             return false;
         }
 
-        self.projects.sort_by(|a, b| b.id.cmp(&a.id));
-        while self.projects.len() != 0{
-            let top = self.projects.pop().unwrap();
+        buffer.sort_by(|a, b| b.id.cmp(&a.id));
+        while buffer.len() != 0{
+            let top = buffer.pop().unwrap();
             if !search_in(&top, &mut roots) {
                 let error = format!("could not find parent ({}) project for {}", top.parent.unwrap(), top.desc.name);
                 return Err(DatabaseError::other(error));
@@ -454,22 +439,56 @@ impl Database{
         );
     }
 
-
-    pub fn build_task_tree(&self, id: usize) -> Result<Task>{
-        let task = self.clone().__build_task_trees(id)?;
-        return Ok(task);
+    pub fn get_writer_mut(&mut self) -> &mut Box<dyn DatabaseWriter>{
+        return &mut self.writer;
     }
 
-    pub fn build_project_trees(&self) -> Result<Vec<Project>>{
-        let projects = self.clone().__build_project_trees()?;
-        return Ok(projects);
+    pub fn get_reader_mut(&mut self) -> &mut Box<dyn DatabaseReader>{
+        return &mut self.reader;
     }
 }
 
-use project::ProjectManager;
+type ProjectManager<'a> = Manager<'a, Project>;
+type ProjectManagerMut<'a> = ManagerMut<'a, Project>;
 
 type TaskManager<'a> = Manager<'a, Task>;
 type TaskManagerMut<'a> = ManagerMut<'a, Task>;
+
+impl<'a> ProjectManager<'a>{
+    pub fn name(&self) -> &String{
+        &self.get_table().desc.name
+    }
+
+    pub fn location(&self) -> &Location{
+        &self.get_table().location
+    }
+
+    pub fn get_table(&self) -> &ProjectTable{
+        &self.pool.projects[self.id]
+    }
+}
+
+impl<'a> TaskManager<'a>{
+    pub fn name(&self) -> &String{
+        &self.get_table().desc.name
+    }
+
+    pub fn get_table(&self) -> &ProjectTable{
+        &self.pool.projects[self.id]
+    }
+}
+
+pub trait DatabaseReader where Self: 'static {
+    fn read_all_projects(&self) -> Result<Vec<ProjectTable>>;
+    fn read_all_tasks(&self) -> Result<Vec<TaskTable>>;
+    fn read_all_tags(&self) -> Result<Vec<TagTable>>;
+}
+
+pub trait DatabaseWriter where Self: 'static {
+    fn write_all_projects(&mut self, v: &mut Vec<ProjectTable>) -> Result<()>;
+    fn write_all_tasks(&mut self, v: &mut Vec<TaskTable>) -> Result<()>;
+    fn write_all_tags(&mut self, v: &mut Vec<TagTable>) -> Result<()>;
+}
 
 pub struct Manager<'a, T>{
     pool: &'a Database,

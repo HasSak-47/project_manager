@@ -7,7 +7,7 @@ use anyhow::Result;
 use thiserror::Error;
 use project_manager_api::{desc::Descriptor, project::Project, Database, Location};
 
-use crate::{utils::{exists_path, exists_name}, VERSION};
+use crate::{utils::{exists_name, exists_path, save_database}, VERSION};
 use ly::log::prelude::*;
 
 #[derive(Args, Debug, Clone)]
@@ -32,8 +32,8 @@ enum NewError{
 
 impl NewStruct{
     pub fn run(self, _args: Arguments, mut db: Database) -> Result<()> {
-        let mut path = self.path.unwrap_or(current_dir().unwrap());
 
+        let mut path = self.path.unwrap_or(current_dir().unwrap());
         let _ = log!("creating project at {}", path.display());
 
         path.push("status");
@@ -70,8 +70,7 @@ impl NewStruct{
         file.write(s.as_bytes())?;
 
         db.add_full_project(p)?;
-        db.write_data()?;
-
+        save_database(&db)?;
         Ok(())
     }
 }
