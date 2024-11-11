@@ -92,8 +92,6 @@ pub fn cli(mut db: Database) -> anyhow::Result<()> {
 
     let tree = args.tree.clone().unwrap();
 
-    db.load_data()?;
-
     use Tree as TR;
 
     match tree{
