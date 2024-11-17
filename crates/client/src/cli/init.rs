@@ -3,11 +3,11 @@ use std::{env::current_dir, fs::File, io::{BufReader, Read}, path::PathBuf};
 use super::Arguments;
 use clap::Args;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use project_manager_api::{project::Project, Database, Location};
 
 use crate::
-    utils::{load_database, save_database};
+    utils::{exists_path, load_database, save_database};
 
 use ly::log::prelude::*;
 
@@ -36,12 +36,15 @@ impl InitStruct{
         let mut buf = String::new();
         file.read_to_string(&mut buf)?;
 
-        let proj= toml::from_str::<Project>(&buf)?
-            .location(Location::Path(status_path));
+        let proj = toml::from_str::<Project>(&buf)?
+            .location(Location::Path(status_path.clone()));
 
-        load_database(&mut db);
+        load_database(&mut db)?;
+        if exists_path(&db, &status_path) {
+            return Err(anyhow!("Project path ({}) already exists", status_path.display()));
+        }
         db.add_full_project(proj)?;
-        save_database(&db);
+        save_database(&db)?;
 
         Ok(())
     }

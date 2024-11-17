@@ -7,7 +7,7 @@ use anyhow::Result;
 use thiserror::Error;
 use project_manager_api::{desc::Descriptor, project::Project, Database, Location};
 
-use crate::{utils::{exists_name, exists_path, save_database}, VERSION};
+use crate::{utils::{exists_name, exists_path, load_database, save_database}, VERSION};
 use ly::log::prelude::*;
 
 #[derive(Args, Debug, Clone)]
@@ -41,16 +41,14 @@ impl NewStruct{
 
         let _ = log!("with status at {}", path.display());
 
-        if exists_path(&db, path.clone()){
-            Err(
-                NewError::PathAlreadyUsed(path.clone().to_str().unwrap().to_string())
-            )?;
+        load_database(&mut db)?;
+
+        if exists_path(&db, &path){
+            Err( NewError::PathAlreadyUsed(path.clone().to_str().unwrap().to_string()) )?;
         }
 
         if exists_name(&db, &self.name){
-            Err(
-                NewError::NameAlreadyUsed(path.clone().to_str().unwrap().to_string())
-            )?;
+            Err( NewError::NameAlreadyUsed(path.clone().to_str().unwrap().to_string()) )?;
         }
 
 

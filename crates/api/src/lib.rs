@@ -3,15 +3,15 @@ pub mod tags;
 pub mod task;
 pub mod desc;
 
-use std::{marker::PhantomData, path::PathBuf, time::SystemTime};
+use std::{marker::PhantomData, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use ly::{log::prelude::*, proc::builder};
+use ly::log::prelude::*;
 
 use project::{Project, ProjectTable};
-use tags::{Tag, TagOtherTable, TagTable};
+use tags::{TagOtherTable, TagTable};
 use task::{Task, TaskTable};
 
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
@@ -20,6 +20,15 @@ pub enum Location{
     Git(String),
     #[default]
     None,
+}
+
+impl Location {
+    pub fn is_path(&self, p: &PathBuf) -> bool{
+        if let Location::Path(path) = self{
+            return path == p;
+        }
+        return false;
+    }
 }
 
 pub type Result<T> = std::result::Result<T, DatabaseError>;
