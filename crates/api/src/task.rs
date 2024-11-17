@@ -1,5 +1,5 @@
 use ly::proc::builder;
-use crate::{desc::{Description, Descriptor}, TaskManager};
+use crate::{desc::{Description, Descriptor}, tags::Tag, TaskManager};
 use serde::{Deserialize, Serialize};
 
 #[builder(name = Task, pass = derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize))]

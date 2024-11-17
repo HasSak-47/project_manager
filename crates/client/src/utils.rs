@@ -42,11 +42,12 @@ pub fn database_path() -> Result<PathBuf>{
 
 pub fn save_database(db: &Database) -> Result<()>{
     let path = database_path()?;
-    let _ = log!("saving database at {}", path.display());
+    let _ = log!("saving database {db:?}");
+    let _ = log!("at {}", path.display());
     let mut manager = Manager::default();
 
     for project in db.build_project_trees()?{
-        let _ = log!("saving project {:?}", project);
+        let _ = log!("saving project {:#?}", project);
         manager.projects.push(Pair{
             name: project.desc.name.clone(),
             loc: project.location.clone(),

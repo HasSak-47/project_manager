@@ -1,12 +1,12 @@
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-use std::{cell::RefCell, default, fs::{self, File, OpenOptions}, io::{Read, Write}, path::PathBuf, sync::Arc};
+use std::{fs::OpenOptions, io::Read};
 
 use cli::cli;
 use anyhow::Result;
 use ly::log::write::ANSI;
 use project_manager_api::{
-    project::*, tags::*, task::*, DatabaseBuilder, DatabaseError, Location, Result as DBResult
+    Database, Location,
 };
 
 mod cli;
@@ -34,7 +34,6 @@ fn main() {
 fn panic_main() -> Result<()>{
     ly::log::set_logger(ANSI::new());
     ly::log::set_level(ly::log::Level::Error);
-    
 
     let path = database_path()?;
     let _ = log!("opening file at {}", path.display());
@@ -50,7 +49,7 @@ fn panic_main() -> Result<()>{
     let _ = log!("read file");
     
 
-    let mut db = DatabaseBuilder::new().build();
+    let mut db = Database::default();
 
     load_database(&mut db)?;
     cli(db)?;

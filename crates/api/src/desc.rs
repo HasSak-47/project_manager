@@ -16,6 +16,7 @@ fn default_version() -> String{
 }
 
 const fn default_min_time() -> i64 { 30 }
+const fn is_zero(i: &i64) -> bool { *i == 0 }
 
 #[builder(name = Descriptor, pass = derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize))]
 #[derive(Debug, Default, Clone)]
@@ -45,6 +46,7 @@ pub struct Description{
     // minimun time in minutes
     #[builder(ty = i64)]
     #[builder(pass = serde(default= "default_min_time"))]
+    #[builder(pass = serde(skip_serializing_if = "is_zero"))]
     pub min_time   :chrono::Duration,
 
     #[builder(skip_table)]

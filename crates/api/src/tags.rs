@@ -4,7 +4,7 @@ use ly::proc::builder;
 use serde::{Deserialize, Serialize};
 
 
-#[builder(name = Tag, pass = derive(Debug, Default, Serialize, Deserialize, Clone))]
+#[builder(name = Tag, pass = derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq))]
 #[allow(dead_code)]
 #[derive(Debug, Default, Clone)]
 pub struct TagTable{
