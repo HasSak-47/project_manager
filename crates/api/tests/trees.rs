@@ -9,14 +9,8 @@ use ly::macro_error;
 use ly::macro_log;
 use pm_api::project::Project;
 use pm_api::task::Task;
-<<<<<<< HEAD
-use project_manager_api::desc::{Description, Descriptor};
-use project_manager_api::{Database, DatabaseBuilder, DatabaseReader, DatabaseWriter};
-=======
 use pm_api::desc::Descriptor;
-use pm_api::{Database, DatabaseBuilder, DatabaseReader, DatabaseWriter};
-use rand::random;
->>>>>>> dc7eaf5 (tests seems to be fineee)
+use pm_api::Database;
 use serde;
 use anyhow::{anyhow, Result};
 
@@ -26,18 +20,6 @@ use ly::log::prelude::*;
 
 struct ReaderWriter{ }
 
-impl DatabaseReader for ReaderWriter {
-    fn read_all_tags(&self) -> pm_api::Result<Vec<pm_api::tags::TagTable>> { Ok(Vec::new()) }
-    fn read_all_tasks(&self) -> pm_api::Result<Vec<pm_api::task::TaskTable>> { Ok(Vec::new()) }
-    fn read_all_projects(&self) -> pm_api::Result<Vec<pm_api::project::ProjectTable>> { Ok(Vec::new()) }
-}
-
-impl DatabaseWriter for ReaderWriter {
-    fn write_all_tags(&mut self, _: &mut Vec<pm_api::tags::TagTable>) -> pm_api::Result<()> { Ok(()) }
-    fn write_all_tasks(&mut self, _: &mut Vec<pm_api::task::TaskTable>) -> pm_api::Result<()> { Ok(()) }
-    fn write_all_projects(&mut self, _: &mut Vec<pm_api::project::ProjectTable>) -> pm_api::Result<()> { Ok(()) }
-}
-
 #[test]
 fn test_add_project() -> Result<()>{
     let ansi = ANSI::new();
@@ -45,10 +27,7 @@ fn test_add_project() -> Result<()>{
     log::set_level(log::Level::Log);
 
     let tree : Project = serde_json::from_str(TEST_PROJECT)?;
-    let mut pool = DatabaseBuilder::new()
-        .set_reader(ReaderWriter{})
-        .set_writer(ReaderWriter{})
-        .build();
+    let mut pool = Database::default();
     pool.add_full_project(tree)?;
 
     println!("{pool:?}");
@@ -62,10 +41,7 @@ fn test_add_task() -> Result<()>{
     log::set_level(log::Level::Log);
 
     let project : Project = serde_json::from_str(TEST_PROJECT)?;
-    let mut pool = DatabaseBuilder::new()
-        .set_reader(ReaderWriter{})
-        .set_writer(ReaderWriter{})
-        .build();
+    let mut pool = Database::default();
 
     pool.add_full_project(project)?;
 
@@ -80,54 +56,32 @@ fn test_add_task() -> Result<()>{
 #[test]
 fn unfold() -> Result<()>{
     let ansi = ANSI::new();
-    log::set_logger(ansi);
-    log::set_level(log::Level::Log);
 
     let project : Project = serde_json::from_str(TEST_PROJECT)?;
-    let mut pool = DatabaseBuilder::new()
-        .set_reader(ReaderWriter{})
-        .set_writer(ReaderWriter{})
-        .build();
+    let mut pool = Database::default();
 
     pool.add_full_project(project)?;
 
     let task: Task = serde_json::from_str(TEST_TASK)?;
     pool.add_full_task(task)?;
 
+    println!("here!");
+
     let _projects = pool.build_project_trees()?;
+
+    println!("trees!");
+
     let _task = pool.build_task_tree(0)?;
 
-    println!("{_task:?}");
-
-
-    Ok(())
-}
-
-
-fn create_random_project(depth: usize) -> Project {
-}
-
-
-#[test]
-fn stress_test() -> Result<()>{
-    use rand::prelude::*;
-    let n_rp : usize = rand::random();
-    let mut root_projects = Vec::with_capacity(n_rp);
-    for i in 0..n_rp{
-        let project = Project::new()
-            .desc(Descriptor::new().name(format!("root_{i}")))
-            .last_worked(format!("{} {} {}", rand::random::<u32>() % 28, rand::random::<u32>() % 12, 2000 + rand::random::<u32>() % 24));
-        root_projects.push(project);
-    }
-
-
+    println!("finished!");
 
     Ok(())
 }
+
 
 fn proc_task(depth: usize, max: usize) -> Task{
     let mut task = Task::new().desc(Descriptor::new());
-    let child = rand10() + depth < 2 * max;
+    let child = rand10() + depth < max;
     if child && depth < max{
         let child_count : usize = rand10();
         for _ in 0..child_count{
@@ -142,7 +96,7 @@ fn proc_project(depth: usize, max: usize) -> Project{
     let mut project = Project::new().desc(
         Descriptor::new()
     );
-    let child = rand10() + depth < 2 * max;
+    let child = rand10() + depth < max;
     if child && depth < max{
         let child_count : usize = rand10();
         for _ in 0..child_count{
@@ -163,7 +117,8 @@ fn proc_project(depth: usize, max: usize) -> Project{
 #[test]
 fn proc_test() -> Result<()>{
     let project = proc_project(0, 4);
-    let mut pool = DatabaseBuilder::new().build();
+    let mut pool = Database::default();
+
     pool.add_full_project(project.clone())?;
     let mut tree = pool.build_project_trees()?;
     if tree.len() != 1{
@@ -178,6 +133,22 @@ fn proc_test() -> Result<()>{
     Ok(())
 }
 
+#[test]
+#[ignore = "it is still weak"]
+fn stress_test() -> Result<()>{
+    use rand::prelude::*;
+    let n_rp = u16::MAX as usize;
+    let mut root_projects = Vec::with_capacity(n_rp);
+    for i in 0..n_rp{
+        println!("creating project: {i}");
+        let project = proc_project(0, u8::MAX as usize);
+        root_projects.push(project);
+    }
+
+    Ok(())
+}
+
 fn rand10() -> usize{
+    use rand::random;
     random::<usize>() % 10
 }

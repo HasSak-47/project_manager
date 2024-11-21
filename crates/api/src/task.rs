@@ -1,5 +1,5 @@
 use ly::proc::builder;
-use crate::{desc::{Description, Descriptor}, tags::Tag, TaskManager};
+use crate::{desc::{Description, Descriptor}, tags::Tag, TaskManager, utils::IsZero};
 use serde::{Deserialize, Serialize};
 
 #[builder(name = Task, pass = derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize))]
@@ -15,9 +15,13 @@ pub struct TaskTable{
 
     // minimun time needed to perform the task min_time   : time::Duration,
     #[builder(init = 1.)]
+    #[builder(pass = serde(skip_serializing_if="f64::is_zero"))]
+    #[builder(pass = serde(default="f64::default"))]
     pub difficulty: f64,
 
     #[builder(init = 1.)]
+    #[builder(pass = serde(skip_serializing_if="f64::is_zero"))]
+    #[builder(pass = serde(default="f64::default"))]
     pub priority: f64,
 
     #[builder(skip)]

@@ -1,4 +1,5 @@
 pub mod project;
+pub mod utils;
 pub mod tags;
 pub mod task;
 pub mod desc;
@@ -202,6 +203,13 @@ impl Database{
         self.tasks.iter().filter(p).map(|k| TaskManager::new(k.id, self)).collect()
     }
 
+    pub fn get_projects_where<P>(&self, p: P) -> Vec<ProjectManager>
+    where
+        P: FnMut(&&ProjectTable) -> bool,
+    {
+        self.projects.iter().filter(p).map(|k| ProjectManager::new(k.id, self)).collect()
+    }
+
     // [boilerplate end]
 
 
@@ -320,12 +328,16 @@ impl Database{
         // NOTE: this assumes that all childs are after the parent in the vector
         let mut index = 0;
         loop {
+            println!("__take_childs_tasks: {index} < {}", v.len());
             if !(index < v.len()){
                 break;
             }
             if let Some(parent) = v[index].task.parent{
                 if parent == table.task.id{
                     table.childs.push( v.remove(index) );
+                }
+                else{
+                    index += 1;
                 }
             }
             else{
@@ -345,6 +357,9 @@ impl Database{
             if let Some(parent) = v[index].project.parent{
                 if parent == table.project.id{
                     table.childs.push( v.remove(index));
+                }
+                else{
+                    index += 1;
                 }
             }
             // since a task at i was removed, a new task will appear in i
@@ -385,6 +400,7 @@ impl Database{
             let mut index = 0;
             // NOTE: this assumes that all childs are after the parent in the vector
             loop {
+                println!("{index} < {}", task_buffer.len());
                 if index >= task_buffer.len(){
                     break;
                 }
@@ -394,7 +410,6 @@ impl Database{
                         let task = Self::__build_task_tree(task_buffer[index].task.id, &mut task_buffer)?.into_task();
                         project.tasks.push(task);
                     }
-
                 }
                 else{
                     index += 1;
@@ -427,6 +442,68 @@ impl Database{
             .map(ProjectTree::into_project)
             .collect()
         );
+    }
+}
+
+#[derive(Debug, Default)]
+pub enum NodeType{
+    #[default]
+    Project,
+    Task,
+}
+
+#[derive(Debug)]
+pub struct Explorer {
+    node_t: NodeType,
+    dir: Vec<(NodeType, usize)>,
+}
+
+impl Explorer {
+    fn root() -> Self{ 
+        Self{
+            node_t: NodeType::Project,
+            dir: Vec::new(),
+        }
+    }
+
+    /**
+     * getting a task: /project_a/project_b/.../!task_a/task_b/.../task_c
+     * getting a project: /project_a/project_b/.../project_c
+     */
+    fn get_desired_target(path: String, database: &Database) -> Option<Vec<usize>>{
+        // HACK: I hate you rust
+        let direns : Vec<String> = path.split("/").into_iter().map(String::from).collect();
+        let mut direns : Vec<String> = direns.into_iter().rev().collect();
+        let mut projects = Vec::new();
+        // gets all projects
+        loop {
+            if let Some(data) = direns.pop(){
+                assert_ne!(data, "", "this is not well formatted");
+                let mut chars = data.chars();
+                if chars.next().unwrap() == '!'{
+                    break;
+                }
+                else
+                if chars.next().is_none(){
+                    assert!(false, "this other stuff is not well formatted")
+                }
+                projects.push(data.clone());
+                continue;
+            }
+            break;
+        }
+        return None;
+    }
+}
+
+#[cfg(test)]
+mod exploter_test{
+    use crate::{Database, Explorer};
+
+    #[test]
+    fn test_target(){
+        let d = Database::default();
+        Explorer::get_desired_target("projecta/projectb/!task/!task".to_string(), &d);
     }
 }
 
