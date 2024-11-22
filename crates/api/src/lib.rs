@@ -221,7 +221,6 @@ impl Database{
         entry.desc = t.desc.into();
         entry.parent = pa_id;
         entry.project = pr_id;
-        entry.min_time = chrono::TimeDelta::minutes(t.min_time as i64);
         let id = entry.id;
 
         tt.push(entry);
@@ -470,29 +469,29 @@ impl Explorer {
      * getting a task: /project_a/project_b/.../!task_a/task_b/.../task_c
      * getting a project: /project_a/project_b/.../project_c
      */
-    fn get_desired_target(path: String, database: &Database) -> Option<Vec<usize>>{
+    pub fn get_desired_target(path: String, database: &Database) -> Option<Vec<usize>>{
+        None
+    }
+
+    fn split_target_path(path: String) -> Option<Vec<(String, NodeType)>>{
         // HACK: I hate you rust
         let direns : Vec<String> = path.split("/").into_iter().map(String::from).collect();
         let mut direns : Vec<String> = direns.into_iter().rev().collect();
-        let mut projects = Vec::new();
+        println!("direns: {direns:?}");
+        let mut target_path = Vec::new();
+        let mut is_task: bool = false;
+
         // gets all projects
-        loop {
-            if let Some(data) = direns.pop(){
-                assert_ne!(data, "", "this is not well formatted");
-                let mut chars = data.chars();
-                if chars.next().unwrap() == '!'{
-                    break;
-                }
-                else
-                if chars.next().is_none(){
-                    assert!(false, "this other stuff is not well formatted")
-                }
-                projects.push(data.clone());
-                continue;
+        while !direns.is_empty(){
+            let mut data = direns.pop().unwrap();
+            println!("data: {data}");
+            if data.chars().next().unwrap() == '!'{
+                is_task = true;
+                data.remove(0);
             }
-            break;
+            target_path.push((data, if is_task { NodeType::Project } else { NodeType::Task }));
         }
-        return None;
+        return Some(target_path);
     }
 }
 
@@ -503,7 +502,8 @@ mod exploter_test{
     #[test]
     fn test_target(){
         let d = Database::default();
-        Explorer::get_desired_target("projecta/projectb/!task/!task".to_string(), &d);
+        let path = Explorer::split_target_path("projecta/projectb/!taska/taskb".to_string());
+        println!("d: {path:?}");
     }
 }
 
