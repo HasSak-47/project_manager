@@ -7,7 +7,7 @@ use anyhow::{anyhow, Result};
 use project_manager_api::{project::Project, Database, Location};
 
 use crate::
-    utils::{exists_path, load_database, save_database};
+    utils::{exists_path, save_database};
 
 use ly::log::prelude::*;
 
@@ -39,7 +39,6 @@ impl InitStruct{
         let proj = toml::from_str::<Project>(&buf)?
             .location(Location::Path(status_path.clone()));
 
-        load_database(&mut db)?;
         if exists_path(&db, &status_path) {
             return Err(anyhow!("Project path ({}) already exists", status_path.display()));
         }

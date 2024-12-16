@@ -9,8 +9,13 @@ mod new;
 // mod mark_feature;
 // mod utils;
 
-
 use std::path::PathBuf;
+use std::{fs::OpenOptions, io::Read};
+
+use ly::log::prelude::*;
+use ly::log::write::ANSI;
+
+use project_manager_api::Database;
 
 use anyhow::{Result, anyhow};
 use clap::{Subcommand, Parser, Args};
@@ -24,7 +29,8 @@ use self::{
     list::ListStruct,
 };
 
-use project_manager_api::Database;
+use crate::utils::load_database;
+
 
 #[derive(Parser, Debug)]
 #[clap(author="Daniel", version, about)]
@@ -70,27 +76,26 @@ enum Tree{
     // Git(GitStruct),
 }
 
-impl Arguments {
-    pub fn debug<S: AsRef<str>>(&self, info: &S){
-        let info = info.as_ref();
-        if self.debug{
-            println!("{}", info);
-        }
-    }
-    
-}
-
-pub fn cli(mut db: Database) -> anyhow::Result<()> {
+pub fn cli() -> anyhow::Result<()> {
     // set up stuff
+    ly::log::set_logger(ANSI::new());
+
     let args = Arguments::parse();
     if args.tree.is_none(){
         return Err(anyhow!("no arguments given!"));
     }
     if args.debug {
-        ly::log::set_level(ly::log::Level::Log);
+        ly::log::set_level(ly::log::Level::Debug);
+        log!("running in debug...");
+    }
+    else{
+        ly::log::set_level(ly::log::Level::Error);
     }
 
     let tree = args.tree.clone().unwrap();
+
+    let mut db = Database::default();
+    load_database(&mut db)?;
 
     use Tree as TR;
 

@@ -30,12 +30,12 @@ pub struct Description{
     pub priority   : f64,
     pub difficulty : f64,
 
-    #[builder(pass = serde(default = "default_version"))]
     #[builder(init = default_version() )]
+    #[builder(pass = serde(default = "default_version"))]
     pub version    : String,
 
-    #[builder(pass = serde(default = "default_edition"))]
     #[builder(init = default_edition())]
+    #[builder(pass = serde(default = "default_edition"))]
     pub edition    : String,
 
     #[builder(ty = String)]

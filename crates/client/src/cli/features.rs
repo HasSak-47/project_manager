@@ -4,7 +4,7 @@ use anyhow::{anyhow, Result};
 use project_manager_api::{desc::Descriptor, task::Task, Database, Location};
 use ly::log::prelude::*;
 
-use crate::utils::{load_database, save_database};
+use crate::utils::save_database;
 
 use super::Arguments;
 
