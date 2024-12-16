@@ -11,9 +11,9 @@ use thiserror::Error;
 
 use ly::log::prelude::*;
 
-use project::{Project, ProjectTable};
+use project::{Project, ProjectManager, ProjectTable};
 use tags::{TagOtherTable, TagTable};
-use task::{Task, TaskTable};
+use task::{Task, TaskManager, TaskManagerMut, TaskTable};
 
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Location{
@@ -136,6 +136,35 @@ impl Database{
             .collect()
     }
 
+    fn get_project_where_id(&self, id: usize) -> Result<&ProjectTable> {
+            self.projects
+                .iter()
+                .find(|p| p.id == id)
+                .ok_or(DatabaseError::NotFound)
+    }
+
+    fn get_project_where_id_mut(&mut self, id: usize) -> Result<&mut ProjectTable> {
+            self.projects
+                .iter_mut()
+                .find(|p| p.id == id)
+                .ok_or(DatabaseError::NotFound)
+    }
+
+    fn get_task_where_id(&self, id: usize) -> Result<&TaskTable> {
+            self.tasks
+                .iter()
+                .find(|p| p.id == id)
+                .ok_or(DatabaseError::NotFound)
+    }
+
+    fn get_task_where_id_mut(&mut self, id: usize) -> Result<&mut TaskTable> {
+            self.tasks
+                .iter_mut()
+                .find(|p| p.id == id)
+                .ok_or(DatabaseError::NotFound)
+    }
+
+
     pub fn get_project_id<P>(&self, p: P) -> Result<usize>
     where
         P: FnMut(&&ProjectTable) -> bool,
@@ -168,7 +197,7 @@ impl Database{
             .and_then(|p| Ok(p.id))
     }
 
-    pub fn get_project<P>(&self, p: P) -> Result<Manager<ProjectTable>>
+    pub fn get_project<P>(&self, p: P) -> Result<ProjectManager>
     where
         P: FnMut(&&ProjectTable) -> bool
     {
@@ -182,7 +211,7 @@ impl Database{
         self.get_project_id(p).and_then(|p| Ok(ManagerMut::new(p, self)))
     }
 
-    pub fn get_task<P>(&self, p: P) -> Result<Manager<TaskTable>>
+    pub fn get_task<P>(&self, p: P) -> Result<TaskManager>
     where
         P: FnMut(&&TaskTable) -> bool,
     {
@@ -201,6 +230,35 @@ impl Database{
         P: FnMut(&&TaskTable) -> bool,
     {
         self.tasks.iter().filter(p).map(|k| TaskManager::new(k.id, self)).collect()
+    }
+
+    fn __get_task_of_project<P>(&self, project_id: usize, p: P) -> Result<usize>
+    where
+        P: FnMut(&&TaskTable) -> bool,
+    {
+        self.tasks
+            .iter()
+            .find(p)
+            .iter()
+            .find(|task| task.parent.is_some_and(|pi| pi == project_id))
+            .ok_or(DatabaseError::NotFound)
+            .map(|t| t.id)
+    }
+
+    pub fn get_task_of_project<P>(&self, project_id: usize, p: P) -> Result<TaskManager>
+    where
+        P: FnMut(&&TaskTable) -> bool,
+    {
+        self.__get_task_of_project(project_id, p)
+            .and_then(|p| Ok(Manager::new(p, self)))
+    }
+
+    pub fn get_task_of_project_mut<P>(&mut self, project_id: usize, p: P) -> Result<TaskManagerMut>
+    where
+        P: FnMut(&&TaskTable) -> bool,
+    {
+        self.__get_task_of_project(project_id, p)
+            .and_then(|p| Ok(ManagerMut::new(p, self)))
     }
 
     pub fn get_projects_where<P>(&self, p: P) -> Vec<ProjectManager>
@@ -508,13 +566,6 @@ mod exploter_test{
     }
 }
 
-type ProjectManager<'a> = Manager<'a, Project>;
-#[allow(dead_code)]
-type ProjectManagerMut<'a> = ManagerMut<'a, Project>;
-
-type TaskManager<'a> = Manager<'a, Task>;
-#[allow(dead_code)]
-type TaskManagerMut<'a> = ManagerMut<'a, Task>;
 
 pub struct Manager<'a, T>{
     pool: &'a Database,
@@ -574,3 +625,5 @@ impl DatabaseError {
         return DatabaseError::Other(s.as_ref().to_string());
     }
 }
+
+

@@ -61,6 +61,10 @@ impl<'a> ProjectManager<'a>{
         &self.get_table().desc.name
     }
 
+    pub fn id(&self) -> usize{
+        self.get_table().id
+    }
+
     pub fn location(&self) -> &Location{
         &self.get_table().location
     }

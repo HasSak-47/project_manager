@@ -1,9 +1,6 @@
 use ly::proc::builder;
 use crate::{
-    desc::{Description, Descriptor},
-    tags::Tag,
-    TaskManager,
-    utils::*
+    desc::{Description, Descriptor}, tags::Tag, Manager, ManagerMut,
 };
 use serde::{Deserialize, Serialize};
 
@@ -96,4 +93,15 @@ impl<'a> TaskManager<'a>{
     }
 
 
+}
+
+pub type TaskManager<'a> = Manager<'a, Task>;
+#[allow(dead_code)]
+pub type TaskManagerMut<'a> = ManagerMut<'a, Task>;
+
+impl<'a> TaskManagerMut<'a>{
+    pub fn mark_as_done(&mut self) {
+        let mut task = self.pool.get_task_where_id_mut(self.id).unwrap();
+        task.done = true;
+    }
 }
