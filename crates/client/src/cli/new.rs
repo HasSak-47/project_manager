@@ -34,12 +34,12 @@ impl NewStruct{
     pub fn run(self, _args: Arguments, mut db: Database) -> Result<()> {
 
         let mut path = self.path.unwrap_or(current_dir().unwrap());
-        let _ = log!("creating project at {}", path.display());
+        log!("creating project at {}", path.display());
 
         path.push("status");
         path.set_extension("toml");
 
-        let _ = log!("with status at {}", path.display());
+        log!("with status at {}", path.display());
 
         load_database(&mut db)?;
 
@@ -59,10 +59,10 @@ impl NewStruct{
                   .edition(self.edition)
             )
             .location(Location::Path(path.clone()));
-        let _ = log!("created project {p:?}");
+        debug!("created project {p:?}");
 
         let mut file = File::create(&path)?;
-        let _ = log!("created status file");
+        log!("created status file");
         let s = toml::to_string(&p).unwrap();
 
         file.write(s.as_bytes())?;

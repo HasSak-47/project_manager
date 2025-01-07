@@ -30,3 +30,39 @@ priority = 1.0
 difficulty = 1.0
 version = "0.5.2"
 edition = "0.1.0"
+min_time = 30
+
+[[tasks]]
+done = false
+project = ""
+
+[tasks.desc]
+name = "test feat"
+priority = 1.0
+difficulty = 1.0
+version = "0.5.2"
+edition = "0.1.0"
+min_time = 30
+
+[[tasks]]
+done = false
+project = ""
+
+[tasks.desc]
+name = "test feat"
+priority = 1.0
+difficulty = 1.0
+version = "0.5.2"
+edition = "0.1.0"
+min_time = 30
+
+[[tasks]]
+done = false
+project = ""
+
+[tasks.desc]
+name = "test feat"
+priority = 1.0
+difficulty = 1.0
+version = "0.5.2"
+edition = "0.1.0"

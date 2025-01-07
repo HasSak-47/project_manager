@@ -25,13 +25,13 @@ pub struct InitStruct{
 impl InitStruct{
     pub fn run(self, _args: Arguments, mut db: Database) -> Result<()> {
         let path = self.path.unwrap_or(current_dir().unwrap());
-        let _ = log!("path of the new project: {}", path.display());
+        log!("path of the new project: {}", path.display());
 
         let mut status_path = path.clone();
         status_path.push("status");
         status_path.set_extension("toml");
 
-        let _ = log!("path of the status file : {}", status_path.display());
+        log!("path of the status file : {}", status_path.display());
         let mut file = BufReader::new(File::open(&status_path)?);
         let mut buf = String::new();
         file.read_to_string(&mut buf)?;

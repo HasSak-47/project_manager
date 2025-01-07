@@ -22,6 +22,7 @@ use clap::{Subcommand, Parser, Args};
 use self::{
     // delete::DelStruct,
     features::AddFeat,
+    mark_feature::MarkFeature,
     // git::GitStruct,
     init::InitStruct,
     new::NewStruct,
@@ -71,7 +72,7 @@ enum Tree{
     DoneFeat(NotDone),
     Update(NotDone),
 
-    // MarkFeature(MarkFeature),
+    MarkFeature(MarkFeature),
     // Git(GitStruct),
 }
 
@@ -105,7 +106,7 @@ pub fn cli() -> anyhow::Result<()> {
         // TR::Delete(d) => d.run(args, db)?,
         TR::AddFeat(f) => f.run(args, db)?,
         // TR::Git(g) => g.run(args, db)?,
-        // TR::MarkFeature(f) => f.run(args, db)?,
+        TR::MarkFeature(f) => f.run(args, db)?,
         _ => NotDone::default().run(args, db)?,
     }
 

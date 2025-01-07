@@ -93,4 +93,16 @@ impl<'a> ProjectManager<'a>{
     }
 }
 
+impl<'a> ProjectManagerMut<'a> {
+    pub fn as_ref(self) -> Result<ProjectManager<'a>>{
+        return self.pool.get_project(|p| p.id == self.id);
+    }
+
+    pub fn update(&mut self, now: chrono::NaiveDate) -> Result<()>{
+        let project = self.pool.get_project_where_id_mut(self.id)?;
+        project.last_worked = Some(now);
+        Ok(())
+    }
+}
+
 

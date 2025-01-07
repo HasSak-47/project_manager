@@ -101,7 +101,7 @@ pub type TaskManagerMut<'a> = ManagerMut<'a, Task>;
 
 impl<'a> TaskManagerMut<'a>{
     pub fn mark_as_done(&mut self) {
-        let mut task = self.pool.get_task_where_id_mut(self.id).unwrap();
+        let task = self.pool.get_task_where_id_mut(self.id).unwrap();
         task.done = true;
     }
 }

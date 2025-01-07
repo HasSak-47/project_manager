@@ -1,9 +1,11 @@
-target/
-Cargo.lock
+# MINE
 *.bk
 .nogit
 tmp
 
+document/*
+!document/*.tex
+!document/*.pdf
 
 # Added by cargo
 

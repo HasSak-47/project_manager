@@ -5,8 +5,6 @@ use std::io::{Read, Write};
 use project_manager_api as pm_api;
 
 use ly::log::{self, write::ANSI};
-use ly::macro_error;
-use ly::macro_log;
 use pm_api::project::Project;
 use pm_api::task::Task;
 use pm_api::desc::Descriptor;
