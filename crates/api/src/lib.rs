@@ -114,6 +114,16 @@ impl ProjectTree{
 }
 
 impl Database{
+    // const stuff
+    pub const fn new() -> Self{
+        Self {
+            projects: Vec::new(),
+            tasks: Vec::new(),
+            tags: Vec::new(),
+            tag_pro: Vec::new(),
+            tag_task: Vec::new()
+        }
+    }
     // [boilerplate start]
     pub fn get_all_projects(&self) -> Vec<ProjectManager>{
         self.projects
