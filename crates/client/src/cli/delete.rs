@@ -1,8 +1,8 @@
-use crate::SystemHandler;
-
-use super::Arguments;
 use clap::Args;
 use anyhow::Result;
+use project_manager_api::Handler;
+
+use super::Arguments;
 
 #[derive(Args, Debug, Clone)]
 #[clap(about = include_str!("abouts/DelStruct.txt").trim_end())]
@@ -13,8 +13,9 @@ pub struct DelStruct{
 }
 
 impl DelStruct{
-    pub fn run(self, _args: Arguments, mut handler: SystemHandler) -> Result<()> {
-        handler.remove_project(self.name)?;
+    pub fn run(self, _args: Arguments, mut handler: Handler) -> Result<()> {
+        handler.load_projects()?;
+        handler.projects.remove(&self.name);
         handler.commit_manager()?;
         Ok(())
     }
