@@ -14,7 +14,7 @@ pub struct ProjectTable{
 
     #[builder(ty=String)]
     pub(crate) last_worked: Option<Timestamp>,
-    pub(crate) location: Option<Location>,
+    pub(crate) location: Location,
 
     #[builder(skip)]
     pub(crate) id: usize,

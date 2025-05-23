@@ -14,6 +14,8 @@ pub struct Description{
     pub(crate) description: String,
     pub(crate) priority   : f64,
     pub(crate) difficulty : f64,
+    #[builder(init = String::from("0.1.0"))]
+    pub(crate) version    : String,
 
     #[builder(pass = serde(default))]
     #[builder(pass = serde(skip_serializing_if = "String::is_empty"))]
