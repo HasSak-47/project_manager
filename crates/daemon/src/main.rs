@@ -8,7 +8,15 @@ use std::net::TcpListener;
 use ly::log::prelude::*;
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, PartialOrd)]
+struct Event{
+    id: usize,
+    duration: u64,
+    date: u64,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, PartialOrd)]
 struct Task{
+    id: usize,
     priority: f64,
     difficulty: f64,
     done: bool,
@@ -17,43 +25,41 @@ struct Task{
     due_date: u64, // UNIX TIMESTAMP
 }
 
+impl Task {
+    fn duration(&self) -> u64{
+        (self.min_time as f64 * self.difficulty) as u64
+    }
+}
+
+#[derive(Debug, Default, Clone, PartialEq, PartialOrd)]
+struct CollapsedEntry{
+    id: usize,
+    time: u64, // unix
+}
+
 #[derive(Debug, Default, Clone, PartialEq, PartialOrd)]
 struct Scheduler{
     current_time: u64,
     delta_time: u64,
     tasks: Vec<Task>,
-    schedule: Vec<Task>,
+    events: Vec<Event>,
+    schedule: Vec<CollapsedEntry>,
 }
 
 impl Scheduler{
     pub const fn new() -> Self{
-        Self { current_time: 0, delta_time: 0, tasks: Vec::new(), schedule: Vec::new(), }
+        Self { current_time: 0, delta_time: 0, tasks: Vec::new(), events: Vec::new(), schedule: Vec::new(), }
     }
 
     pub fn add_task(&mut self, task: Task) {
         self.tasks.push(task);
     }
 
+    pub fn add_event(&mut self, event: Event) {
+        self.events.push(event);
+    }
 
     pub fn slot(&mut self) {
-        // reverse order
-        self.tasks.sort_by(|a, b| b.due_date.cmp(&a.due_date));
-        loop {
-            let last = self.tasks.pop();
-            if last.is_none(){
-                break;
-            }
-            let last = last.unwrap();
-
-            if last.due_date > self.delta_time{
-                if last.due_date <= 
-                continue;
-            }
-            else{
-            }
-
-        }
-        println!("{:#?}", self.tasks);
     }
 }
 
