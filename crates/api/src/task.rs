@@ -1,5 +1,5 @@
 use ly::proc::builder;
-use crate::desc::{Descriptor, Description};
+use crate::{desc::{Description, Descriptor}, TaskManager};
 use serde::{Deserialize, Serialize};
 
 #[builder(name = Task, pass = derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize))]
@@ -12,6 +12,13 @@ pub struct TaskTable{
     // minimun time needed to perform the task min_time   : time::Duration,
     #[builder(ty = u64, init = 10)]
     pub min_time: chrono::Duration,
+
+    // minimun time needed to perform the task min_time   : time::Duration,
+    #[builder(init = 1.)]
+    pub difficulty: f64,
+
+    #[builder(init = 1.)]
+    pub priority: f64,
 
     #[builder(skip)]
     pub id : usize,
@@ -37,6 +44,8 @@ pub struct TaskTable{
 impl TaskTable {
     pub fn naive_task(self) -> Task{
         Task {
+            priority: self.priority,
+            difficulty: self.difficulty,
             desc: self.desc.naive_description(),
             done: self.done,
             min_time: self.min_time.num_minutes() as u64,
@@ -45,4 +54,55 @@ impl TaskTable {
             tags: Vec::new(),
         }
     }    
+}
+
+impl<'a> TaskManager<'a>{
+    pub fn name(&self) -> &String{
+        &self.get_table().desc.name
+    }
+
+    pub fn get_table(&self) -> &TaskTable{
+        &self.pool.tasks[self.id]
+    }
+
+    fn __get_completion(&self, candidates: &mut Vec<TaskManager<'a>>, cdone: &mut f64, ctodo: &mut f64) {
+        let mut childs = Vec::new();
+        let parent = self.id;
+        loop{
+            match candidates.iter()
+                .position(|t| t.get_table().parent.is_some_and(|p_id| p_id == parent))
+            {
+                Some(index) => childs.push(candidates.remove(index)),
+                None => break,
+            }
+        }
+
+        if self.get_table().done {
+            *cdone += self.get_table().difficulty;
+        }else{
+            *ctodo += self.get_table().difficulty;
+        } 
+
+        for child in childs{
+            child.__get_completion(candidates, cdone, ctodo);
+        }
+    }
+
+    pub fn get_completion_pairs(&self) -> (f64, f64){
+        let mut candidates = self.pool.get_all_tasks();
+        let mut todo = 0.;
+        let mut done = 0.;
+        self.__get_completion(&mut candidates, &mut done, &mut todo);
+        return (done, todo);
+    }
+
+    pub fn get_completion(&self) -> f64{
+        let (done, todo) = self.get_completion_pairs();
+        if done + todo == 0.{
+            return 0.;
+        }
+        return done / (done + todo);
+    }
+
+
 }

@@ -67,6 +67,25 @@ impl<'a> ProjectManager<'a>{
     pub fn get_table(&self) -> &ProjectTable{
         &self.pool.projects[self.id]
     }
+
+    pub fn get_parent_id(&self) -> Option<usize>{
+        self.pool.projects[self.id].parent.clone()
+    }
+
+    pub fn get_completion(&self) -> f64{
+        let mut todo = 0.;
+        let mut done = 0.;
+        let tasks = self.pool.get_tasks_where(|p| p.project.is_some_and(|p| p == self.id));
+        for task in tasks{
+            let (td, tt) = task.get_completion_pairs();
+            done += td;
+            todo += tt;
+        }
+        if todo + done == 0.{
+            return 0.;
+        }
+        return done / (todo + done);
+    }
 }
 
 
