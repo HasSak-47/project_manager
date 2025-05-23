@@ -39,15 +39,19 @@ pub trait Idable{
     fn get_id(&mut self) -> usize;
 }
 
-#[allow(dead_code)]
-type TagProjectTable = TagOtherTable<ProjectTable>;
-#[allow(dead_code)]
-type TagTaskTable = TagOtherTable<TaskTable>;
+/**
+ * the "root" project has id 0
+ */
+pub struct ProjectDatabase{
+    projects: Vec<ProjectTable>,
+    tasks   : Vec<TaskTable>,
+}
+
+
 
 #[derive(Default)]
 pub struct Database{
-    projects: Vec<ProjectTable>,
-    tasks   : Vec<TaskTable>,
+    projects: Vec<ProjectDatabase>,
     tags    : Vec<TagTable>,
 
     #[allow(dead_code)]
@@ -118,7 +122,6 @@ impl Database{
     pub const fn new() -> Self{
         Self {
             projects: Vec::new(),
-            tasks: Vec::new(),
             tags: Vec::new(),
             tag_pro: Vec::new(),
             tag_task: Vec::new()
