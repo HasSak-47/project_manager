@@ -1,10 +1,10 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, env::current_dir};
 
-
-use super::{utils::find_local_status, Arguments};
+use super::Arguments;
 use clap::Args;
-use anyhow::{Result, anyhow};
-use project_manager_api::{Handler, Location};
+
+use anyhow::Result;
+use project_manager_api::{project::{Project, ProjectStatus}, Handler, Location};
 
 use crate::VERSION;
 
@@ -14,32 +14,31 @@ pub struct NewStruct{
     name: String,
     #[arg(short, long)]
     path: Option<PathBuf>,
-    #[arg(short, long, default_value = "0.0.0")]
+    #[arg(short, long, default_value = "0.1.0")]
     version: String,
     #[arg(short, long, default_value = VERSION)]
     edition: String,
 }
 
 impl NewStruct{
-    fn get_location(&self) -> Result<Location>{
-        let path = find_local_status()?;
-
-        if path.exists(){
-            return Err(anyhow!("status.toml already exists try using init instead!"));
-        }
-        Ok(Location::path(path))
-    }
-
-    fn validate_path(&self) -> bool { true }
-
     pub fn run(self, _args: Arguments, mut handler: Handler) -> Result<()> {
+        let name = self.name;
+        let path = self.path.unwrap_or(current_dir().unwrap());
 
-        if self.validate_path() {
-            handler.new_project(self.name.clone(), self.get_location()?)?;
-        }
+        let mut status_path = path.clone();
+        status_path.push("status");
+        status_path.set_extension("toml");
 
-        handler.commit_manager()?;
-        handler.commit_projects()?;
+        let mut project = Project::default();
+        project.info.name = name.clone();
+        project.info.location = Location::Path(path);
+        project.status = Some(Box::new(
+            ProjectStatus::new(name.clone(), String::new())
+        ));
+
+        handler.new_project(project).unwrap();
+        handler.commit_project(name).unwrap();
+        handler.commit_manager().unwrap();
 
         Ok(())
     }

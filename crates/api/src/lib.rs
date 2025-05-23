@@ -5,8 +5,13 @@ use std::{collections::HashMap, path::{Path, PathBuf}};
 use serde::{Serialize, Deserialize};
 use anyhow::{anyhow, Ok, Result};
 
+pub fn current_edition() -> String {
+    return env!("CARGO_PKG_VERSION").to_string();
+}
+
 #[derive(Debug, Clone, PartialEq, Eq,
          Serialize, Deserialize)]
+#[serde(tag = "loc_type", content = "location")]
 pub enum Location{
     Path(PathBuf),
     Url(String),
@@ -242,6 +247,20 @@ impl Handler{
             .and_then(|(_, p)| Some(p))
             .ok_or(anyhow!("Handler::find_project_mut Project not found!"))?;
         Ok(project)
+    }
+
+    /**
+    creates a status.toml in the location with an empty toml
+    adds project to the database
+    */
+    pub fn new_project(&mut self, project: Project) -> Result<()>{
+        self.project_handler.write(&project)?;
+        let name = project.info.name.clone();
+
+        self.manager.projects.insert(name.clone(), project.info.clone());
+        let cached_proj = CachedProject { project, ..Default::default() };
+        self.projects.insert(name, cached_proj);
+        Ok(())
     }
 
     /**

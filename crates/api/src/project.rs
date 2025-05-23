@@ -36,6 +36,8 @@ impl Feature{
     }
 }
 
+use crate::current_edition;
+
 /**
  * this data is just for decoration
  */
@@ -45,6 +47,11 @@ pub struct ProjectData{
     #[serde(default)] 
     #[serde(skip_serializing_if = "String::is_empty")]
     pub description: String,
+    #[serde(default)] 
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub version: String,
+    #[serde(default = "current_edition")] 
+    pub edition: String,
 }
 
 
@@ -66,6 +73,7 @@ impl ProjectStatus{
         ProjectStatus{
             project: ProjectData{
                 name, description,
+                ..Default::default()
             },
             ..Default::default()
         }
@@ -135,8 +143,10 @@ impl ProjectStatus{
 pub struct ProjectInfo{
     pub name: String,
     pub location: Location,
+
+    /** if None, status is in the project folder */
     #[serde(default)] 
-    pub status: Option<Location>, // if None, status is in the project folder
+    pub status: Option<Location>, 
     #[serde(default)] 
     pub last_update: Option<usize>, // timestamp
 }

@@ -4,7 +4,7 @@ use super::Arguments;
 use clap::Args;
 
 use anyhow::Result;
-use project_manager_api::{project::{Project, ProjectStatus}, Handler};
+use project_manager_api::{project::{Project, ProjectStatus}, Handler, Location};
 
 /**
 The project already has a status.toml in it's path
@@ -19,7 +19,7 @@ pub struct InitStruct{
 
 impl InitStruct{
     pub fn run(self, _args: Arguments, mut handler: Handler) -> Result<()> {
-        let path = self.path.unwrap_or(current_dir()?);
+        let path = self.path.unwrap_or(current_dir().unwrap());
         let name = self.name.unwrap_or(path.file_name().unwrap().to_str().unwrap().to_string());
 
         let mut status_path = path.clone();
@@ -28,13 +28,14 @@ impl InitStruct{
 
         let mut project = Project::default();
         project.info.name = name.clone();
+        project.info.location = Location::Path(path);
         project.status = Some(Box::new(
             ProjectStatus::new(name.clone(), String::new())
         ));
 
-        handler.init_project(project)?;
-        handler.commit_project(name)?;
-        handler.commit_manager()?;
+        handler.init_project(project).unwrap();
+        handler.commit_project(name).unwrap();
+        handler.commit_manager().unwrap();
 
         Ok(())
     }

@@ -1,10 +1,10 @@
-mod print;
+mod list;
 // mod rename;
 // mod git;
 // mod features;
 // mod delete;
 mod init;
-// mod new;
+mod new;
 // mod mark_feature;
 // mod utils;
 
@@ -15,12 +15,13 @@ use anyhow::{Result, anyhow};
 use clap::{Subcommand, Parser, Args};
 
 use init::InitStruct;
+use new::NewStruct;
 use project_manager_api::Handler;
 
 use crate::{ManagerTOML, ProjectTOML};
 
 use self::{
-    print::PrintStruct,
+    list::ListStruct,
 //     delete::DelStruct, features::AddFeat, git::GitStruct, mark_feature::MarkFeature, new::NewStruct
 };
 
@@ -50,10 +51,10 @@ impl NotDone{
 #[derive(Subcommand, Debug, Clone)]
 enum Tree{
     // Daemon(DaemonStruct),
-    Print(PrintStruct),
+    List(ListStruct),
     Init(InitStruct),
     // Delete(DelStruct),
-    // New(NewStruct),
+    New(NewStruct),
 
     // SetParent(NotDone),
     // SetSubproject(NotDone),
@@ -115,10 +116,10 @@ pub fn cli() -> Result<()> {
     use Tree as TR;
 
     match tree{
-        TR::Print(p) => p.run(args, handler)?,
+        TR::List(l) => l.run(args, handler)?,
         TR::Init(i) => i.run(args, handler)?,
         // TR::Delete(d) => d.run(args, handler)?,
-        // TR::New(n) => n.run(args, handler)?,
+        TR::New(n) => n.run(args, handler)?,
         // TR::AddFeat(f) => f.run(args, handler)?,
         // TR::Git(g) => g.run(args, handler)?,
         // TR::MarkFeature(f) => f.run(args, handler)?,
