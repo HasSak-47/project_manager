@@ -5,6 +5,7 @@ mod features;
 mod delete;
 mod init;
 mod new;
+mod parentchilds;
 // mod mark_feature;
 // mod utils;
 
@@ -71,7 +72,7 @@ enum Tree{
     Delete(DelStruct),
     New(NewStruct),
 
-    // SetParent(NotDone),
+    SetParent(NotDone),
     // SetSubproject(NotDone),
     AddFeat(AddFeat),
     // AddSubFeat(NotDone),

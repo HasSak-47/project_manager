@@ -1,5 +1,6 @@
 pub mod manager;
 pub mod project;
+pub mod project_tree;
 
 use std::{collections::HashMap, path::{Path, PathBuf}};
 use serde::{Serialize, Deserialize};
