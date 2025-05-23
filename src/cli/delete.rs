@@ -1,6 +1,6 @@
 use std::{path::PathBuf, env::current_dir};
 
-use super::RunCmd;
+use super::{RunCmd, Params};
 use clap::{Subcommand, Parser, Args};
 use crate::{error::ProjectResult, config::manager::{Manager, ProjectData, self}};
 
@@ -10,8 +10,9 @@ pub struct DelStruct{
     name: Option<String>,
 }
 
+
 impl RunCmd for DelStruct{
-    fn run(&self) -> ProjectResult<()> {
+    fn run(&self, _: Params) -> ProjectResult<()> {
         if self.name.is_none(){
             return Err(crate::error::ProjectError::Other("proj not found".to_string()));
         }

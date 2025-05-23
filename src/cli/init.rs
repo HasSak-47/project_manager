@@ -1,6 +1,6 @@
 use std::{path::PathBuf, env::current_dir};
 
-use super::RunCmd;
+use super::{RunCmd, Params};
 use clap::{Subcommand, Parser, Args};
 use crate::{error::ProjectResult, config::manager::{Manager, ProjectData, self}};
 
@@ -12,7 +12,7 @@ pub struct InitStruct{
 }
 
 impl RunCmd for InitStruct{
-    fn run(&self) -> ProjectResult<()> {
+    fn run(&self, params: Params) -> ProjectResult<()> {
         let man_path = Manager::get_path()?;
         let mut manager = Manager::load_data_from(&man_path)?;
         let cwd = current_dir().unwrap();
