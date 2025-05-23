@@ -1,4 +1,95 @@
 [project]
-name="test"
-version="0.0.0"
-edition="0.1.1"
+name="Project Manager"
+version="0.1.1"
+edition="0.1.0"
+
+[[todo]]
+name="upgrade system"
+priority=0.3
+difficulty=1.0
+
+[[todo]]
+name="redo get project config"
+priority=0.1
+difficulty=0.2
+
+[[todo.todo]]
+name="create subprojects"
+priority=0.3
+difficulty=0.8
+
+[[todo]]
+name="cli system"
+priority=0.8
+difficulty=0.5
+
+[[todo.todo]]
+name="print options"
+priority=0.2
+difficulty=0.5
+
+[[todo.done]]
+name="print percentajes"
+priority=0.2
+difficulty=0.1
+
+[[todo.done]]
+name="print all"
+priority=0.2
+difficulty=0.1
+
+[[todo.todo]]
+name="print random"
+priority=0.2
+difficulty=0.1
+
+[[todo]]
+name="bake projects"
+priority=0.9
+difficulty=0.3
+
+[[todo]]
+name="project selector"
+priority=0.2
+difficulty=0.1
+
+[[todo]]
+name="upgrade project read"
+priority=0.7
+difficulty=0.1
+
+[[todo]]
+name="improve subfeature implementation"
+priority=0.1
+difficulty=0.6
+
+[[todo.done]]
+name="feats can have done and todo subfeats"
+priority=0.1
+difficulty=0.6
+
+
+[[done]]
+name="read project"
+priority=1.0
+difficulty=0.2
+
+[[done.done]]
+name="read subfeat"
+priority=1.0
+difficulty=0.2
+
+[[done]]
+name="project status"
+priority=0.1
+difficulty=0.1
+
+[[done.done]]
+name="calculate % done"
+priority=0.4
+difficulty=0.1
+
+[[done]]
+name="rework file interaction"
+priority=1.0
+difficulty=1.0
