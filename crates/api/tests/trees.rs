@@ -4,6 +4,7 @@ use ly::macro_error;
 use ly::macro_log;
 use pm_api::project::Project;
 use pm_api::task::Task;
+use project_manager_api::desc::{Description, Descriptor};
 use project_manager_api::{Database, DatabaseBuilder, DatabaseReader, DatabaseWriter};
 use serde;
 use anyhow::Result;
@@ -83,7 +84,33 @@ fn unfold() -> Result<()>{
     let task: Task = serde_json::from_str(TEST_TASK)?;
     pool.add_full_task(task)?;
 
-    let trees = pool.build_trees()?;
+    let _projects = pool.build_project_trees()?;
+    let _task = pool.build_task_tree(0)?;
+
+    println!("{_task:?}");
+
+
+    Ok(())
+}
+
+
+fn create_random_project(depth: usize) -> Project {
+}
+
+
+#[test]
+fn stress_test() -> Result<()>{
+    use rand::prelude::*;
+    let n_rp : usize = rand::random();
+    let mut root_projects = Vec::with_capacity(n_rp);
+    for i in 0..n_rp{
+        let project = Project::new()
+            .desc(Descriptor::new().name(format!("root_{i}")))
+            .last_worked(format!("{} {} {}", rand::random::<u32>() % 28, rand::random::<u32>() % 12, 2000 + rand::random::<u32>() % 24));
+        root_projects.push(project);
+    }
+
+
 
     Ok(())
 }

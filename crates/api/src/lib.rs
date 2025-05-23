@@ -352,7 +352,7 @@ impl Database{
         Ok(())
     }
 
-    pub fn build_task_trees(&self, id: usize) -> Result<Task>{
+    pub fn build_task_tree(&self, id: usize) -> Result<Task>{
         let mut root = TaskTree::new(
             self.tasks.iter().find(|t| t.id == id)
             .ok_or(DatabaseError::NotFound)?
@@ -384,10 +384,12 @@ impl Database{
                 root.childs.push(TaskTree::new(top));
                 continue;
             }
-            search_in(&top, &mut root.childs);
+            if !search_in(&top, &mut root.childs){
+                let _ = warn!("task not found in tree");
+            }
         }
 
-        return Err(DatabaseError::NotImplemented);
+        return Ok(root.into_task());
     }
 
     pub fn build_project_trees(&self) -> Result<Vec<Project>>{
@@ -536,7 +538,7 @@ pub enum DatabaseError{
     #[error("Malformed non expected field")]
     Malformed,
 
-    #[error("not implemented")]
+    #[error("database function not implemented")]
     NotImplemented,
 }
 
