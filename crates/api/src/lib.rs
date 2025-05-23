@@ -279,8 +279,6 @@ impl Database{
     }
 
     // [boilerplate end]
-
-
     pub fn build_project(&self) -> Result<Project>{ Err(DatabaseError::NotImplemented) }
 
     fn unravel_tasks(&self, pt: &mut Vec<ProjectTable>, tt: &mut Vec<TaskTable>, gt: &mut Vec<TagTable>, t: Task, pa_id: Option<usize>, pr_id: Option<usize>) -> Result<()>{
