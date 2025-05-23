@@ -4,12 +4,10 @@ use super::{RunCmd, Params};
 use clap::{Subcommand, Parser, Args};
 use crate::{error::ProjectResult, config::manager::{Manager, ProjectData, self}};
 
-// this looks like shit
 #[derive(Args, Debug, Clone)]
 pub struct DelStruct{
     name: String,
 }
-
 
 impl RunCmd for DelStruct{
     fn run(&self, params: Params) -> ProjectResult<()> {

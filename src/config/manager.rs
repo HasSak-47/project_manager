@@ -8,8 +8,6 @@ use toml::{self, map::Map, Table, Value};
 
 use crate::{error::*, utils::get_dir};
 
-const DATA_PATH: &str = "project_manager/config.toml";
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ProjectData{
     pub name: String,
