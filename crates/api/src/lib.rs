@@ -284,6 +284,18 @@ impl Database{
             .collect()
     }
 
+    pub fn build_trees(&self) -> Result<Vec<Project>>{
+        let mut roots = self.projects
+            .iter()
+            .filter(|p| p.parent.is_none());
+
+        for root in &mut roots{
+            let childs = self.projects.iter().filter(|p| p.parent.is_some_and(|k| k == root.id));
+        }
+
+        return Err(DatabaseError::NotImplemented);
+    }
+
     pub fn get_writer_mut(&mut self) -> &mut Box<dyn DatabaseWriter>{
         return &mut self.writer;
     }
