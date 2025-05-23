@@ -14,9 +14,7 @@ use clap::{Subcommand, Parser, Args};
 use print::PrintStruct;
 use init::InitStruct;
 
-use std::path::PathBuf;
-
-use crate::{SystemHandler, VERSION};
+use crate::SystemHandler;
 use self::{
     delete::DelStruct, features::AddFeat, git::GitStruct, mark_feature::MarkFeature, new::NewStruct
 };
