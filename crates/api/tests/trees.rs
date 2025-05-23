@@ -37,5 +37,7 @@ fn test_tree_serde() -> Result<()>{
         .build();
     pool.add_full_project(tree)?;
 
+    println!("{pool:?}");
+
     Ok(())
 }

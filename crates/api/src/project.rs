@@ -19,7 +19,10 @@ pub struct ProjectTable{
 
     #[builder(skip)]
     pub(crate) id: usize,
-    #[builder(skip)]
+
+    #[builder(ty = String, init = String::new())]
+    #[builder(pass = serde(default = "String::new"))]
+    #[builder(pass = serde(skip_serializing_if = "String::is_empty"))]
     pub(crate) parent: Option<usize>,
 
     #[builder(skip_table)]
@@ -38,28 +41,3 @@ pub struct ProjectTable{
     tags: Vec<Tag>,
 }
 
-pub struct FlatProject{
-    desc: Descriptor,
-    last_worked: String,
-    location: Location,
-    parent: Option<String>,
-    tags: Vec<Tag>,
-}
-
-impl Project{
-    fn _flatten(self, parent: String) -> Result<Vec<Project>>{
-        let mut projects = Vec::new();
-        let name = self.desc.name.clone();
-
-        projects.push(Project::new()
-            .desc(self.desc)
-            .last_worked(self.last_worked)
-            .location(self.location.clone())
-        );
-        return Ok(projects);
-    }
-
-    pub fn flatten(self) -> Result<Vec<Project>>{
-        return self._flatten(String::new());
-    }
-}
