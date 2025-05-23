@@ -106,8 +106,14 @@ impl Project {
     pub fn get_todo(&self) -> f64{ Self::_get_act(&self.todo, |feat : &Feature| &feat.todo )}
     pub fn get_done(&self) -> f64{ Self::_get_act(&self.done, |feat : &Feature| &feat.done )}
 
-    pub fn add_todo(&mut self, f: Feature){ self.todo.as_mut().and_then(|v| Some(v.push(f))); }
-    pub fn add_done(&mut self, f: Feature){ self.done.as_mut().and_then(|v| Some(v.push(f))); }
+    fn __add_to(ov : &mut Option<Vec<Feature>>, f : Feature){ 
+        let mut v = ov.take().unwrap_or(Vec::new());
+        v.push(f);
+        *ov = Some(v);
+    }
+
+    pub fn add_todo(&mut self, f: Feature){ Self::__add_to(&mut self.todo, f); }
+    pub fn add_done(&mut self, f: Feature){ Self::__add_to(&mut self.done, f); }
 
     pub fn mark_done(&mut self, name: String){
         let i = self.todo.as_ref().and_then(|v| v.iter().position(|f| f.name == name));

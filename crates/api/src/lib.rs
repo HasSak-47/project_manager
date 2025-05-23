@@ -53,6 +53,7 @@ where
         for proj in self._projects.values_mut(){
             proj.load_project(&self._loader);
         } 
+
     }
 
     pub fn get_loader(&self) -> &Loader{ &self._loader }
@@ -127,7 +128,7 @@ where
         if p._proj.is_none(){
             return Err(anyhow!("Project is missing or it is not loaded!"))
         }
-        let tml = toml::to_string(&p._proj.as_ref().unwrap()).unwrap();
+        let tml = toml::to_string(&p._proj.as_ref().unwrap())?;
         self._loader.write_project(tml, &p._data.location)?;
         Ok(())
     }
