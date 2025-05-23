@@ -1,10 +1,11 @@
+#![allow(unused_import_braces)]
 use super::{Params};
 use clap::{Subcommand, Args};
 use rand::random;
 use project_manager_api::{
     error::{ProjectResult},
     config::{
-        manager::{Manager},
+        manager::{Manager, ProjectData},
         project::Project
     },
 };
@@ -30,11 +31,27 @@ struct PrintPercentaje{
 struct PrintProject{
     name: String,
     #[clap(short, long)]
-    toml: bool
+    toml: bool,
+    // probably shouldn't be used like this
 }
 
 #[derive(Args, Debug, Default, Clone)]
-struct PrintProjects{ }
+struct PrintProjects{
+    #[clap(subcommand)]
+    sort_by: SortBy
+}
+
+#[derive(Subcommand, Default, Debug, Clone)]
+enum SortBy{
+    #[default]
+    #[clap(skip)]
+    None,
+
+    Progress,
+    Name,
+    LastUsed,
+}
+
 
 #[derive(Subcommand, Default, Debug, Clone)]
 enum PrintEnum{
@@ -43,6 +60,7 @@ enum PrintEnum{
     Project(PrintProject),
     Projects(PrintProjects),
     #[default]
+    #[clap(skip)]
     None,
 }
 
@@ -52,6 +70,17 @@ fn print_projects(manager: Manager, projects: Vec<Project>, _data: PrintProjects
         let l = p.project.name.len();
         if l > max_len {max_len = l}
     }
+    
+    let sort_by = match _data.sort_by{
+        SortBy::Progress => |a: &ProjectData, b: &ProjectData| b.name.cmp(&a.name),
+        SortBy::LastUsed => |a: &ProjectData, b: &ProjectData| b.name.cmp(&a.name),
+        _ => |a: &ProjectData, b: &ProjectData| b.name.cmp(&a.name),
+    };
+
+    let projects = if let SortBy::None = _data.sort_by{
+    }
+    else{
+    };
 
     for p in manager.projects{
         println!("{:2$} {}", p.name, p.path.display(), max_len + 4);
