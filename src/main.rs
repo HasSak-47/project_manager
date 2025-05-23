@@ -1,4 +1,3 @@
-use std::path::Path;
 use std::env;
 
 mod daemon;
@@ -10,22 +9,8 @@ use configs::project::{self, Project};
 use configs::config::{self, Config};
 
 fn main(){
-    let config_path = dirs::config_dir().unwrap().to_str().unwrap().to_string();
-    let config_prmg = {let mut a = config_path.clone(); a.push_str("/project_manager"); a};
-    let config_file = {let mut a = config_prmg.clone(); a.push_str("/config");          a};
-
-    if !Path::new(&config_prmg).exists(){
-        std::fs::create_dir(&config_prmg).unwrap();
-    }
-
-    if std::fs::File::open(&config_file).is_err(){
-        std::fs::write(&config_file, config::DEFAULT_CONFIG).unwrap();
-    }
-
-    let config_data = String::from_utf8(std::fs::read(config_file).unwrap()).unwrap();
-    let data : Config = toml::from_str(config_data.as_str()).unwrap();
-
-    let projects = Project::get_projects(&data).unwrap();
+    let config : Config = Config::get_config();//toml::from_str(config_data.as_str()).unwrap();
+    let projects = Project::get_projects(&config).unwrap();
 
     // tracker::main(data, projects);
     let mut args = Vec::<String>::new();
@@ -33,10 +18,16 @@ fn main(){
         args.push(arg);
     }
 
-    if args.len() >= 2 && args[1] == "--daemon"{
-        daemon::main(data, projects); 
+    if args.len() >= 2 {
+        if args[1] == "--daemon"{
+            daemon::main(config, projects); 
+        }
+        else 
+        if args[1] == "--create" {
+            editor::make_project(config);
+        }
     }
     else{
-        tracker::main(data, projects);
+        tracker::main(config, projects);
     }
 }

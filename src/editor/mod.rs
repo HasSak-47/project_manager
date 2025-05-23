@@ -2,31 +2,51 @@ use std::io::{self, prelude::*};
 use std::fs;
 use std::env;
 use dirs;
+use super::config::Config;
 
 use super::project::{self, *};
 
-fn ask<Type, ReaderT>(reader: &mut io::BufReader<ReaderT>, name: &str, option: &mut Type) 
+fn ask<Type>(reader: &mut io::BufReader<std::io::Stdin>, name: &str) -> Option<Type>
 where
     Type: std::fmt::Display + std::str::FromStr + std::fmt::Debug, 
     <Type as std::str::FromStr>::Err: std::fmt::Debug,
-    ReaderT: io::Read,
 {
     let mut buffer = String::new();
-    println!("is this option ({}: {}) okay? Y/n", name, option);
+    println!("write {}: ", name);
     reader.read_line(&mut buffer).unwrap();
+    buffer.pop();
 
-    if buffer.len() == 0 {return;}
-
-    let nth = buffer.chars().nth(0).unwrap();
-    if nth.to_uppercase().nth(0).unwrap() != 'Y'{
-        print!("write the new one: ");
-        reader.read_line(&mut buffer).unwrap();
-      
-        *option = Type::from_str(buffer.as_str()).unwrap();
-    }
+    Some(Type::from_str(buffer.as_str()).unwrap())
 
 }
 
+pub fn make_project(mut c: Config){
+    let mut p = Project::new();
+    let mut reader = io::BufReader::new(io::stdin());
+    p.project.name    = ask(&mut reader, "name").unwrap();
+    p.project.folder  = std::env::current_dir().unwrap().to_str().unwrap().to_string();
+    p.project.version = ask(&mut reader, "version").unwrap();
+
+    let name = p.project.name.clone().to_lowercase().replace(" ", "_");
+
+    let pm_path = format!("{}/project_manager/", dirs::config_dir().unwrap().to_str().unwrap());
+    let config_path  = format!("{}config", pm_path);
+    let project_path = format!("{}{}.toml", pm_path, name);
+
+
+    let mut projects = c.projects.unwrap();
+    projects.insert(name, toml::Value::String(project_path.clone()));
+    c.projects = Some(projects);
+
+
+    let mut project_file = fs::File::create(project_path).unwrap();
+    project_file.write(toml::to_string(&p).unwrap().as_bytes()).unwrap();
+
+    let mut config_file = fs::File::create(config_path).unwrap();
+    config_file.write(toml::to_string(&c).unwrap().as_bytes()).unwrap();
+}
+
+/*
 pub fn ask_for_project() -> (Project, String){
     let mut p : Project = Project::new();
     let mut reader = io::BufReader::new(io::stdin());
@@ -52,9 +72,7 @@ pub fn ask_for_project() -> (Project, String){
 
     ask(&mut reader, "file path", &mut file_path);
     (p , file_path)
-}
+}*/
 
-pub fn create_project(project: Project, path: String){
-    let mut file = fs::File::open(&path).unwrap();
-    file.write(toml::to_string(&project).unwrap().as_bytes()).unwrap();
+pub fn create_project(config: Config, project : Project, path: String){
 }
