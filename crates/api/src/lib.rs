@@ -4,11 +4,17 @@ pub mod task;
 pub mod trees;
 pub mod desc;
 
-use std::{error::Error, marker::PhantomData, path::PathBuf, time::{self, Duration, SystemTime}};
+use std::{collections::HashMap, error::Error, marker::PhantomData, path::PathBuf, time::{self, Duration, SystemTime}};
 
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+
 use ly::log::prelude::*;
+
+use project::ProjectTable;
+use tags::TagTable;
+use task::TaskTable;
+
 
 type Timestamp = SystemTime;
 
@@ -20,21 +26,29 @@ pub enum Location{
 
 type Result<T> = std::result::Result<T, DatabaseError>;
 
-struct Database{}
+pub trait FromSchema<T> where Self: Sized{
+    fn from_schema(schema: T, db: &Database) -> Result<Self>;
+}
 
-impl Database
-where
-{
-    pub fn search_entry_id<T>(&self, ident: T) -> Result<usize>
-    where
-        T: std::fmt::Debug,
-    {
-        let ident = format!("{:?}", ident);
-        return Err(DatabaseError::IdentNotFound{ ident });
-    }
+pub trait Idable{
+    fn set_id(&mut self);
+    fn get_id(&mut self) -> usize;
+}
 
-    pub fn get_entry<T>(&self, id: usize) -> Result<Manager<'static, T>>{
-        return Err(DatabaseError::IdNotFound { id });
+#[derive(Debug, Default)]
+struct Database{
+    pub projects: Vec<ProjectTable>,
+    pub tasks   : Vec<TaskTable>,
+    pub tags    : Vec<TagTable>,
+}
+
+impl Database{
+}
+
+trait Find<T> where
+Self: Sized{
+    fn find(&self, db: &Database) -> Result<T>{
+        return Err(DatabaseError::NotImplemented);
     }
 }
 
@@ -56,6 +70,12 @@ pub enum DatabaseError{
 
     #[error("unknown")]
     Unknown,
+
+    #[error("undefined error")]
+    Undefined,
+
+    #[error("not implemented")]
+    NotImplemented,
 }
 
 impl<'a, T> Manager<'a, T> {
