@@ -19,7 +19,6 @@ const fn default_min_time() -> i64 { 30 }
 
 #[builder(name = Descriptor, pass = derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize))]
 #[derive(Debug, Default, Clone)]
-#[allow(dead_code)]
 pub struct Description{
     pub name       : String,
 

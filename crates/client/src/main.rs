@@ -93,7 +93,8 @@ impl DatabaseWriter for Manager{
         }
 
         let fake = FakeReader {tables : p.clone()};
-        let temp_db = DatabaseBuilder::new().set_reader(fake).build();
+        let mut temp_db = DatabaseBuilder::new().set_reader(fake).build();
+        temp_db.load_data()?;
 
         let projects = temp_db.build_project_trees()?;
 

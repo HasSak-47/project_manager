@@ -202,6 +202,12 @@ impl Database{
             .and_then(|p| Ok(p.id))
     }
 
+    pub fn search_task<P>(&self, p: P) -> Result<TaskManager>
+    where
+        P: FnMut(&&TaskTable) -> bool {
+        self.search_task_id(p).and_then(|p| Ok(Manager::new(p, self)))
+    }
+
     pub fn search_project<P>(&self, p: P) -> Result<Manager<ProjectTable>>
     where
         P: FnMut(&&ProjectTable) -> bool
@@ -465,8 +471,8 @@ impl<'a> TaskManager<'a>{
         &self.get_table().desc.name
     }
 
-    pub fn get_table(&self) -> &ProjectTable{
-        &self.pool.projects[self.id]
+    pub fn get_table(&self) -> &TaskTable{
+        &self.pool.tasks[self.id]
     }
 }
 
