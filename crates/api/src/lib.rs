@@ -111,7 +111,7 @@ struct ProjectTree{
 #[derive(Debug)]
 struct TaskTree{
     task: TaskTable,
-    childs: Vec<ProjectTree>,
+    childs: Vec<TaskTree>,
 }
 
 impl TaskTree{
@@ -142,8 +142,8 @@ impl ProjectTree{
     }
 }
 
-
 impl Database{
+    // [boilerplate start]
     pub fn search_project_id<P>(&self, p: P) -> Result<usize>
     where
         P: FnMut(&&ProjectTable) -> bool,
@@ -166,16 +166,20 @@ impl Database{
                 .and_then(|p| Ok(p.id))
     }
 
-    pub fn search_tag_id(&self, name: &String) -> Result<usize>{
+    pub fn search_tag_id<P>(&self, p: P) -> Result<usize>
+    where
+        P: FnMut(&&TagTable) -> bool,
+    {
         self.tags.iter()
-            .find(|p| p.tag == *name)
-            .ok_or(DatabaseError::NotFoundOther(format!("Could not found tag {name}")))
+            .find(p)
+            .ok_or(DatabaseError::NotFound)
             .and_then(|p| Ok(p.id))
     }
 
     pub fn search_project<P>(&self, p: P) -> Result<Manager<ProjectTable>>
     where
-        P: FnMut(&&ProjectTable) -> bool {
+        P: FnMut(&&ProjectTable) -> bool
+    {
         self.search_project_id(p).and_then(|p| Ok(Manager::new(p, self)))
     }
 
@@ -185,6 +189,22 @@ impl Database{
     {
         self.search_project_id(p).and_then(|p| Ok(ManagerMut::new(p, self)))
     }
+
+    pub fn search_task<P>(&self, p: P) -> Result<Manager<TaskTable>>
+    where
+        P: FnMut(&&TaskTable) -> bool,
+    {
+        Ok(Manager::new(self.search_task_id(p)?, self))
+    }
+
+    pub fn search_tag<P>(&self, p: P) -> Result<Manager<TagTable>>
+    where
+        P: FnMut(&&TagTable) -> bool,
+    {
+        Ok(Manager::new(self.search_tag_id(p)?, self))
+    }
+    // [boilerplate end]
+
 
     pub fn build_project(&self) -> Result<Project>{ Err(DatabaseError::NotImplemented) }
 
@@ -326,12 +346,16 @@ impl Database{
     }
 
     pub fn build_task_trees(&self, id: usize) -> Result<Task>{
-        let root = self.tasks.iter().find(|t| t.id == id).ok_or(DatabaseError::NotFound)?;
-        let buffer : Vec<_> = self.tasks.iter().filter(|t| t.id == id).collect();
+        let mut root = TaskTree::new(
+            self.tasks.iter().find(|t| t.id == id)
+            .ok_or(DatabaseError::NotFound)?
+            .clone()
+        );
+        let mut buffer : Vec<_> = self.tasks.clone().into_iter().filter(|t| t.id == id).collect();
 
         fn search_in(table: &TaskTable, v: &mut Vec<TaskTree>) -> bool{
             for root in v{
-                if root.project.id == table.parent.unwrap(){
+                if root.task.id == table.parent.unwrap(){
                     root.childs.push(TaskTree::new(table.clone()));
                     return true;
                 }
@@ -346,13 +370,17 @@ impl Database{
         buffer.sort_by(|a, b| b.id.cmp(&a.id));
         while buffer.len() != 0{
             let top = buffer.pop().unwrap();
-            if !search_in(&top, &mut root) {
-                let error = format!("could not find parent ({}) project for {}", top.parent.unwrap(), top.desc.name);
-                return Err(DatabaseError::other(error));
+            if top.parent.is_none(){
+                continue;
             }
+            if top.parent.unwrap() == root.task.id{
+                root.childs.push(TaskTree::new(top));
+                continue;
+            }
+            search_in(&top, &mut root.childs);
         }
 
-        return Ok(root);
+        return Err(DatabaseError::NotImplemented);
     }
 
     pub fn build_project_trees(&self) -> Result<Vec<Project>>{
