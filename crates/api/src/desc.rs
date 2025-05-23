@@ -1,12 +1,9 @@
-use std::time::Duration;
-
 use ly::proc::builder;
 use serde::{Deserialize, Serialize};
 
 use crate::Database;
 use crate::Result;
 use crate::DatabaseError;
-use crate::Timestamp;
 
 const DEFAULT_EDITION : &str = "0.1.0";
 const DEFAULT_VERSION : &str = "0.5.2";
@@ -25,36 +22,36 @@ const fn default_min_time() -> i64 {
 #[builder(name = Descriptor, pass = derive(Debug, Default, Clone, Serialize, Deserialize))]
 #[derive(Debug, Default, Clone)]
 pub struct Description{
-    pub(crate) name       : String,
+    pub name       : String,
 
     #[builder(pass = serde(default))]
     #[builder(pass = serde(skip_serializing_if = "String::is_empty"))]
-    pub(crate) description: String,
+    pub description: String,
 
-    pub(crate) priority   : f64,
-    pub(crate) difficulty : f64,
+    pub priority   : f64,
+    pub difficulty : f64,
 
     #[builder(pass = serde(default = "default_version"))]
     #[builder(init = default_version() )]
-    pub(crate) version    : String,
+    pub version    : String,
 
     #[builder(pass = serde(default = "default_edition"))]
     #[builder(init = default_edition())]
-    pub(crate) edition    : String,
+    pub edition    : String,
 
     #[builder(ty = String)]
     #[builder(pass = serde(default))]
     #[builder(pass = serde(skip_serializing_if = "String::is_empty"))]
-    pub(crate) due_date   : Option<chrono::NaiveDate>,
+    pub due_date   : Option<chrono::NaiveDate>,
     
     #[builder(ty = i64)]
     #[builder(pass = serde(default= "default_min_time"))]
-    pub(crate) min_time   :chrono::Duration,
+    pub min_time   :chrono::Duration,
 
     #[builder(skip_table)]
     #[builder(pass = serde(default))]
     #[builder(pass = serde(skip_serializing_if = "Vec::is_empty"))]
-    pub(crate) tags       : Vec<String>,
+    pub tags       : Vec<String>,
 }
 
 impl From<Descriptor> for Description{
