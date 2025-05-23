@@ -14,5 +14,23 @@
         },
         "done": false,
         "min_time" : 10
+    }],
+    "childs" : [{
+        "desc": {
+            "name": "child0",
+            "priority" : 32,
+            "difficulty" : 32
+        },
+        "location": "Other",
+        "last_worked": "15 10 2024",
+        "childs" : [{
+            "desc": {
+                "name": "child1",
+                "priority" : 32,
+                "difficulty" : 32
+            },
+            "location": "Other",
+            "last_worked": "15 10 2024"
+        }]
     }]
 }

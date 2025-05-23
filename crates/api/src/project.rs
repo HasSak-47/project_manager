@@ -41,3 +41,16 @@ pub struct ProjectTable{
     tags: Vec<Tag>,
 }
 
+
+impl ProjectTable {
+    pub fn naive_project(self) -> Project{
+        Project {
+            desc: self.desc.naive_description(),
+            last_worked: self.last_worked
+                .and_then(|p| Some(p.format("%d %m %Y").to_string()))
+                .unwrap_or(String::new()),
+            location: self.location,
+            ..Default::default()
+        }
+    }
+}
