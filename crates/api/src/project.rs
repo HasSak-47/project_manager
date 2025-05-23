@@ -1,5 +1,3 @@
-use std::error::Error;
-
 use super::Location;
 use chrono::Timelike;
 use ly::proc::builder;
@@ -25,20 +23,19 @@ pub struct ProjectTable{
 }
 
 impl ProjectTable {
-    pub fn from_project(project: Project, pool: &Pool) -> Result<Self, PoolError>{
-        let id = pool.projects.last().and_then(|s| Some(s.id)).unwrap_or(pool.projects.len());
+    pub fn from_project(project: Project, db: &Database) -> Result<Self>{
+        let id = db.search_entry_id(&project)?;
         let parent = if !project.parent.is_empty() {
-            Some(pool.search_project_id(&project.parent)?)
+            Some(db.search_entry_id(&project.parent)?)
         }
         else {
             None
         };
         return Ok(ProjectTable{
-            desc: Description::from_descriptor( project.desc, pool )?,
+            desc: Description::from_descriptor( project.desc, db )?,
             location: project.location,
             last_worked: Some(chrono::DateTime::parse_from_str(&project.last_worked, "")
-                .and_then(|d| Ok( SystemTime::UNIX_EPOCH + Duration::from_secs( d.second() as u64 ) ))
-                .map_err(PoolError::from_error)?
+                .and_then(|d| Ok( SystemTime::UNIX_EPOCH + Duration::from_secs( d.second() as u64 ) ))?
             ),
             parent, id,
         });
