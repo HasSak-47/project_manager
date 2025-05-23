@@ -6,6 +6,7 @@ use anyhow::{Result, anyhow};
 pub use cached_project::*;
 
 pub mod cached_project;
+pub mod v2;
 pub mod config;
 
 pub trait ProjectLoader{
