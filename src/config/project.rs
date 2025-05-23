@@ -14,3 +14,14 @@ pub struct Project{
     todo: Vec<usize>,
     done: Vec<usize>,
 }
+
+pub struct ProjectToml{
+    name : String,
+    features: Option<Vec<Feature>>,
+    todo    : Option<Vec<usize>>,
+    done    : Option<Vec<usize>>,
+}
+
+pub fn load_project<S: AsRef<str>>(path : S){
+    let path = path.as_str();
+}
