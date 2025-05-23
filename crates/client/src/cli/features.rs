@@ -24,7 +24,12 @@ pub struct AddFeat{
 
 impl AddFeat{
     pub fn run(self, _params: Arguments, mut db: Database) -> Result<()> {
-        let cwd = Location::Path(current_dir()?);
+        let mut cwd = current_dir()?;
+        db.load_data()?;
+
+        cwd.push("status");
+        cwd.set_extension("toml");
+        let cwd = Location::Path(cwd);
         let project = if !self.orphan{
             db.get_all_projects()
                 .iter()
@@ -44,7 +49,6 @@ impl AddFeat{
 
         db.add_full_task(task)?;
         db.write_data()?;
-
         Ok(())
     }
 }

@@ -285,7 +285,7 @@ impl Database{
         self.tasks.append(tt);
     }
 
-    pub fn add_full_task(&mut self, t: Task) -> Result<()>{
+    pub fn add_full_task(&mut self, t: Task) -> Result<usize>{
         let mut pt = Vec::new();
         let mut tt = Vec::new();
         let mut gt = Vec::new();
@@ -309,11 +309,12 @@ impl Database{
             task.id += offset;
         }
 
+        let id = tt[0].id;
         self.add_buffer(&mut pt, &mut tt, &mut gt);
-        Ok(())
+        Ok(id)
     }
 
-    pub fn add_full_project(&mut self, p: Project) -> Result<()>{
+    pub fn add_full_project(&mut self, p: Project) -> Result<usize>{
         if !p.parent.is_empty(){
             return Err(DatabaseError::NotImplemented);
         }
@@ -334,8 +335,9 @@ impl Database{
             project.id += p_offset;
         }
 
+        let id = pt[0].id;
         self.add_buffer(&mut pt, &mut tt, &mut gt);
-        Ok(())
+        Ok(id)
     }
 
     pub fn load_data(&mut self) -> Result<()>{
@@ -448,25 +450,10 @@ impl Database{
     }
 }
 
-type ProjectManager<'a> = Manager<'a, Project>;
-type ProjectManagerMut<'a> = ManagerMut<'a, Project>;
+use project::{ProjectManager, ProjectManagerMut};
 
 type TaskManager<'a> = Manager<'a, Task>;
 type TaskManagerMut<'a> = ManagerMut<'a, Task>;
-
-impl<'a> ProjectManager<'a>{
-    pub fn name(&self) -> &String{
-        &self.get_table().desc.name
-    }
-
-    pub fn location(&self) -> &Location{
-        &self.get_table().location
-    }
-
-    pub fn get_table(&self) -> &ProjectTable{
-        &self.pool.projects[self.id]
-    }
-}
 
 impl<'a> TaskManager<'a>{
     pub fn name(&self) -> &String{
