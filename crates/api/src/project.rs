@@ -10,8 +10,6 @@ use serde::{Deserialize, Serialize};
 pub struct Feature{
     name: String,
     #[serde(default)] 
-    status: String,
-    #[serde(default)] 
     description: String,
     priority: u8,
     difficulty: u8,
@@ -25,13 +23,12 @@ pub struct Feature{
 }
 
 impl Feature{
-    pub fn new(name: String, description: String, status: String, priority: u8, difficulty: u8) -> Self {
+    pub fn new(name: String, description: String, priority: u8, difficulty: u8) -> Self {
         Feature{
             name,
             priority, difficulty,
             todo: Vec::new(), done: Vec::new(),
             description,
-            status,
         }
     }
 }
