@@ -1,10 +1,12 @@
 [package]
 name    = "project_manager_api"
-version = "0.2.0"
+version = "0.3.1"
 edition = "2021"
 
 [dependencies]
 toml = "0.7.2"
+
+[target.'cfg(target_arch = "x86_64")'.dependencies]
 dirs = "1.0"
 
 [dependencies.serde]

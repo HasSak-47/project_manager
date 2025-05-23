@@ -16,7 +16,7 @@ impl GitStruct{
         let man_path = Manager::get_path()?;
         let mut man = Manager::load_data_from(&man_path)?;
         let cwd = current_dir()?;
-        let current_project = man.find_project_data(|p| p.path == cwd)?.name.clone();
+        let current_project = man.find_project(|p| p.path == cwd)?.name.clone();
         man.update_project(current_project)?;
         man.write_data_to(man_path)?;
         let _child = process::Command::new("git")

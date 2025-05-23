@@ -115,14 +115,6 @@ impl Project {
         }
     }
 
-    fn get_status<P : AsRef<Path>>(path: P) -> PathBuf{
-        let mut path = path.as_ref().to_path_buf();
-        path.push("status");
-        path.set_extension("toml");
-        
-        path
-    }
-
     pub fn read_project<R: BufRead>(reader: &mut BufReader<R>) -> ProjectResult<Self>{
         let mut buffer = String::new();
         reader.read_to_string(&mut buffer)?;
@@ -135,25 +127,6 @@ impl Project {
         Ok(toml::from_str(&buffer)?)
     }
 
-    pub fn read_project_from_dir<P : AsRef<Path>>(path: P) -> ProjectResult<Self>{
-        let path = Self::get_status(path.as_ref());
-        let data = crate::utils::read_file(path)?;
-
-        let project_toml : ProjectToml = toml::from_str(std::str::from_utf8(data.as_bytes())?)?;
-
-        Ok(project_toml.into())
-    }
-
-    pub fn write_project_to_dir<P: AsRef<Path>>(&self, path: P) -> ProjectResult<()>{
-        let project_toml = ProjectToml::from(self.clone());
-
-        let buffer = toml::to_string(&project_toml)?;
-        let path = Self::get_status(path.as_ref());
-        let mut file = File::create(path)?;
-        file.write(&buffer.as_bytes())?;
-
-        Ok(())
-    }
 
     fn _get_act<F>(v: &Vec<Feature>, sel: F) -> f64
     where 
@@ -181,5 +154,39 @@ impl Project {
         let total = t + d;
         if total == 0.{ 0. }
         else{ d  / total }
+    }
+}
+
+/*
+ * stuff that isn't available to wasm
+ */
+#[cfg(target_arch="x86_64")]
+impl Project{
+    pub fn read_project_from_dir<P : AsRef<Path>>(path: P) -> ProjectResult<Self>{
+        let path = Self::get_status(path.as_ref());
+        let data = crate::utils::read_file(path)?;
+
+        let project_toml : ProjectToml = toml::from_str(std::str::from_utf8(data.as_bytes())?)?;
+
+        Ok(project_toml.into())
+    }
+
+    pub fn write_project_to_dir<P: AsRef<Path>>(&self, path: P) -> ProjectResult<()>{
+        let project_toml = ProjectToml::from(self.clone());
+
+        let buffer = toml::to_string(&project_toml)?;
+        let path = Self::get_status(path.as_ref());
+        let mut file = File::create(path)?;
+        file.write(&buffer.as_bytes())?;
+
+        Ok(())
+    }
+
+    fn get_status<P : AsRef<Path>>(path: P) -> PathBuf{
+        let mut path = path.as_ref().to_path_buf();
+        path.push("status");
+        path.set_extension("toml");
+        
+        path
     }
 }

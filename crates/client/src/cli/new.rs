@@ -1,10 +1,12 @@
 use std::{path::PathBuf, env::current_dir, fs::File, io::Write};
 
-use super::{Params};
+use crate::SystemHandler;
+
+use super::{Params, Arguments};
 use clap::Args;
 use project_manager_api::{
     error::{ProjectResult, ProjectError},
-    config::{manager::{Manager, ProjectData}, default::create_project}
+    config::{manager::{Manager, ProjectData, Location}, default::create_project}
 };
 
 #[derive(Args, Debug, Clone)]
@@ -19,26 +21,27 @@ pub struct NewStruct{
 }
 
 impl NewStruct{
-    pub fn run(&self, params: Params) -> ProjectResult<()> {
-        let mut manager = Manager::load_data_from(&params.manager_path)?;
-        let mut path = current_dir()?;
+    fn get_location() -> ProjectResult<Location>{
+        let path = current_dir()?;
+        let mut status_path = path.clone();
+        status_path.push("status");
+        status_path.set_extension("toml");
 
-        if path.exists(){
-            return Err(ProjectError::Other("project already exists!".to_string()));
+        if status_path.exists(){
+            return Err(ProjectError::Other("status.toml already exists try using init instead!".to_string()));
+        };
+        Ok(Location::Path(path))
+    }
+
+    fn validate_path(&self) -> bool { true }
+
+    pub fn run(&self, args: Arguments, mut handler: SystemHandler) -> ProjectResult<()> {
+
+        if self.validate_path() {
+            handler.new_project(self.name, Location::Path(self.path.unwrap()));
         }
-        path.push("status");
-        path.set_extension("toml");
 
-        let mut file = File::create(path)?;
-        file.write(&create_project(&self.name, &self.version, &self.edition).as_bytes())?;
 
-        manager.projects.push(ProjectData{
-            name: self.name.clone(),
-            path: self.path.clone().unwrap_or(current_dir()?.clone()),
-            ..Default::default()
-        });
-
-        manager.write_data_to(&params.manager_path)?;
         Ok(())
     }
 }
