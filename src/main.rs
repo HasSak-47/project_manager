@@ -8,8 +8,6 @@ mod editor;
 
 use configs::project::{self, Project};
 use configs::config::{self, Config};
-// use editor::create_project;
-
 
 fn main(){
     let config_path = dirs::config_dir().unwrap().to_str().unwrap().to_string();
