@@ -4,7 +4,7 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 use std::{fs::File, io::{BufReader, BufWriter, Read, Write}, path::{Path, PathBuf}};
 use cli::cli;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use project_manager_api::{
     Location,
     project,
@@ -31,7 +31,7 @@ impl ProjectTOML{
 impl project::IO for ProjectTOML{
     fn read(&self, location: &Location) -> Result<project::ProjectStatus>{
         let path = Self::get_status(location.get_path()?);
-        let file = File::open(path)?;
+        let file = File::open(&path)?;
         let mut reader = BufReader::new(file);
         let mut content = String::new();
         reader.read_to_string(&mut content)?;

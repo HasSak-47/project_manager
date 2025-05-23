@@ -2,7 +2,7 @@
 use std::path::PathBuf;
 
 use libc::STDOUT_FILENO;
-use project_manager_api::{manager::Manager, project::ProjectStatus, CachedProject, FindCriteria, Handler, Location};
+use project_manager_api::{manager::Manager, project::{ProjectInfo, ProjectStatus}, CachedProject, Handler, Location};
 use super::Arguments;
 use rand::random;
 use clap::{Subcommand, Args, ValueEnum};
@@ -83,10 +83,10 @@ enum PrintEnum{
 //     Ok(())
 // }
 // 
-fn make_pretty(project: &CachedProject, padding: usize) -> String {
-    let name = project.get_name();
+fn make_pretty(project: &ProjectInfo, padding: usize) -> String {
+    let name = &project.name;
     let mut path =
-        if let Location::Path(p) = project.get_location() { p.clone() }
+        if let Location::Path(p) = &project.location { p.clone() }
         else { PathBuf::new() };
     // format path to be prettier
     // removes home from path and saves to string with the ~
@@ -104,18 +104,8 @@ fn make_pretty(project: &CachedProject, padding: usize) -> String {
 }
 
 impl PrintProjects {
-    fn run(&self, mut handler: Handler, _args: Arguments, print_args: &PrintStruct) -> Result<()>{
-        if _args.debug{
-            println!("loading projects...");
-        }
-        handler.load_projects()?;
-        _args.debug(&
-            format!("Handler: {handler:?}")
-        );
-        let mut projects = handler.get_cached_projects();
-        if _args.debug{
-            println!("projects: {:#?}", projects);
-        }
+    fn run(&self, handler: Handler, _args: Arguments, print_args: &PrintStruct) -> Result<()>{
+        let mut projects = handler.get_projects_info();
         let mut padding = 0usize;
         for (_, p) in &handler.projects{
             let l = p.project.info.name.len();
@@ -134,21 +124,21 @@ impl PrintProjects {
             }
             else{
                 for p in projects{
-                    println!("{}", p.get_name());
+                    println!("{}", p.name);
                 }
             }
         }
         else{
             if !self.path{
                 for p in projects{
-                    let path = p.get_location().to_string();
-                    let name = p.get_name();
+                    let path = p.location.to_string();
+                    let name = p.name;
                     println!("{name},{path}");
                 }
             }
             else{
                 for p in projects{
-                    let name = p.get_name();
+                    let name = p.name;
                     println!("{name}");
                 }
             }
@@ -157,7 +147,7 @@ impl PrintProjects {
         Ok(())
     }
 
-    fn print_pretty(projects: &Vec<CachedProject>, padding: usize){
+    fn print_pretty(projects: &Vec<ProjectInfo>, padding: usize){
         let mut buffer = Vec::new();
         let mut max = 0usize;
         for p in projects{
@@ -185,8 +175,7 @@ impl PrintProjects {
 }
 // 
 // impl PrintProject{
-//     fn print(&self, mut handler: Handler){
-//         let project = handler.find_project_mut(&FindCriteria::Name(self.name.clone()));
+//     fn print(&self, mut handler: Handler){ let project = handler.find_project_mut(&FindCriteria::Name(self.name.clone()));
 //         // match project {
 //         //     Some(mut s) => {
 //         //         s.get_completion_mut();
@@ -204,33 +193,45 @@ impl PrintProjects {
 //     println!("{}", projects[i].get_name());
 // }
 
-// impl PrintPercentaje{
-//     fn print(&self, mut handler: Handler, args : Arguments) -> Result<()>{
-//         let mut max_len = 0usize;
-//         let projects = handler.get_cached_projects();
-//         for p in &projects{
-//             let l = p.get_name().len();
-//             if l > max_len {max_len = l}
-//         }
-// 
-//         for project in &mut projects{
-//             if project.cache_completion().is_err() && args.verbose && args.debug{
-//                 println!("project: {project:#?} could not be loaded");
-//             }
-//         }
-// 
-//         let mut filtered : Vec<_> = projects.iter().filter(|p| {
-//             self.min as f64 <= p.get_completion() * 100. &&
-//                 p.get_completion() * 100. <= self.max as f64}).collect();
-//         
-//         filtered.sort_by(|a, b| b.get_completion().total_cmp(&a.get_completion()) );
-// 
-//         for p in filtered{
-//             println!("{:2$} {:>7.2}%", p.get_name(), 100. * p.get_completion(), max_len + 4);
-//         }
-//         Ok(())
-//     }
-// }
+impl PrintPercentaje{
+    fn run(&self, mut handler: Handler, _args: Arguments, _ps : &PrintStruct) -> Result<()>{
+        handler.load_projects()?;
+        let projects = handler.get_cached_projects();
+        for project in projects{
+            let completion = project.get_completion() * 100.;
+            if self.min as f64 <= completion && completion <= self.max as f64{
+                println!("{:2} {:>7.2}%", project.get_name(), completion);
+            }
+        }
+
+        Ok(())
+    }
+    // fn print(&self, mut handler: Handler, args : Arguments) -> Result<()>{
+    //     let mut max_len = 0usize;
+    //     let projects = handler.get_cached_projects();
+    //     for p in &projects{
+    //         let l = p.get_name().len();
+    //         if l > max_len {max_len = l}
+    //     }
+
+    //     for project in &mut projects{
+    //         if project.cache_completion().is_err() && args.verbose && args.debug{
+    //             println!("project: {project:#?} could not be loaded");
+    //         }
+    //     }
+
+    //     let mut filtered : Vec<_> = projects.iter().filter(|p| {
+    //         self.min as f64 <= p.get_completion() * 100. &&
+    //             p.get_completion() * 100. <= self.max as f64}).collect();
+    //     
+    //     filtered.sort_by(|a, b| b.get_completion().total_cmp(&a.get_completion()) );
+
+    //     for p in filtered{
+    //         println!("{:2$} {:>7.2}%", p.get_name(), 100. * p.get_completion(), max_len + 4);
+    //     }
+    //     Ok(())
+    // }
+}
 
 impl PrintStruct{
     pub fn run(self, args: Arguments, handler: Handler) -> Result<()> {
@@ -246,6 +247,7 @@ impl PrintStruct{
         use PrintEnum as PE;
         match option{
             PE::Projects(p) => p.run(handler, args, &self),
+            PE::Percentajes(p) => p.run(handler, args, &self),
             _ => {Ok(())},
         }
     }
