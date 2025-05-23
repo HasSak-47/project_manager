@@ -21,13 +21,13 @@ pub struct ManagerData{
     pub version : String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 struct ManagerToml{
     pub manager : ManagerData,
     pub projects: Table 
 }
 
-#[derive(Default, Debug)]
+#[derive(Serialize, Default, Debug)]
 pub struct Manager{
     pub manager : ManagerData,
     pub projects: Vec<ProjectData>
@@ -72,7 +72,8 @@ impl Manager{
     {
         let mut file = File::open(path)?;
         let buffer = toml::to_string(self)?;
-        file.write(buffer.as_bytes())?;
+        println!("{buffer}");
+        // file.write(buffer.as_bytes())?;
         Ok(())
     }
 
@@ -116,6 +117,9 @@ impl Manager{
             let _p = Project::load_project(&p.path);
             if _p.is_ok(){
                 v.push(_p.unwrap());
+            }
+            else{
+                // println!("broken: {:?}", _p);
             }
         }
 

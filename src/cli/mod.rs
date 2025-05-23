@@ -1,9 +1,11 @@
 mod print;
-mod add;
+mod init;
 
 use clap::{Subcommand, Parser, Args};
 use crate::error::ProjectResult;
 use print::PrintStruct;
+use init::InitStruct;
+
 
 #[derive(Parser, Debug)]
 #[clap(author="Daniela", version, about)]
@@ -32,10 +34,10 @@ impl RunCmd for NotDone{
     }
 }
 
-#[derive(Subcommand, Debug, Clone, Copy)]
+#[derive(Subcommand, Debug, Clone)]
 enum Tree{
     Print(PrintStruct),
-    Init(NotDone),
+    Init(InitStruct),
     New(NotDone),
     SetParent(NotDone),
     Delete(NotDone),
@@ -56,6 +58,7 @@ pub fn cli() -> ProjectResult<()>{
     use Tree as TR;
     match tree{
         TR::Print(p) => p.run()?,
+        TR::Init(i) => i.run()?,
         _ => NotDone::default().run()?,
     }
 

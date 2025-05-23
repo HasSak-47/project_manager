@@ -2,18 +2,19 @@ use std::{path::PathBuf, env::current_dir};
 
 use super::RunCmd;
 use clap::{Subcommand, Parser, Args};
-use crate::{error::ProjectResult, config::manager::{Manager, ProjectData}};
+use crate::{error::ProjectResult, config::manager::{Manager, ProjectData, self}};
 
 // this looks like shit
 #[derive(Args, Debug, Clone)]
-pub struct AddStruct{
+pub struct InitStruct{
     name: Option<String>,
     path: Option<PathBuf>,
 }
 
-impl RunCmd for AddStruct{
+impl RunCmd for InitStruct{
     fn run(&self) -> ProjectResult<()> {
-        let mut manager = Manager::load_data_from(Manager::get_path()?)?;
+        let man_path = Manager::get_path()?;
+        let mut manager = Manager::load_data_from(&man_path)?;
         let cwd = current_dir().unwrap();
         let f_name = cwd.file_name().unwrap().to_str().unwrap().to_string();
         manager.projects.push(ProjectData{
@@ -22,6 +23,10 @@ impl RunCmd for AddStruct{
             ignore: None,
             subprojects: None,
         });
+        
+        manager.write_data_to(man_path)?;
+
+
         Ok(())
     }
 }
