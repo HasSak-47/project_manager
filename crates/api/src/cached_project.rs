@@ -39,7 +39,7 @@ impl FindCriteria{
 }
 
 impl CachedProject{
-    pub(crate) fn __load_project<L>(&mut self, loader: &L)
+    pub fn load_project<L>(&mut self, loader: &L)
     where
         L: ProjectLoader,
     {
@@ -55,6 +55,11 @@ impl CachedProject{
         if self._loaded { Some(self._proj.is_none()) }
         else { None}
         
+    }
+
+    pub fn get_last_updated(&self) -> Option<Duration>{
+        self._data.last_updated
+            .and_then(|t| Some(Duration::from_secs(t)))
     }
 
     pub fn get_completion_mut(&mut self) -> f64 {
@@ -123,3 +128,29 @@ impl CachedProject{
     }
 }
 
+// prints the project name
+// features and completion
+pub fn format_project(p: &CachedProject) -> String {
+    let name = p.get_name();
+    let comp = p.get_completion();
+    let mut buffer = String::new();
+    buffer += &format!("{}: {:.2}%\n", name, comp * 100.);
+    p._proj.as_ref().and_then(|p| {
+        // prints feature tree
+        let todo_vec = p.todo.as_ref().and_then(|v| Some(v.clone())).unwrap_or(Vec::new());
+        let done_vec = p.done.as_ref().and_then(|v| Some(v.clone())).unwrap_or(Vec::new());
+
+        buffer += "Todo:\n";
+        for todo in todo_vec{
+            buffer += &format!("{todo}");
+        }
+        buffer += "Done:\n";
+        for done in done_vec{
+            buffer += &format!("{done}");
+        }
+        Some(())
+    });
+
+
+    buffer
+}
