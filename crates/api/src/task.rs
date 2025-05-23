@@ -14,21 +14,6 @@ pub struct TaskTable{
     pub desc: Description,
     pub done: bool,
 
-    // minimun time needed to perform the task min_time   : time::Duration,
-    #[builder(ty = u64, init = 10)]
-    pub min_time: chrono::Duration,
-
-    // minimun time needed to perform the task min_time   : time::Duration,
-    #[builder(init = 1.)]
-    #[builder(pass = serde(skip_serializing_if="f64::is_zero"))]
-    #[builder(pass = serde(default="f64::default"))]
-    pub difficulty: f64,
-
-    #[builder(init = 1.)]
-    #[builder(pass = serde(skip_serializing_if="f64::is_zero"))]
-    #[builder(pass = serde(default="f64::default"))]
-    pub priority: f64,
-
     #[builder(skip)]
     pub id : usize,
 
@@ -53,11 +38,8 @@ pub struct TaskTable{
 impl TaskTable {
     pub fn naive_task(self) -> Task{
         Task {
-            priority: self.priority,
-            difficulty: self.difficulty,
             desc: self.desc.naive_description(),
             done: self.done,
-            min_time: self.min_time.num_minutes() as u64,
             project: String::new(),
             childs: Vec::new(),
             tags: Vec::new(),
@@ -87,9 +69,9 @@ impl<'a> TaskManager<'a>{
         }
 
         if self.get_table().done {
-            *cdone += self.get_table().difficulty;
+            *cdone += self.get_table().desc.difficulty;
         }else{
-            *ctodo += self.get_table().difficulty;
+            *ctodo += self.get_table().desc.difficulty;
         } 
 
         for child in childs{
