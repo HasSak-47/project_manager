@@ -1,6 +1,5 @@
 pub mod manager;
 pub mod project;
-pub mod project_tree;
 
 use std::{collections::HashMap, path::{Path, PathBuf}};
 use serde::{Serialize, Deserialize};
@@ -284,6 +283,18 @@ impl Handler{
         self.manager.projects.insert(name.clone(), project.info.clone());
         let cached_proj = CachedProject { project, ..Default::default() };
         self.projects.insert(name, cached_proj);
+        Ok(())
+    }
+
+    pub fn project_add_subproject<F: Finder>(&mut self, parent: F, child: F) -> Result<()>{
+        let child_name = self.find_project(child)?.name.clone();
+        let parent_name = {
+            let parent_pro = self.find_project_mut(parent)?;
+            parent_pro.sub_projects.push(child_name);
+            parent_pro.name.clone()
+        };
+
+        self.commit_project(parent_name)?;
         Ok(())
     }
 }
