@@ -3,4 +3,5 @@ resolver = "1"
 members = [
 	"crates/api",
 	"crates/client",
+	"crates/daemon",
 ]
