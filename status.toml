@@ -44,6 +44,11 @@ name="upgrade project read"
 priority=0.7
 difficulty=0.1
 
+[[todo]]
+name="improve subfeature implementation"
+priority=0.1
+difficulty=0.6
+
 [[done]]
 name="read project"
 priority=1.0
