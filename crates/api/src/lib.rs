@@ -1,5 +1,6 @@
 pub mod project;
 pub mod task;
+pub mod trees;
 
 use std::{path::PathBuf, time::{self, Duration}};
 
@@ -10,6 +11,8 @@ use thiserror::Error;
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Description {
     name       : String,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "String::is_empty")]
     description: String,
     priority   : f64,
     difficulty : f64,
@@ -25,52 +28,13 @@ pub struct Description {
 
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-enum Location{
+pub enum Location{
     Path(PathBuf),
     Git(String),
 }
 
-#[derive(Debug, Default, Clone)]
-pub struct Project{
-    desc: Description,
-    last_worked: Option<time::Instant>,
-    location: Option<Location>,
-    parent: Option<String>,
-}
-
-#[allow(dead_code)]
-impl Project {
-    fn new(desc: Description) -> Self{
-        Self {desc, last_worked: None, location: None, parent: None}
-    }
-
-    fn location(mut self, location: Location) -> Self {
-        self.location = Some(location);
-        return self;
-    }
-
-    fn parent(mut self, parent: String) -> Self {
-        self.parent = Some(parent);
-        return self;
-    }
-    
-    fn last_worked(mut self, last_worked: time::Instant) -> Self {
-        self.last_worked = Some(last_worked);
-        return self;
-    }
-}
-
-#[derive(Debug, Default, Clone)]
-pub struct ProjectTable{
-    desc: Description,
-    last_worked: Option<time::Instant>,
-    location: Option<Location>,
-
-    id    : usize,
-    parent: Option<usize>,
-}
-
-use crate::task::TaskTable;
+use crate::task::*;
+use crate::project::*;
 
 #[derive(Debug, Default, Clone)]
 pub struct Pool{
@@ -92,6 +56,9 @@ pub struct TaskManager<'a>{
 
 #[derive(Debug, Error)]
 pub enum PoolError{
+    #[error("could not load pool")]
+    LoadingError,
+
     #[error("project \"{name}\" was not found ")]
     ProjectNotFound{ name: String },
 
@@ -112,6 +79,7 @@ impl Pool{
         let entry = ProjectTable::from_project(project, self);
         let project_id = entry.id;
         self.projects.push(entry);
+
         return Ok(ProjectManager{ pool: self, project_id });
     }
 
@@ -146,6 +114,10 @@ impl Pool{
     pub fn search_task(&mut self, name: String) -> Result<TaskManager, PoolError>{
         let task_id = self.search_task_id(name)?;
         Ok(TaskManager { pool: self, task_id})
+    }
+    
+    pub fn load() -> Result<Self, PoolError>{
+        return Err(PoolError::LoadingError);
     }
 }
 

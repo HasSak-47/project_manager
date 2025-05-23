@@ -2,10 +2,11 @@ use ly::proc::builder;
 use crate::*;
 
 use crate::Description;
-use std::time::Duration;
+use std::{error::Error, time::Duration};
+use serde::{Deserialize, Serialize};
 
 #[builder(name = Task)]
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct TaskTable{
     pub(crate) desc: Description,
     pub(crate) done: bool,
@@ -26,8 +27,20 @@ pub struct TaskTable{
 impl TaskTable {
     pub(crate) fn from_task(task: Task, pool: &Pool)-> Self{
         let id = pool.tasks.last().and_then(|s| Some(s.id)).unwrap_or(pool.tasks.len());
-        let parent_task = if !task.parent_task.is_empty() { pool.search_task_id(task.parent_task).ok() } else { None };
-        let project = if !task.project.is_empty() { pool.search_task_id(task.project).ok() } else { None };
+
+        let parent_task = if !task.parent_task.is_empty() {
+            pool.search_task_id(task.parent_task).ok()
+        }
+        else {
+            None
+        };
+
+        let project = if !task.project.is_empty() {
+            pool.search_task_id(task.project).ok()
+        }
+        else {
+            None
+        };
 
         return Self{
             desc: task.desc,
