@@ -1,11 +1,11 @@
 
 use std::env::current_dir;
 
-use crate::utils::*;
+
 use clap::Args;
 
 use anyhow::{anyhow, Result};
-use project_manager_api::{desc::Descriptor, task::Task, Database, DatabaseError, Location};
+use project_manager_api::{desc::Descriptor, task::Task, Database, Location};
 
 use super::Arguments;
 
