@@ -13,6 +13,6 @@ const EDITION : &str = "0.1.0";
 
 fn main() -> ProjectResult<()>{
     Manager::create_data()?;
-    cli().unwrap();
+    cli()?;
     Ok(())
 }

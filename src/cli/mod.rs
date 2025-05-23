@@ -3,14 +3,14 @@ mod delete;
 mod init;
 mod new;
 
-use std::path::PathBuf;
+use std::{path::PathBuf, io::Write};
 
 use clap::{Subcommand, Parser, Args};
-use crate::{error::ProjectResult, config::manager::Manager};
+use crate::{error::ProjectResult, config::{manager::Manager, default::DEFAULT_MANAGER}};
 use print::PrintStruct;
 use init::InitStruct;
 
-use self::delete::DelStruct;
+use self::{delete::DelStruct, new::NewStruct};
 
 #[derive(Parser, Debug)]
 #[clap(author="Daniela", version, about)]
@@ -53,7 +53,7 @@ enum Tree{
     Print(PrintStruct),
     Init(InitStruct),
     Delete(DelStruct),
-    New(NotDone),
+    New(NewStruct),
 
     SetParent(NotDone),
     Tui(NotDone),
@@ -64,6 +64,14 @@ enum Tree{
 }
 
 pub fn cli() -> ProjectResult<()>{
+    // set up stuff
+    let path = Manager::get_path()?;
+    if !path.exists(){
+        let mut f = std::fs::File::create(path)?;
+        f.write( &DEFAULT_MANAGER.as_bytes())?;
+    }
+
+
     let args = Arguments::parse();
     if args.tree.is_none(){
         return Ok(());
@@ -80,6 +88,7 @@ pub fn cli() -> ProjectResult<()>{
         TR::Print(p) => p.run(params)?,
         TR::Init(i) => i.run(params)?,
         TR::Delete(d) => d.run(params)?,
+        TR::New(n) => n.run(params)?,
         _ => NotDone::default().run(params)?,
     }
 
