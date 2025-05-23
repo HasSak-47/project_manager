@@ -19,6 +19,7 @@ const fn default_min_time() -> i64 { 30 }
 
 #[builder(name = Descriptor, pass = derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize))]
 #[derive(Debug, Default, Clone)]
+#[allow(dead_code)]
 pub struct Description{
     pub name       : String,
 
@@ -86,7 +87,7 @@ pub struct TagProject{
 }
 
 impl Description {
-    pub fn from_descriptor(des: Descriptor, db: &Database) -> Result<Self>{
+    pub fn from_descriptor(_des: Descriptor, _db: &Database) -> Result<Self>{
         return Err(DatabaseError::other("Could not create Description form Descriptor"));
     }
 }

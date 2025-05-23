@@ -1,9 +1,11 @@
+#![allow(dead_code)]
+
 pub mod project;
 pub mod tags;
 pub mod task;
 pub mod desc;
 
-use std::{marker::PhantomData, path::PathBuf, time::SystemTime};
+use std::{marker::PhantomData, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -11,7 +13,7 @@ use thiserror::Error;
 use ly::{log::prelude::*, proc::builder};
 
 use project::{Project, ProjectTable};
-use tags::{Tag, TagOtherTable, TagTable};
+use tags::{TagOtherTable, TagTable};
 use task::{Task, TaskTable};
 
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
@@ -29,7 +31,9 @@ pub trait Idable{
     fn get_id(&mut self) -> usize;
 }
 
+#[allow(dead_code)]
 type TagProjectTable = TagOtherTable<ProjectTable>;
+#[allow(dead_code)]
 type TagTaskTable = TagOtherTable<TaskTable>;
 
 #[builder(name = DatabaseBuilder)]
@@ -41,9 +45,11 @@ pub struct Database{
     #[builder(skip)]
     tags    : Vec<TagTable>,
 
+    #[allow(dead_code)]
     #[builder(skip)]
     tag_pro : Vec<TagOtherTable<ProjectTable>>,
 
+    #[allow(dead_code)]
     #[builder(skip)]
     tag_task: Vec<TagOtherTable<TaskTable>>,
 
@@ -82,8 +88,7 @@ impl DatabaseBuilder{
     pub fn build(self) -> Database{
         Database{
             projects: Vec::new(),
-            tags: Vec::new(),
-            tasks: Vec::new(),
+            tags: Vec::new(), tasks: Vec::new(),
             tag_pro: Vec::new(),
             tag_task: Vec::new(),
             reader: self.reader,
@@ -450,7 +455,7 @@ impl Database{
     }
 }
 
-use project::{ProjectManager, ProjectManagerMut};
+use project::{ProjectManager};
 
 type TaskManager<'a> = Manager<'a, Task>;
 type TaskManagerMut<'a> = ManagerMut<'a, Task>;
