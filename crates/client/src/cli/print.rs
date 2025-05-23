@@ -61,7 +61,7 @@ enum PrintEnum{
     None,
 }
 
-fn print_projects(mut projects: Vec<&mut CachedProject>, _data: PrintProjects) -> Result<()>{
+fn print_projects(projects: Vec<&mut CachedProject>, _data: PrintProjects) -> Result<()>{
     let mut max_len = 0usize;
     for p in &projects{
         let l = p.get_name().len();
