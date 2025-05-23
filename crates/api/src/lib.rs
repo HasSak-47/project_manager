@@ -42,10 +42,25 @@ pub struct Database{
     #[builder(skip)]
     tags    : Vec<TagTable>,
 
-    #[builder(ty = Option<Box<dyn DatabaseReader>>, skip_setter)]
+    #[builder(ty = Box<dyn DatabaseReader>, skip_setter, init = Box::new(UnimplementedReader))]
     reader: Box<dyn DatabaseReader>,
-    #[builder(ty = Option<Box<dyn DatabaseWriter>>, skip_setter)]
+    #[builder(ty = Box<dyn DatabaseWriter>, skip_setter, init = Box::new(UnimplementedWriter))]
     writer: Box<dyn DatabaseWriter>,
+}
+
+struct UnimplementedReader;
+struct UnimplementedWriter;
+
+impl DatabaseReader for UnimplementedReader {
+    fn read_all_projects(&self) -> Result<Vec<ProjectTable>> { Err(DatabaseError::NotImplemented) }
+    fn read_all_tasks(&self) -> Result<Vec<TaskTable>> { Err(DatabaseError::NotImplemented) }
+    fn read_all_tags(&self) -> Result<Vec<TagTable>> { Err(DatabaseError::NotImplemented) }
+}
+
+impl DatabaseWriter for UnimplementedWriter {
+    fn write_all_projects(&mut self, v: &mut Vec<ProjectTable>) -> Result<()> {Err(DatabaseError::NotImplemented) }
+    fn write_all_tasks(&mut self, v: &mut Vec<TaskTable>) -> Result<()> {Err(DatabaseError::NotImplemented) }
+    fn write_all_tags(&mut self, v: &mut Vec<TagTable>) -> Result<()> {Err(DatabaseError::NotImplemented) }
 }
 
 impl DatabaseBuilder{
@@ -54,18 +69,18 @@ impl DatabaseBuilder{
             projects: Vec::new(),
             tags: Vec::new(),
             tasks: Vec::new(),
-            reader: self.reader.unwrap(),
-            writer: self.writer.unwrap(),
+            reader: self.reader,
+            writer: self.writer,
         }
 
     }
 
     pub fn set_reader<R: DatabaseReader>(mut self, r: R) -> Self{
-        self.reader = Some(Box::new(r));
+        self.reader = Box::new(r);
         return self;
     }
     pub fn set_writer<W: DatabaseWriter>(mut self, w: W) -> Self{
-        self.writer = Some(Box::new(w));
+        self.writer = Box::new(w);
         return self;
     }
 }
@@ -98,6 +113,7 @@ impl Database{
     }
 
     pub fn build_project_tree(&self) -> Result<ProjectTree>{ Err(DatabaseError::NotImplemented) }
+    pub fn add_project_tree(&mut self, tree: ProjectTree) -> Result<()>{ Err(DatabaseError::NotImplemented) }
 
     pub fn load_data(&mut self) -> Result<()>{
         self.projects = self.reader.read_all_projects()?;
@@ -107,9 +123,9 @@ impl Database{
     }
 
     pub fn write_data(&mut self) -> Result<()>{
-        self.projects = self.writer.write_all_projects()?;
-        self.tasks = self.writer.write_all_tasks()?;
-        self.tags = self.writer.write_all_tags()?;
+        self.writer.write_all_projects(&mut self.projects)?;
+        self.writer.write_all_tasks(&mut self.tasks)?;
+        self.writer.write_all_tags(&mut self.tags)?;
         Ok(())
     }
 
@@ -125,20 +141,12 @@ pub trait DatabaseReader where Self: 'static {
     fn read_all_projects(&self) -> Result<Vec<ProjectTable>>;
     fn read_all_tasks(&self) -> Result<Vec<TaskTable>>;
     fn read_all_tags(&self) -> Result<Vec<TagTable>>;
-
-    fn read_project(&self) -> Result<ProjectTable>;
-    fn read_task(&self) -> Result<TaskTable>;
-    fn read_tag(&self) -> Result<TagTable>;
 }
 
 pub trait DatabaseWriter where Self: 'static {
-    fn write_all_projects(&self) -> Result<Vec<ProjectTable>>;
-    fn write_all_tasks(&self) -> Result<Vec<TaskTable>>;
-    fn write_all_tags(&self) -> Result<Vec<TagTable>>;
-
-    fn write_project(&mut self) -> Result<()>;
-    fn write_task(&mut self) -> Result<()>;
-    fn write_tag(&mut self) -> Result<()>;
+    fn write_all_projects(&mut self, v: &mut Vec<ProjectTable>) -> Result<()>;
+    fn write_all_tasks(&mut self, v: &mut Vec<TaskTable>) -> Result<()>;
+    fn write_all_tags(&mut self, v: &mut Vec<TagTable>) -> Result<()>;
 }
 
 pub struct Manager<'a, T>{

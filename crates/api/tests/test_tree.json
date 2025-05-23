@@ -5,6 +5,7 @@
         "difficulty" : 64,
         "tags" : ["NOT IMPLEMENTED"]
     },
+    "location": "Other",
     "last_worked": "NOT IMPLEMENTED",
     "childs" : [
     ],

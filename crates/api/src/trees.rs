@@ -29,6 +29,7 @@ pub struct ProjectTree{
     #[serde(skip_serializing_if = "String::is_empty")]
     pub last_worked: String,
 
+    #[serde(default = "Location::default")]
     pub location: Location,
 
     #[serde(default)]
