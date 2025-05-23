@@ -13,6 +13,17 @@ pub struct DatabaseGraph {
     pub nodes: HashMap<String, Rc<DatabaseNode>>,
 }
 
+pub struct Project{
+    pub local_id: usize,
+    pub name: String,
+}
+
+pub struct Task{
+    pub local_id: usize,
+    pub parent: Option<usize>,
+    pub name: String,
+}
+
 impl DatabaseNode {
     pub fn new() -> Result<Self> {
         let con = Connection::open_in_memory()?;
@@ -20,6 +31,11 @@ impl DatabaseNode {
             "BEGIN;
             CREATE TABLE Project(
                 local_id INTEGER NOT NULL PRIMARY KEY,
+                name TEXT NOT NULL
+            );
+            CREATE TABLE Task(
+                id INTEGER NOT NULL PRIMARY KEY,
+                project INTEGER NOT NULL
                 name TEXT NOT NULL
             );
             CREATE TABLE ExternalDatabase(
@@ -45,25 +61,30 @@ impl DatabaseNode {
     }
 
     pub fn load_databases(&mut self) -> Result<Vec<Rc<DatabaseNode>>> {
-        let mut stmt = self.con.prepare("SELECT local_id, location FROM ExternalDatabase")?;
-        return Ok(stmt.query_map([],  |row|{
-            let id: usize = row.get(0)?;
-            let location: String = row.get(1)?;
-            Ok((id, location))
-        })?.into_iter()
-        .filter_map(|child|{
-            if child.is_err() {
-                return None;
-            }
-            let (id, location) = child.as_ref().unwrap();
-            if self.externals.contains_key(&id){
-                return None;
-            }
+        let mut stmt = self
+            .con
+            .prepare("SELECT local_id, location FROM ExternalDatabase")?;
+        return Ok(stmt
+            .query_map([], |row| {
+                let id: usize = row.get(0)?;
+                let location: String = row.get(1)?;
+                Ok((id, location))
+            })?
+            .into_iter()
+            .filter_map(|child| {
+                if child.is_err() {
+                    return None;
+                }
+                let (id, location) = child.as_ref().unwrap();
+                if self.externals.contains_key(&id) {
+                    return None;
+                }
 
-            return DatabaseNode::from_file(format!("./testing/{location}"))
-                .ok()
-                .and_then(|a| Some(Rc::new(a)));
-        }).collect());
+                return DatabaseNode::from_file(format!("./testing/{location}"))
+                    .ok()
+                    .and_then(|a| Some(Rc::new(a)));
+            })
+            .collect());
     }
 
     pub fn unload_database(&mut self, local_id: usize) -> Result<Rc<DatabaseNode>> {
