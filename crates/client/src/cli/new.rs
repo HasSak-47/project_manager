@@ -1,10 +1,10 @@
-use std::{path::PathBuf, env::current_dir, fs::File, io::Write};
+use std::{path::PathBuf, env::current_dir};
 
 use crate::SystemHandler;
 
-use super::{Params, Arguments};
+use super::Arguments;
 use clap::Args;
-use project_manager_api::config::{manager::{Manager, ProjectData, Location}, default::create_project} ;
+use project_manager_api::config::manager::Location;
 use anyhow::{Result, anyhow};
 
 #[derive(Args, Debug, Clone)]
@@ -32,7 +32,7 @@ impl NewStruct{
 
     fn validate_path(&self) -> bool { true }
 
-    pub fn run(self, args: Arguments, mut handler: SystemHandler) -> Result<()> {
+    pub fn run(self, _args: Arguments, mut handler: SystemHandler) -> Result<()> {
 
         if self.validate_path() {
             handler.new_project(self.name.clone(), self.get_location()?)?;

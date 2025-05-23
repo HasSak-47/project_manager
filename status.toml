@@ -4,11 +4,6 @@ version = "0.1.1"
 edition = "0.1.0"
 
 [[todo]]
-name = "upgrade system"
-priority = 0.3
-difficulty = 1.0
-
-[[todo]]
 name = "redo get project config"
 priority = 0.1
 difficulty = 0.2
@@ -33,30 +28,15 @@ name = "print all"
 priority = 0.2
 difficulty = 0.1
 
-[[todo.todo]]
-name = "print options"
-priority = 0.2
-difficulty = 0.5
-
-[[todo.todo]]
+[[todo.done]]
 name = "print random"
 priority = 0.2
 difficulty = 0.1
 
-[[todo]]
-name = "bake projects"
-priority = 0.9
-difficulty = 0.3
-
-[[todo]]
-name = "project selector"
+[[todo.todo]]
+name = "print options"
 priority = 0.2
-difficulty = 0.1
-
-[[todo]]
-name = "upgrade project read"
-priority = 0.7
-difficulty = 0.1
+difficulty = 0.5
 
 [[todo]]
 name = "improve subfeature implementation"
