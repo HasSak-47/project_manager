@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::env;
 
 mod daemon;
 mod configs;
@@ -7,11 +8,10 @@ mod editor;
 
 use configs::project::{self, Project};
 use configs::config::{self, Config};
+// use editor::create_project;
 
 
 fn main(){
-    editor::add_project();
-    return;
     let config_path = dirs::config_dir().unwrap().to_str().unwrap().to_string();
     let config_prmg = {let mut a = config_path.clone(); a.push_str("/project_manager"); a};
     let config_file = {let mut a = config_prmg.clone(); a.push_str("/config");          a};
@@ -29,5 +29,16 @@ fn main(){
 
     let projects = Project::get_projects(&data).unwrap();
 
-    daemon::child(data, projects);
+    // tracker::main(data, projects);
+    let mut args = Vec::<String>::new();
+    for arg in env::args() {
+        args.push(arg);
+    }
+
+    if args.len() >= 2 && args[1] == "--daemon"{
+        daemon::main(data, projects); 
+    }
+    else{
+        tracker::main(data, projects);
+    }
 }
