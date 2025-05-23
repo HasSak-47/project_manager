@@ -197,6 +197,7 @@ impl PrintPercentaje{
     fn run(&self, mut handler: Handler, _args: Arguments, _ps : &PrintStruct) -> Result<()>{
         handler.load_projects()?;
         let projects = handler.get_cached_projects();
+        
         for project in projects{
             let completion = project.get_completion() * 100.;
             if self.min as f64 <= completion && completion <= self.max as f64{

@@ -4,16 +4,23 @@ use super::Location;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
+
 #[allow(dead_code)]
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Feature{
     name: String,
-    status: Option<String>,
-    description: Option<String>,
+    #[serde(default)] 
+    status: String,
+    #[serde(default)] 
+    description: String,
     priority: u8,
     difficulty: u8,
 
+    #[serde(default)] 
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     todo: Vec<Feature>,
+    #[serde(default)] 
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     done: Vec<Feature>,
 }
 
@@ -23,8 +30,8 @@ impl Feature{
             name,
             priority, difficulty,
             todo: Vec::new(), done: Vec::new(),
-            description: Some(description),
-            status: Some(status),
+            description,
+            status,
         }
     }
 }
@@ -35,7 +42,9 @@ impl Feature{
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct ProjectData{
     pub name: String,
-    pub description: Option<String>,
+    #[serde(default)] 
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub description: String,
 }
 
 
@@ -44,7 +53,11 @@ pub struct ProjectData{
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct ProjectStatus{
     pub project: ProjectData,
+    #[serde(default)] 
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub todo: Vec<Feature>,
+    #[serde(default)] 
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub done: Vec<Feature>,
 }
 
@@ -52,7 +65,7 @@ impl ProjectStatus{
     pub fn new(name: String, description: String) -> Self {
         ProjectStatus{
             project: ProjectData{
-                name, description: Some(description),
+                name, description,
             },
             ..Default::default()
         }
@@ -122,7 +135,9 @@ impl ProjectStatus{
 pub struct ProjectInfo{
     pub name: String,
     pub location: Location,
+    #[serde(default)] 
     pub status: Option<Location>, // if None, status is in the project folder
+    #[serde(default)] 
     pub last_update: Option<usize>, // timestamp
 }
 
