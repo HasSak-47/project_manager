@@ -6,4 +6,33 @@ priority = 0.0
 difficulty = 0.0
 version = "0.1.0"
 edition = "0.1.18"
-min_time = 0
+min_time = 30
+
+[[tasks]]
+done = false
+min_time = 10
+difficulty = 0.0
+priority = 0.0
+project = ""
+
+[tasks.desc]
+name = "test_name"
+priority = 1.0
+difficulty = 1.0
+version = "0.5.2"
+edition = "0.1.0"
+min_time = 30
+
+[[tasks]]
+done = false
+min_time = 10
+difficulty = 0.0
+priority = 0.0
+project = ""
+
+[tasks.desc]
+name = "second_test_name"
+priority = 1.0
+difficulty = 1.0
+version = "0.5.2"
+edition = "0.1.0"

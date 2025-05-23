@@ -14,8 +14,8 @@ pub struct AddFeat{
     priority: f64,
     difficulty: f64,
 
-    #[clap(short, default_value = "todo")]
-    r#type : String,
+    #[clap(short, default_value = "false")]
+    done: bool,
 
     #[clap(long)]
     orphan: bool,
@@ -45,6 +45,8 @@ impl AddFeat{
                 .priority(self.priority)
                 .difficulty(self.difficulty)
             ).project(project);
+
+        let _ = log!("task added: {task:?}");
 
         db.add_full_task(task)?;
         save_database(&db)?;
