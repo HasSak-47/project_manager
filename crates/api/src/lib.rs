@@ -3,12 +3,16 @@ pub mod task;
 pub mod trees;
 pub mod desc;
 
-use std::{path::PathBuf, time::{self, Duration}};
+use std::{path::PathBuf, time::{self, Duration, SystemTime}};
 
 use serde::{Deserialize, Serialize};
-use task::Task;
+use task::{Task, TaskTable};
 use thiserror::Error;
 use trees::ProjectTree;
+use ly::log::prelude::*;
+use ly::macro_log;
+
+type Timestamp = SystemTime;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Description {
@@ -58,6 +62,9 @@ pub struct TaskManager<'a>{
 
 #[derive(Debug, Error)]
 pub enum PoolError{
+    #[error("Passed project was empty")]
+    PassedEmptyProject,
+
     #[error("could not load pool")]
     LoadingError,
 
@@ -66,6 +73,15 @@ pub enum PoolError{
 
     #[error("task \"{name}\" was not found ")]
     TaskNotFound{ name: String },
+
+    #[error("{other}")]
+    Other{other: String},
+}
+
+impl PoolError{
+    pub fn from_error<E: std::error::Error>(e: E) -> Self{
+        Self::Other {other: e.to_string()}
+    }
 }
 
 #[allow(dead_code)]
@@ -130,6 +146,9 @@ impl Pool{
 
     pub fn add_project_tree(&mut self, tree: ProjectTree) -> Result<(), PoolError>{
         let (projects, tasks) = tree.flatten();
+        if projects.is_empty(){
+            return Err(PoolError::PassedEmptyProject);
+        }
         for project in projects{
             let project = ProjectTable::from_project_result(project, self)?;
             self.projects.push(project);

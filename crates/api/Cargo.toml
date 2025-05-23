@@ -8,12 +8,15 @@ anyhow = "1.0.79"
 thiserror = "1.0.57"
 
 [dependencies.ly]
-git = "https://github.com/HasSak-47/ly-rustlib"
-branch = "stable"
+path = "../../../ly-rlib"
 
 [dependencies.serde]
 version  = "1.0"
 features = ["derive"]
+
+[dependencies.chrono]
+version = "0.4.38"
+features = ["serde"]
 
 [dev-dependencies]
 serde_json = "1.0"

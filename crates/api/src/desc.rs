@@ -32,19 +32,19 @@ pub struct Description {
 }
 
 
-#[builder(name = Tag)]
+#[builder(name = Tag, pass = derive(Debug, Default, Clone, Serialize, Deserialize))]
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct TagTable{
     name       : String,
-    #[builder_pass(serde(skip_serializing_if = "String::is_empty"))]
+    #[builder(pass = serde(skip_serializing_if = "String::is_empty"))]
     description: String,
-    #[builder(def_val = 1.0)]
+    #[builder(init = 1.0)]
     priority   : f64,
-    #[builder(def_val = 1.0)]
+    #[builder(init = 1.0)]
     difficulty : f64,
     #[builder(ty = String)]
     due_date   : Option<SystemTime>,
-    #[builder_skip]
+    #[builder(skip)]
     id : usize,
 }
 
