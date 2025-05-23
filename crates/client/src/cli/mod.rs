@@ -1,4 +1,5 @@
 mod print;
+mod features;
 mod delete;
 mod init;
 mod new;
@@ -6,7 +7,10 @@ mod new;
 use std::{path::PathBuf, io::Write};
 
 use clap::{Subcommand, Parser, Args};
-use crate::{error::ProjectResult, config::{manager::Manager, default::DEFAULT_MANAGER}};
+use project_manager_api::{
+    error::{ProjectResult, ProjectError},
+    config::{manager::{Manager, ProjectData}, default::DEFAULT_MANAGER}
+};
 use print::PrintStruct;
 use init::InitStruct;
 
@@ -44,7 +48,7 @@ struct NotDone;
 impl RunCmd for NotDone{
     fn run(&self, _ : Params) -> ProjectResult<()>{
         println!("not yet implemented!!");
-        Err(crate::error::ProjectError::Other("not yet implemented".to_string()))
+        Err(ProjectError::Other("not yet implemented".to_string()))
     }
 }
 

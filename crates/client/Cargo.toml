@@ -8,3 +8,7 @@ toml = "0.7.2"
 dirs = "1.0"
 rand = "0.8.5"
 project_manager_api = {path = "../api"}
+
+[dependencies.clap]
+version  = "4.0"
+features = ["derive"]
