@@ -1,0 +1,13 @@
+[done]
+parse_files    = 1.0
+design_project = 0.7
+design_file    = 0.5
+add_displayer  = 1.0
+
+[todo]
+add_git         = 0.1
+notifications   = 0.4
+redesign_config = 1.0
+create_daemon   = 0.9
+project_maker   = 0.2
+refactor        = 10.0
