@@ -1,4 +1,5 @@
 pub mod project;
+pub mod tags;
 pub mod task;
 pub mod trees;
 pub mod desc;
@@ -6,6 +7,7 @@ pub mod desc;
 use std::{marker::PhantomData, path::PathBuf, time::{self, Duration, SystemTime}};
 
 use crate::task::*;
+use crate::tags::*;
 use crate::project::*;
 use crate::desc::*;
 
@@ -81,6 +83,7 @@ impl Pool{
         }
     }
 
+    // new
     pub fn new_project(&mut self, project: Project) -> Result<ProjectManager, PoolError>{
         let entry = ProjectTable::from_project(project, self)?;
         let id = entry.id;
@@ -96,6 +99,7 @@ impl Pool{
         Ok(Manager::new(id, self))
     }
 
+    // project
     fn search_project_id(&self, name: &String) -> Result<usize, PoolError>{
         return self.projects
             .iter()
@@ -104,6 +108,12 @@ impl Pool{
             .ok_or(PoolError::ProjectNotFound { name: name.clone() });
     }
 
+    pub fn search_project(&mut self, name: &String) -> Result<ProjectManager, PoolError>{
+        let id = self.search_project_id(name)?;
+        Ok(Manager::new( id, self))
+    }
+
+    // task
     fn search_task_id(&self, name: &String, project: &String) -> Result<usize, PoolError>{
         let project = if project.is_empty(){
             None
@@ -118,18 +128,15 @@ impl Pool{
             .ok_or(PoolError::TaskNotFound { name: name.clone() });
     }
 
-    pub fn search_project(&mut self, name: &String) -> Result<ProjectManager, PoolError>{
-        let id = self.search_project_id(name)?;
-        Ok(Manager::new( id, self))
-    }
-
     pub fn search_task(&mut self, name: &String, project: &String) -> Result<TaskManager, PoolError>{
         let id = self.search_task_id(name, project)?;
         Ok(Manager::new( id, self))
     }
+
+    // tags
     
     pub fn add_project_tree(&mut self, tree: ProjectTree) -> Result<(), PoolError>{
-        let (projects, tasks) = tree.flatten();
+        let (projects, tasks) = tree.flatten()?;
         if projects.is_empty(){
             return Err(PoolError::PassedEmptyProject);
         }
