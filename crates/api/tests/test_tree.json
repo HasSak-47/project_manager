@@ -1,0 +1,13 @@
+{
+    "desc": {
+        "name": "root",
+        "priority" : 64,
+        "difficulty" : 64,
+        "tags" : ["NOT IMPLEMENTED"]
+    },
+    "last_worked": "NOT IMPLEMENTED",
+    "childs" : [
+    ],
+    "tasks" : [
+    ]
+}

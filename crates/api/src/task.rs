@@ -29,14 +29,14 @@ impl TaskTable {
         let id = pool.tasks.last().and_then(|s| Some(s.id)).unwrap_or(pool.tasks.len());
 
         let parent_task = if !task.parent_task.is_empty() {
-            pool.search_task_id(task.parent_task).ok()
+            pool.search_task_id(&task.parent_task, &task.project).ok()
         }
         else {
             None
         };
 
         let project = if !task.project.is_empty() {
-            pool.search_task_id(task.project).ok()
+            pool.search_task_id(&task.project, &task.project).ok()
         }
         else {
             None
@@ -48,5 +48,30 @@ impl TaskTable {
             min_time: task.min_time,
             id, parent_task, project,
         }
+    }
+    
+    pub(crate) fn from_task_result(task: Task, pool: &Pool)-> Result<Self, PoolError> {
+        let id = pool.tasks.last().and_then(|s| Some(s.id)).unwrap_or(pool.tasks.len());
+
+        let parent_task = if !task.parent_task.is_empty() {
+            Some(pool.search_task_id(&task.parent_task, &task.project)?)
+        }
+        else {
+            None
+        };
+
+        let project = if !task.project.is_empty() {
+            Some(pool.search_task_id(&task.project, &task.project)?)
+        }
+        else {
+            None
+        };
+
+        return Ok(Self{
+            desc: task.desc,
+            done: task.done,
+            min_time: task.min_time,
+            id, parent_task, project,
+        });
     }
 }
