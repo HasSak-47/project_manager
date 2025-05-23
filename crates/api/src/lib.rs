@@ -182,6 +182,30 @@ impl Database{
         return Ok(());
     }
 
+    fn project_offset(&self) -> usize { self.projects.last().and_then(|p| Some(p.id)).unwrap_or(self.projects.len()) }
+    fn task_offset(&self) -> usize { self.tasks.last().and_then(|p| Some(p.id)).unwrap_or(self.tasks.len()) }
+
+    fn add_buffer(&mut self, pt: &mut Vec<ProjectTable>, tt: &mut Vec<TaskTable>, _: &mut Vec<TagTable>){
+        self.projects.append(pt);
+        self.tasks.append(tt);
+    }
+
+    pub fn add_full_task(&mut self, t: Task) -> Result<()>{
+        let mut pt = Vec::new();
+        let mut tt = Vec::new();
+        let mut gt = Vec::new();
+        let pa_id = self.projects.iter().find(|p| p.desc.name == t.project).and_then(|p| Some(p.id));
+
+        self.unravel_tasks(&mut pt, &mut tt, &mut gt, t, pa_id, None)?;
+        let offset = self.task_offset();
+        for task in &mut tt{
+            task.parent.as_mut().and_then(|p| Some(*p += offset));
+            task.id += offset;
+        }
+
+        Ok(())
+    }
+
     pub fn add_full_project(&mut self, p: Project) -> Result<()>{
         if !p.parent.is_empty(){
             return Err(DatabaseError::NotImplemented);
@@ -191,8 +215,19 @@ impl Database{
         let mut gt = Vec::new();
 
         self.unravel_project(&mut pt, &mut tt, &mut gt, p, None)?;
-        self.projects.append(&mut pt);
-        self.tasks.append(&mut tt);
+
+        let t_offset = self.task_offset();
+        let p_offset = self.project_offset();
+        for task in &mut tt{
+            task.parent.as_mut().and_then(|p| Some(*p += t_offset));
+            task.id += t_offset;
+        }
+        for project in &mut pt{
+            project.parent.as_mut().and_then(|p| Some(*p += p_offset));
+            project.id += p_offset;
+        }
+
+        self.add_buffer(&mut pt, &mut tt, &mut gt);
         Ok(())
     }
 
@@ -227,6 +262,17 @@ impl Database{
 }
 
 type ProjectManager<'a> = Manager<'a, Project>;
+type ProjectManagerMut<'a> = ManagerMut<'a, Project>;
+
+impl<'a> ProjectManager<'a>{
+    pub fn name(&self) -> &String{
+        &self.get_table().desc.name
+    }
+
+    pub fn location(&self) -> &Location{
+        &self.get_table().location
+    }
+}
 
 impl<'a> ProjectManager<'a>{
     pub fn get_table(&self) -> &ProjectTable{

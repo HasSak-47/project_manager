@@ -1,0 +1,20 @@
+{
+    "desc": {
+        "name": "root",
+        "priority" : 64,
+        "difficulty" : 64
+    },
+    "location": "Other",
+    "min_tim": 15,
+    "last_worked": "15 10 2024",
+    "project": "root",
+    "childs": [{
+        "desc": {
+            "name": "child_task",
+            "priority" : 64,
+            "difficulty" : 64
+        },
+        "done": false,
+        "min_time" : 10
+    }]
+}
