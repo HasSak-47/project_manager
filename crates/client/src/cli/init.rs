@@ -27,8 +27,7 @@ impl InitStruct{
         manager.projects.push(ProjectData{
             name: self.name.clone().unwrap_or(f_name),
             path: self.path.clone().unwrap_or(cwd),
-            ignore: None,
-            subprojects: None,
+            ..Default::default()
         });
         
         manager.write_data_to(&params.manager_path)?;

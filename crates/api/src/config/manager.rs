@@ -1,7 +1,8 @@
+use core::time;
 use std::{
     fs::{DirBuilder, File},
     path::{PathBuf, Path},
-    io::{Write, BufReader, Read, BufWriter},
+    io::{Write, BufReader, Read, BufWriter}, time::{SystemTime, UNIX_EPOCH},
 };
 
 use serde::{Serialize, Deserialize};
@@ -10,10 +11,11 @@ use toml::{self, map::Map, Table, Value};
 
 use crate::{error::*, utils::get_dir};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct ProjectData{
     pub name: String,
     pub path: PathBuf,
+    pub last_updated: Option<u64>,
     pub ignore: Option<bool>,
     pub subprojects: Option<Vec<String>>,
 }
@@ -50,8 +52,7 @@ fn map_to_data(m: Map<String, toml::Value>) -> Vec<ProjectData>{
         r.push(ProjectData{
             name: k,
             path: v.as_str().unwrap().to_string().into(),
-            ignore: None,
-            subprojects: None,
+            ..Default::default()
         });
     }
 
@@ -124,46 +125,53 @@ impl Manager{
 
     #[allow(dead_code)]
     pub fn get_projects(&self) -> Vec<ProjectResult<Project>>{
-        let mut v = Vec::new();
-        
-        for p in &self.projects{
-            v.push(Project::read_project_from_dir(&p.path));
-        }
-
-        v
+        self.projects.iter()
+            .map(|p| Project::read_project_from_dir(&p.path))
+            .collect()
     }
 
     pub fn get_unbroken_projects(&self) -> Vec<Project>{
-        let mut v = Vec::new();
-        
-        for p in &self.projects{
-            let _p = Project::read_project_from_dir(&p.path);
-            if _p.is_ok(){ v.push(_p.unwrap()); }
-        }
-
-        v
+        self.get_projects()
+            .into_iter()
+            .filter(|x| x.is_ok())
+            .map(|p| p.unwrap())
+            .collect()
     }
 
     pub fn find_project_name(&self, name: String) -> ProjectResult<Project>{
-        for proj in self.projects.iter(){
-            if proj.name == name{
-                return Ok(Project::read_project_from_dir(&proj.path)?);
-            }
-        }
-        Err(ProjectError::ProjectNotFound { name: Some(name), path: None })
+        self.projects.iter()
+            .find(|p| p.name == name)
+            .ok_or(ProjectError::ProjectNotFound { name: Some(name), path: None })
+            .and_then(|p| Project::read_project_from_dir(&p.path))
     }
 
-    pub fn find_project_path<P: AsRef<Path>>(&self, path: P)
-        -> ProjectResult<Project>
+    pub fn find_project_path<P: AsRef<Path>>(&self, path: P) -> ProjectResult<Project> {
+        let path = path.as_ref();
+        self.projects.iter()
+            .find(|p| p.path.as_path() == path)
+            .ok_or(ProjectError::ProjectNotFound { name: None, path: Some(path.to_path_buf()) })
+            .and_then(|p| Project::read_project_from_dir(&p.path))
+    }
+
+    pub fn find_project<P>(&self, predicate: P) -> ProjectResult<Project> 
+    where
+        P : FnMut(&&ProjectData) -> bool,
     {
-        for proj in self.projects.iter(){
-            if proj.path.as_path() == path.as_ref(){
-                return Ok(Project::read_project_from_dir(&proj.path)?);
-            }
-        }
-        Err(ProjectError::ProjectNotFound {
-            name: None,
-            path: Some(path.as_ref().to_path_buf())
-        })
+        self.projects.iter()
+            .find(predicate)
+            .ok_or(ProjectError::ProjectNotFound { name: None, path: None })
+            .and_then(|p| Project::read_project_from_dir(&p.path))
+    }
+
+    pub fn update_project<S: AsRef<str>>(&mut self, name: S) -> ProjectResult<()>{
+        let name = name.as_ref();
+        let project = self .projects.iter_mut()
+            .find(|p| p.name.as_str() == name)
+            .ok_or(ProjectError::Option)?;
+
+        let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+        project.last_updated = Some(now);
+
+        Ok(())
     }
 }
