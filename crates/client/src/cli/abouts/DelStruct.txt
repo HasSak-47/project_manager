@@ -1,1 +1,0 @@
-Removes a project from the manager, it can also delete the status.toml.

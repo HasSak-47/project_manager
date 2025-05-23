@@ -1,2 +1,0 @@
-Updates the last time since the project was touched and launches git with all the remaining parameters.
-It only updates if git existed succesfully.
