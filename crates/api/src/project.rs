@@ -34,11 +34,6 @@ pub struct ProjectTable{
     #[builder(pass = serde(skip_serializing_if = "Vec::is_empty"))]
     #[builder(pass = serde(default = "Vec::new"))]
     tasks: Vec<Task>,
-
-    #[builder(skip_table)]
-    #[builder(pass = serde(skip_serializing_if = "Vec::is_empty"))]
-    #[builder(pass = serde(default = "Vec::new"))]
-    tags: Vec<Tag>,
 }
 
 

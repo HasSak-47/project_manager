@@ -8,22 +8,22 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Default, Clone)]
 pub struct TaskTable{
     #[builder(ty = Descriptor)]
-    pub(crate) desc: Description,
-    pub(crate) done: bool,
+    pub desc: Description,
+    pub done: bool,
 
     // minimun time needed to perform the task min_time   : time::Duration,
     #[builder(ty = u64, init = 10)]
-    pub(crate) min_time: chrono::Duration,
+    pub min_time: chrono::Duration,
 
     #[builder(skip)]
-    pub(crate) id : usize,
+    pub id : usize,
 
     #[builder(skip)]
-    pub(crate) parent : Option<usize>,
+    pub parent : Option<usize>,
 
     #[builder(ty = String, init = String::new())]
     #[builder(pass = serde(default = "String::new"))]
-    pub(crate) project: Option<usize>,
+    pub project: Option<usize>,
 
     #[builder(skip_table)]
     #[builder(pass = serde(skip_serializing_if = "Vec::is_empty"))]
@@ -34,7 +34,6 @@ pub struct TaskTable{
     #[builder(pass = serde(skip_serializing_if = "Vec::is_empty"))]
     #[builder(pass = serde(default = "Vec::new"))]
     tags: Vec<Tag>,
-
 }
 
 impl TaskTable {
