@@ -4,7 +4,7 @@ use crate::*;
 use crate::desc::{Descriptor, Description};
 use serde::{Deserialize, Serialize};
 
-#[builder(name = Task, pass = derive(Debug, Default, Clone, Serialize, Deserialize))]
+#[builder(name = Task, pass = derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize))]
 #[derive(Debug, Default, Clone)]
 pub struct TaskTable{
     #[builder(ty = Descriptor)]
