@@ -1,8 +1,10 @@
 #![allow(unused_import_braces)]
+use std::path::PathBuf;
+
 use crate::SystemHandler;
 use super::Arguments;
 use rand::random;
-use project_manager_api::CachedProject;
+use project_manager_api::{config::manager::Location, CachedProject};
 use clap::{Subcommand, Args, ValueEnum};
 
 use anyhow::Result;
@@ -12,6 +14,8 @@ use anyhow::Result;
 pub struct PrintStruct{
     #[command(subcommand)]
     print: Option<PrintEnum>,
+    #[clap(short, long)]
+    pretty : bool
 }
 
 #[derive(Args, Debug, Default, Clone)]
@@ -32,7 +36,7 @@ struct PrintProject{
     // probably shouldn't be used like this
 }
 
-#[derive(Args, Debug, Default, Clone)]
+#[derive(Args, Default, Debug, Clone)]
 struct PrintProjects{
     #[clap(value_enum, long, default_value = "progress")]
     sort_by: SortBy
@@ -74,6 +78,14 @@ fn print_broken_projects(mut handler: SystemHandler) -> Result<()>{
     Ok(())
 }
 
+fn make_pretty(project: &CachedProject, padding: usize) -> String {
+    let name = project.get_name();
+    let path =
+        if let Location::Path{path: p} = project.get_location() { p.clone() }
+        else { PathBuf::new() };
+    format!("\x1b[1;34m{name:1$}\x1b[0m @ {}", path.display(), padding)
+}
+
 fn print_projects(projects: Vec<&mut CachedProject>, _data: PrintProjects) -> Result<()>{
     let mut max_len = 0usize;
     for p in &projects{
@@ -83,7 +95,7 @@ fn print_projects(projects: Vec<&mut CachedProject>, _data: PrintProjects) -> Re
 
 
     for p in projects{
-        println!("{:1$}", p.get_name(), max_len + 4);
+        println!("{}", make_pretty(p, max_len + 4));
     }
     Ok(())
 }
@@ -117,8 +129,9 @@ fn print_random(projects: Vec<&mut CachedProject>){
     println!("{}", projects[i].get_name());
 }
 
+
 impl PrintPercentaje{
-    fn print(&self, mut projects: Vec<&mut CachedProject>) -> Result<()>{
+    fn print(&self, mut projects: Vec<&mut CachedProject>, args : Arguments) -> Result<()>{
         let mut max_len = 0usize;
         for p in &projects{
             let l = p.get_name().len();
@@ -126,7 +139,7 @@ impl PrintPercentaje{
         }
 
         for project in &mut projects{
-            if project.cache_completion().is_err() {
+            if project.cache_completion().is_err() && args.verbose && args.debug{
                 println!("project: {project:#?} could not be loaded");
             }
         }
@@ -145,12 +158,12 @@ impl PrintPercentaje{
 }
 
 impl PrintStruct{
-    pub fn run(self, _args: Arguments, mut handler: SystemHandler) -> Result<()> {
+    pub fn run(self, args: Arguments, mut handler: SystemHandler) -> Result<()> {
         handler.load_projects();
 
         let projects = handler.get_projects_mut();
         let option = if self.print.is_none(){
-            PrintEnum::default()
+            PrintEnum::Projects(PrintProjects::default() )
         }
         else{
             self.print.clone().unwrap()
@@ -158,14 +171,14 @@ impl PrintStruct{
         use PrintEnum as PE;
         match option{
             PE::Project(p) => {p.print(projects);}
-            PE::Projects(p) => {print_projects(projects, p)?;}
             PE::Random => {print_random(projects);}
-            PE::Percentajes(p) => {p.print(projects)?}
+            PE::Percentajes(p) => {p.print(projects, args)?}
             PE::Broken => {
                 drop(projects);
                 print_broken_projects(handler)?
             }
-            _ => {print(projects);},
+            PE::Projects(p) => {print_projects(projects, p)?;}
+            _ => {},
         }
 
         Ok(())

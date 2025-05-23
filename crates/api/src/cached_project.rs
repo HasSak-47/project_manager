@@ -93,8 +93,8 @@ impl CachedProject{
 
     pub fn get_name(&self) -> &String{ &self._name }
 
-    pub fn get_location(&self) -> Location {
-        self._data.location.clone()
+    pub fn get_location(&self) -> &Location {
+        &self._data.location
     }
 
     pub(crate) fn match_criteria(&self, find_criteria: &FindCriteria) -> bool{
