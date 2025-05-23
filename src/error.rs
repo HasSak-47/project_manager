@@ -11,6 +11,7 @@ pub enum ProjectError{
     UTF8ErrorString(std::string::FromUtf8Error),
     TOMLFromStr(toml::de::Error),
     TOMLToStr(toml::ser::Error),
+    Other(String),
 }
 
 pub type ProjectResult<T> = Result<T, ProjectError>;
