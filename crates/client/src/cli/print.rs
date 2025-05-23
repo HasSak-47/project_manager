@@ -3,6 +3,7 @@ use std::path::PathBuf;
 
 use crate::SystemHandler;
 use super::Arguments;
+use libc::STDOUT_FILENO;
 use rand::random;
 use project_manager_api::{config::manager::Location, format_project, CachedProject, FindCriteria};
 use clap::{Subcommand, Args, ValueEnum};
@@ -15,7 +16,7 @@ pub struct PrintStruct{
     #[command(subcommand)]
     print: Option<PrintEnum>,
     #[clap(short, long)]
-    pretty : bool
+    not_pretty : bool
 }
 
 #[derive(Args, Debug, Default, Clone)]
@@ -104,7 +105,7 @@ fn make_pretty(project: &CachedProject, padding: usize) -> String {
 
 
 impl PrintProjects {
-    fn run(&self, mut handler: SystemHandler) -> Result<()>{
+    fn run(&self, mut handler: SystemHandler, args: Arguments, print_args: &PrintStruct) -> Result<()>{
         handler.load_projects();
         let mut projects = handler.get_projects_mut();
         let mut padding = 0usize;
@@ -126,6 +127,26 @@ impl PrintProjects {
             projects.reverse();
         }
 
+        let terminal = unsafe {
+            let isatty = libc::isatty(STDOUT_FILENO);
+            isatty == 1
+        };
+
+        if !print_args.not_pretty && terminal{
+            PrintProjects::print_pretty(projects, padding);
+        }
+        else{
+            for p in projects{
+                let path = p.get_location().to_string();
+                println!("{path}");
+            }
+        }
+
+
+        Ok(())
+    }
+
+    fn print_pretty(projects: Vec<&mut CachedProject>, padding: usize){
         let mut buffer = Vec::new();
         let mut max = 0usize;
         for p in projects{
@@ -148,7 +169,6 @@ impl PrintProjects {
         }
         println!();
 
-        Ok(())
     }
     
 }
@@ -227,7 +247,7 @@ impl PrintStruct{
             }
             PE::Projects(p) => {
                 drop(projects);
-                p.run(handler)?;
+                p.run(handler, args, &self)?;
             }
             _ => {},
         }
