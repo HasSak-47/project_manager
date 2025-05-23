@@ -1,8 +1,7 @@
-use std::{collections::HashMap, path::PathBuf, cmp};
 
-use super::config::{project::Project, manager::{ProjectData, Manager, Location}};
-use super::error::{ProjectResult, ProjectError};
+use super::config::{project::Project, manager::{ProjectData, Location}};
 use super::ProjectLoader;
+use anyhow::Result;
 
 /* project cache that may be requested later
    it may need updating when the project is refreshed */
@@ -27,10 +26,9 @@ impl CachedProject{
     where
         L: ProjectLoader,
     {
-        let project : ProjectResult<Project> = 
+        let project : Result<Project> = 
             loader.get_project(&self._data.location)
                 .and_then(|p| Ok(toml::from_str(p.as_str())?))
-                .map_err(ProjectError::from)
         ;
 
         self._proj = project.ok();
@@ -67,5 +65,9 @@ impl CachedProject{
     }
 
     pub fn get_name(&self) -> &String{ &self._name }
+
+    pub fn get_location(&self) -> Location {
+        self._data.location.clone()
+    }
 }
 

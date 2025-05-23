@@ -15,12 +15,6 @@ pub struct DelStruct{
 
 impl DelStruct{
     pub fn run(self, _args: Arguments, mut handler: SystemHandler) -> ProjectResult<()> {
-        let project = match handler.get_project(self.name){
-            Some(s) => s,
-            None => {return Err(ProjectError::ProjectNotFound { name: Some(self.name), path: None })},
-        };
-        if self.delete_status{
-        }
         Ok(())
     }
 }
