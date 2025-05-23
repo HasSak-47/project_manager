@@ -138,11 +138,32 @@ impl Manager{
         
         for p in &self.projects{
             let _p = Project::read_project_from_dir(&p.path);
-            if _p.is_ok(){
-                v.push(_p.unwrap());
-            }
+            if _p.is_ok(){ v.push(_p.unwrap()); }
         }
 
         v
+    }
+
+    pub fn find_project_name(&self, name: String) -> ProjectResult<Project>{
+        for proj in self.projects.iter(){
+            if proj.name == name{
+                return Ok(Project::read_project_from_dir(&proj.path)?);
+            }
+        }
+        Err(ProjectError::ProjectNotFound { name: Some(name), path: None })
+    }
+
+    pub fn find_project_path<P: AsRef<Path>>(&self, path: P)
+        -> ProjectResult<Project>
+    {
+        for proj in self.projects.iter(){
+            if proj.path.as_path() == path.as_ref(){
+                return Ok(Project::read_project_from_dir(&proj.path)?);
+            }
+        }
+        Err(ProjectError::ProjectNotFound {
+            name: None,
+            path: Some(path.as_ref().to_path_buf())
+        })
     }
 }

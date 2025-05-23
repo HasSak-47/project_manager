@@ -27,8 +27,7 @@ pub struct Feature{
 }
 
 impl Feature{
-    #[allow(unused)]
-    fn new(name: String, priority: f64, difficulty: f64) -> Self {
+    pub fn new(name: String, priority: f64, difficulty: f64) -> Self {
         Feature {name, priority, difficulty, ..Default::default()}
     }
 }
