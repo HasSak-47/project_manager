@@ -1,5 +1,5 @@
 use super::{RunCmd, Params};
-use clap::{Subcommand, Parser, Args};
+use clap::{Subcommand, Args};
 use rand::random;
 use crate::{error::ProjectResult, config::{manager::Manager, project::Project}};
 
@@ -27,13 +27,29 @@ struct PrintProject{
     toml: bool
 }
 
+#[derive(Args, Debug, Default, Clone)]
+struct PrintProjects{ }
+
 #[derive(Subcommand, Default, Debug, Clone)]
 enum PrintEnum{
-    Percentaje(PrintPercentaje),
+    Percentajes(PrintPercentaje),
     Random,
     Project(PrintProject),
+    Projects(PrintProjects),
     #[default]
     None,
+}
+
+fn print_projects(manager: Manager, projects: Vec<Project>, _data: PrintProjects){
+    let mut max_len = 0usize;
+    for p in &projects{
+        let l = p.project.name.len();
+        if l > max_len {max_len = l}
+    }
+
+    for p in manager.projects{
+        println!("{:2$} {}", p.name, p.path.display(), max_len + 4);
+    }
 }
 
 fn print_percentaje(mut projects: Vec<Project>, data: PrintPercentaje){
@@ -53,7 +69,7 @@ fn print_percentaje(mut projects: Vec<Project>, data: PrintPercentaje){
     }
 
     for p in projects{
-        println!("{:2$} : {:>7.2}%", p.project.name, p.get_completion() * 100., max_len + 4, );
+        println!("{:2$}{:>7.2}%", p.project.name, p.get_completion() * 100., max_len + 4, );
     }
 }
 
@@ -69,13 +85,16 @@ fn print_project(projects: Vec<Project>, data: PrintProject){
             return;
         }
     }
-
-
 }
 
 fn print(projects: Vec<Project>){
+    let mut max_len = 0usize;
+    for p in &projects{
+        let l = p.project.name.len();
+        if l > max_len {max_len = l}
+    }
     for p in projects{
-        println!("{}", p.project.name);
+        println!("{:1$}{}", p.project.name, max_len);
     }
 }
 
@@ -88,8 +107,6 @@ impl RunCmd for PrintStruct{
     fn run(&self, params: Params) -> ProjectResult<()> {
         let manager = Manager::load_data_from(&params.manager_path)?;
         let projects = manager.get_unbroken_projects();
-        drop(manager);
-
         let option = if self.print.is_none(){
             PrintEnum::default()
         }
@@ -98,8 +115,9 @@ impl RunCmd for PrintStruct{
         };
         use PrintEnum as PE;
         match option{
-            PE::Percentaje(p) => {print_percentaje(projects, p);},
+            PE::Percentajes(p) => {print_percentaje(projects, p);},
             PE::Project(p) => {print_project(projects, p);}
+            PE::Projects(p) => {print_projects(manager, projects, p);}
             PE::Random => {print_random(projects);}
             _ => {print(projects);},
         }
