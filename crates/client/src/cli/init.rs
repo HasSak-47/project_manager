@@ -26,9 +26,6 @@ impl InitStruct{
         let path = self.path.unwrap_or(current_dir().unwrap());
         let _ = log!("path of the new project: {}", path.display());
 
-        let reader = db.get_reader_mut().as_mut();
-        reader = 
-
         let mut status_path = path.clone();
         status_path.push("status");
         status_path.set_extension("toml");
