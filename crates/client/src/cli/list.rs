@@ -1,7 +1,6 @@
 
 
 use project_manager_api::Database;
-use crate::utils::load_database;
 
 use super::Arguments;
 use clap::{Subcommand, Args, ValueEnum};
@@ -57,7 +56,6 @@ enum SortBy{
 
 impl ListProjects{
     fn run(self, mut database: Database) -> Result<()>{
-        load_database(&mut database)?;
 
         let entries : Vec<_> = database.get_all_projects().into_iter().map(|p| (p.name().clone(), p.location().clone(), p.get_completion()) ).collect();
         let _ = log!("entry count: {}", entries.len());
@@ -66,7 +64,7 @@ impl ListProjects{
                 project_manager_api::Location::Path(p) => p.to_str().unwrap().to_string(),
                 _ => "Not here lmao".to_string(),
             };
-            println!("{n} @ {p}: {c}");
+            println!("{n} @ {p}: {:5.2}%", c * 100.);
         }
 
         Ok(())

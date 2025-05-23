@@ -470,6 +470,7 @@ impl Explorer {
      * getting a project: /project_a/project_b/.../project_c
      */
     pub fn get_desired_target(path: String, database: &Database) -> Option<Vec<usize>>{
+        let path = Self::split_target_path(path)?;
         None
     }
 
