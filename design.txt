@@ -1,6 +1,0 @@
---[[config file]]--
-[projects]
-name="path to project config" | {specs}
-
-[config]
-tracker="name"
