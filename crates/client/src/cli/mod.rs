@@ -21,7 +21,7 @@ use self::{delete::DelStruct, new::NewStruct, features::AddFeat, git::GitStruct}
 
 #[derive(Parser, Debug)]
 #[clap(author="Daniel", version, about)]
-struct Arguments{
+pub struct Arguments{
     #[clap(short, long)]
     verbose: bool,
     #[clap(long)]
@@ -45,7 +45,7 @@ pub struct Params{
 struct NotDone;
 
 impl NotDone{
-    pub fn run(&self, _ : Params) -> ProjectResult<()>{
+    pub fn run(&self, _ : Arguments, _handler: SystemHandler) -> ProjectResult<()>{
         println!("not yet implemented!!");
         Err(ProjectError::Other("not yet implemented".to_string()))
     }
@@ -80,7 +80,7 @@ pub fn cli(handler: SystemHandler) -> ProjectResult<()>
         return Ok(());
     }
 
-    let tree = args.tree.unwrap();
+    let tree = args.tree.clone().unwrap();
     use Tree as TR;
 
     match tree{
