@@ -1,52 +1,37 @@
 use std::time::SystemTime;
-
 use ly::proc::builder;
 use serde::{Deserialize, Serialize};
 
 
+
+#[builder(name = Descriptor, pass = derive(Debug, Default, Clone, Serialize, Deserialize))]
 #[derive(Debug, Default, Clone)]
-pub struct SanatizedDescription {
-    name       : String,
-    description: String,
-    priority   : f64,
-    difficulty : f64,
-    due_date   : Option<SystemTime>,
-}
-
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
-pub struct Description {
-    name       : String,
-    #[serde(default)]
-    #[serde(skip_serializing_if = "String::is_empty")]
-    description: String,
-    priority   : f64,
-    difficulty : f64,
-
-    #[serde(default)]
-    #[serde(skip_serializing_if = "String::is_empty")]
-    due_date   : String,
-
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    tags       : Vec<String>,
-}
-
-
-#[builder(name = Tag, pass = derive(Debug, Default, Clone, Serialize, Deserialize))]
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
-pub struct TagTable{
-    name       : String,
+pub struct Description{
+    pub(crate) name       : String,
+    #[builder(pass = serde(default))]
     #[builder(pass = serde(skip_serializing_if = "String::is_empty"))]
-    description: String,
-    #[builder(init = 1.0)]
-    priority   : f64,
-    #[builder(init = 1.0)]
-    difficulty : f64,
-    #[builder(ty = String)]
-    due_date   : Option<SystemTime>,
-    #[builder(skip)]
-    id : usize,
+    pub(crate) escription: String,
+    pub(crate) riority   : f64,
+    pub(crate) ifficulty : f64,
+
+    #[builder(pass = serde(default))]
+    #[builder(pass = serde(skip_serializing_if = "String::is_empty"))]
+    pub(crate) due_date   : String,
+
+    #[builder(skip_table)]
+    #[builder(pass = serde(default))]
+    #[builder(pass = serde(skip_serializing_if = "Vec::is_empty"))]
+    pub(crate) tags       : Vec<String>,
 }
+
+use crate::{Pool, PoolError};
+
+impl Description {
+    pub fn from_descriptor(des: Descriptor, pool: &Pool) -> Result<Self, PoolError>{
+        return Err(PoolError::Unknown);
+    }
+}
+
 
 pub struct TagTask{
     tag: usize,
