@@ -1,8 +1,8 @@
-use std::{path::PathBuf, env::current_dir};
+use std::path::PathBuf;
 
 use crate::SystemHandler;
 
-use super::Arguments;
+use super::{utils::find_local_status, Arguments};
 use clap::Args;
 use project_manager_api::config::manager::Location;
 use anyhow::{Result, anyhow};
@@ -23,9 +23,7 @@ pub struct NewStruct{
 
 impl NewStruct{
     fn get_location(&self) -> Result<Location>{
-        let mut path = current_dir()?;
-        path.push("status");
-        path.set_extension("toml");
+        let path = find_local_status()?;
 
         if path.exists(){
             return Err(anyhow!("status.toml already exists try using init instead!"));
