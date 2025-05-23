@@ -1,6 +1,7 @@
 pub mod project;
 pub mod task;
 pub mod trees;
+pub mod desc;
 
 use std::{path::PathBuf, time::{self, Duration}};
 
