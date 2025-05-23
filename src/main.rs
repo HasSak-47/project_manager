@@ -15,5 +15,5 @@ fn main(){
         .into_iter()
         .fold(Vec::new(), |args, arg| args.push_and_return(arg));
 
-    options::run(if arguments.len() == 1 {options::DEFAULT_OPT}else {arguments[2].as_str()});
+    options::run(if arguments.len() == 1 {options::DEFAULT_OPT} else {arguments[1].as_str()});
 }
