@@ -1,4 +1,4 @@
-mod universal{
+pub mod universal{
 use serde::{Serialize, Deserialize};
 #[derive(Default, Clone, Deserialize, Serialize, Debug)]
 pub struct ProjectInfo{
@@ -8,7 +8,7 @@ pub struct ProjectInfo{
 }
 }
 
-mod prev{
+pub mod prev{
 use serde::{Serialize, Deserialize};
 use super::universal::ProjectInfo;
 
@@ -18,7 +18,7 @@ pub struct FeatureTOML{
     pub priority   : f32,
     pub difficulty : f32,
     pub description: Option<String>,
-    pub subfeat: Option<Vec<FeatureTOML>>,
+    pub subfeature: Option<Vec<FeatureTOML>>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Default)]
@@ -29,7 +29,7 @@ pub struct ProjectToml{
 }
 }
 
-mod next{
+pub mod next{
 use serde::{Serialize, Deserialize};
 use super::universal::ProjectInfo;
 
@@ -68,7 +68,7 @@ impl From<prev::FeatureTOML> for next::FeatureTOML{
             priority: value.priority,
             difficulty: value.difficulty,
             description: value.description,
-            todo: opt_vec_to_vec(value.subfeat),
+            todo: opt_vec_to_vec(value.subfeature),
             done: None,
         }
     }
@@ -76,10 +76,13 @@ impl From<prev::FeatureTOML> for next::FeatureTOML{
 
 impl From<prev::ProjectToml> for next::ProjectToml{
     fn from(value: prev::ProjectToml) -> Self {
-        Self{
+        let mut nself = Self{
             project: value.project,
             todo: opt_vec_to_vec(value.todo),
             done: opt_vec_to_vec(value.done),
-        }
+        };
+        nself.project.edition = "0.1.0".to_string();
+        nself
     }
+
 }
