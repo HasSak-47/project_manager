@@ -179,7 +179,7 @@ impl ListProject{
         handler.load_projects()?;
         match handler.get_project(&self.name){
             Ok(project) => {
-                println!("{project:?}");
+                println!("Name: {}\nPath: {}", project.info.name, project.info.location.to_string())
             },
             Err(_) => {
                 println!("project \"{}\" not found\n", self.name);
