@@ -1,7 +1,6 @@
 pub mod project;
 pub mod tags;
 pub mod task;
-pub mod trees;
 pub mod desc;
 
 use std::{marker::PhantomData, path::PathBuf, time::SystemTime};
@@ -15,7 +14,7 @@ use project::{Project, ProjectTable};
 use tags::{Tag, TagOtherTable, TagTable};
 use task::{Task, TaskTable};
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Location{
     Path(PathBuf),
     Git(String),
@@ -169,6 +168,7 @@ impl Database{
         entry.id = pt.len();
         entry.desc = p.desc.into();
         entry.parent = p_id;
+        entry.location = p.location;
 
         for child in p.childs{
             self.unravel_project(pt, tt, gt, child, Some(entry.id))?;
@@ -210,7 +210,7 @@ impl Database{
         Ok(())
     }
 
-    pub fn get_all_projects(&self) -> Vec<Manager<Project>>{
+    pub fn get_all_projects(&self) -> Vec<ProjectManager>{
         self.projects
             .iter()
             .map(|p| Manager::new(p.id, self))
@@ -218,7 +218,9 @@ impl Database{
     }
 }
 
-impl Manager<'_, Project>{
+type ProjectManager<'a> = Manager<'a, Project>;
+
+impl<'a> ProjectManager<'a>{
     pub fn get_table(&self) -> &ProjectTable{
         &self.pool.projects[self.id]
     }
@@ -266,11 +268,17 @@ pub enum DatabaseError{
     #[error("Not found")]
     NotFound,
 
+    #[error("Root project already exists")]
+    ProjectExists,
+
     #[error("Not found {0}")]
     NotFoundOther(String),
 
     #[error("unknown")]
     Unknown,
+
+    #[error("Other: {0}")]
+    Other(String),
 
     #[error("undefined error")]
     Undefined,
@@ -280,4 +288,10 @@ pub enum DatabaseError{
 
     #[error("not implemented")]
     NotImplemented,
+}
+
+impl DatabaseError {
+    pub fn other<S: AsRef<str>>(s: S) -> Self{
+        return DatabaseError::Other(s.as_ref().to_string());
+    }
 }
