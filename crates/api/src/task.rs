@@ -14,8 +14,8 @@ pub struct TaskTable{
     pub(crate) done: bool,
 
     // minimun time needed to perform the task min_time   : time::Duration,
-    #[builder(init = Duration::new(1000, 0))]
-    pub(crate) min_time: Duration,
+    #[builder(ty = u64, init = 10)]
+    pub(crate) min_time: chrono::Duration,
 
     #[builder(skip)]
     pub(crate) id : usize,
@@ -25,6 +25,7 @@ pub struct TaskTable{
     pub(crate) parent : Option<usize>,
 
     #[builder(ty = String, init = String::new())]
+    #[builder(pass = serde(default = "String::new"))]
     pub(crate) project: Option<usize>,
 
     #[builder(skip_table)]

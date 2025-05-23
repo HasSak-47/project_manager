@@ -6,15 +6,13 @@
     },
     "location": "Other",
     "last_worked": "15 10 2024",
-    "childs" : [{
+    "tasks": [{
         "desc": {
-            "name": "child",
+            "name": "task",
             "priority" : 64,
             "difficulty" : 64
         },
-        "location": "Other",
-        "last_worked": "15 10 2024"
-    }],
-    "tasks" : [
-    ]
+        "done": false,
+        "min_time" : 10
+    }]
 }

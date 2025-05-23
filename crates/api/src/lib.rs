@@ -58,7 +58,7 @@ pub struct Database{
 
 impl std::fmt::Debug for Database{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "projects: {:?} tasks{:?} tags {:?}",    
+        write!(f, "projects: {:#?} tasks{:#?} tags {:#?}",    
             self.projects,
             self.tasks   ,
             self.tags    ,
@@ -76,9 +76,9 @@ impl DatabaseReader for UnimplementedReader {
 }
 
 impl DatabaseWriter for UnimplementedWriter {
-    fn write_all_projects(&mut self, v: &mut Vec<ProjectTable>) -> Result<()> {Err(DatabaseError::NotImplemented) }
-    fn write_all_tasks(&mut self, v: &mut Vec<TaskTable>) -> Result<()> {Err(DatabaseError::NotImplemented) }
-    fn write_all_tags(&mut self, v: &mut Vec<TagTable>) -> Result<()> {Err(DatabaseError::NotImplemented) }
+    fn write_all_projects(&mut self, _: &mut Vec<ProjectTable>) -> Result<()> {Err(DatabaseError::NotImplemented) }
+    fn write_all_tasks(&mut self, _: &mut Vec<TaskTable>) -> Result<()> {Err(DatabaseError::NotImplemented) }
+    fn write_all_tags(&mut self, _: &mut Vec<TagTable>) -> Result<()> {Err(DatabaseError::NotImplemented) }
 }
 
 impl DatabaseBuilder{
@@ -128,6 +128,13 @@ impl Database{
                 .and_then(|p| Ok(p.id))
     }
 
+    pub fn search_tag_id(&self, name: &String) -> Result<usize>{
+        self.tags.iter()
+            .find(|p| p.tag == *name)
+            .ok_or(DatabaseError::NotFoundOther(format!("Could not found tag {name}")))
+            .and_then(|p| Ok(p.id))
+    }
+
     pub fn search_project<P>(&self, p: P) -> Result<Manager<ProjectTable>>
     where
         P: FnMut(&&ProjectTable) -> bool {
@@ -143,69 +150,51 @@ impl Database{
 
     pub fn build_project(&self) -> Result<Project>{ Err(DatabaseError::NotImplemented) }
 
-    pub fn search_tag_id(&self, name: &String) -> Result<usize>{
-        self.tags.iter()
-            .find(|p| p.tag == *name)
-            .ok_or(DatabaseError::NotFoundOther(format!("Could not found tag {name}")))
-            .and_then(|p| Ok(p.id))
-    }
+    fn unravel_tasks(&self, pt: &mut Vec<ProjectTable>, tt: &mut Vec<TaskTable>, gt: &mut Vec<TagTable>, t: Task, pa_id: Option<usize>, pr_id: Option<usize>) -> Result<()>{
+        let mut entry = TaskTable::default();
+        entry.id = tt.len();
+        entry.desc = t.desc.into();
+        entry.parent = pa_id;
+        entry.project = pr_id;
+        entry.min_time = chrono::TimeDelta::minutes(t.min_time as i64);
 
-    fn create_project(&self, p: Project) -> Result<(ProjectTable, Vec<TagProjectTable>)>{
-        let mut entry = ProjectTable::default();
-        entry.id = self.projects
-            .last()
-            .and_then(|l| Some(l.id))
-            .unwrap_or(self.projects.len());
-        let o_id = entry.id;
-
-        let mut tag_pro = Vec::new();
-        for tag in &p.desc.tags{
-            let tag_id = self.search_tag_id(tag)?;
-            tag_pro.push(TagProjectTable::new(o_id, tag_id));
+        for child in t.childs{
+            self.unravel_tasks(pt, tt, gt, child, Some(entry.id), pr_id)?;
         }
 
-        entry.desc = p.desc.into();
-        
-        return Ok((entry, tag_pro));
-    }
-
-    fn get_child_project(&self, entries: &mut Vec<ProjectTable>, p: Project, parent: usize) -> Result<()>{
-        if !p.parent.is_empty(){
-            return Err(DatabaseError::Malformed);
-        }
-
-        let childs = p.childs.clone();
-        let mut entry = self.create_project(p)?;
-        entry.0.parent = Some(parent);
-        let id = entries.len();
-        entries.push(entry.0);
-
-        for child in childs{
-            self.get_child_project(entries, child, id)?;
-        }
-
+        tt.push(entry);
         Ok(())
+    }
+
+    fn unravel_project(&self, pt: &mut Vec<ProjectTable>, tt: &mut Vec<TaskTable>, gt: &mut Vec<TagTable>, p: Project, p_id : Option<usize>) -> Result<()>{
+        let mut entry = ProjectTable::default();
+        entry.id = pt.len();
+        entry.desc = p.desc.into();
+        entry.parent = p_id;
+
+        for child in p.childs{
+            self.unravel_project(pt, tt, gt, child, Some(entry.id))?;
+        }
+
+        for task in p.tasks{
+            self.unravel_tasks(pt, tt, gt, task, None, Some(entry.id))?;
+        }
+        pt.push(entry);
+
+        return Ok(());
     }
 
     pub fn add_full_project(&mut self, p: Project) -> Result<()>{
         if !p.parent.is_empty(){
             return Err(DatabaseError::NotImplemented);
         }
+        let mut pt = Vec::new();
+        let mut tt = Vec::new();
+        let mut gt = Vec::new();
 
-        let childs = p.childs.clone();
-        let entry = self.create_project(p)?;
-        let id = 0;
-        let mut entries = vec![entry.0];
-        for child in childs{
-            self.get_child_project(&mut entries, child, id)?;
-        }
-        let offset = self.projects.last().and_then(|f| Some(f.id)).unwrap_or(0);
-        for mut entry in entries{
-            entry.id += offset;
-            self.projects.push(entry);
-        }
-
-
+        self.unravel_project(&mut pt, &mut tt, &mut gt, p, None)?;
+        self.projects.append(&mut pt);
+        self.tasks.append(&mut tt);
         Ok(())
     }
 
