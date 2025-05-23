@@ -5,19 +5,22 @@ mod delete;
 mod init;
 mod new;
 
-use std::{path::PathBuf, io::Write};
 
+use anyhow::{Result, anyhow};
 use clap::{Subcommand, Parser, Args};
-use project_manager_api::{
-    error::{ProjectResult, ProjectError},
-    config::{manager::Manager, default::DEFAULT_MANAGER}, ProjectsHandler, ProjectLoader
-};
+
 use print::PrintStruct;
 use init::InitStruct;
 
-use crate::SystemHandler;
+use std::path::PathBuf;
 
-use self::{delete::DelStruct, new::NewStruct, features::AddFeat, git::GitStruct};
+use crate::SystemHandler;
+use self::{
+    delete::DelStruct,
+    new::NewStruct,
+    features::AddFeat,
+    git::GitStruct
+};
 
 #[derive(Parser, Debug)]
 #[clap(author="Daniel", version, about)]
@@ -45,9 +48,9 @@ pub struct Params{
 struct NotDone;
 
 impl NotDone{
-    pub fn run(&self, _ : Arguments, _handler: SystemHandler) -> ProjectResult<()>{
-        println!("not yet implemented!!");
-        Err(ProjectError::Other("not yet implemented".to_string()))
+    pub fn run(&self, _ : Arguments, _handler: SystemHandler) -> Result<()>{
+        anyhow!("not yet implemented");
+        Ok(())
     }
 }
 
@@ -72,7 +75,7 @@ enum Tree{
     Git(GitStruct),
 }
 
-pub fn cli(handler: SystemHandler) -> ProjectResult<()>
+pub fn cli(handler: SystemHandler) -> Result<()>
 {
     // set up stuff
     let args = Arguments::parse();

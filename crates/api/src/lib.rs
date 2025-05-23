@@ -142,4 +142,12 @@ where
         };
         self._projects.insert(name, cached);
     }
+
+    pub fn find_project_mut(&mut self, find_criteria: &FindCriteria) -> Result<&mut CachedProject>{
+        self._projects
+            .iter_mut()
+            .map(|(_,c)| c)
+            .find(|c| c.match_criteria(&find_criteria))
+            .ok_or(anyhow!("project was not found!"))
+    }
 }

@@ -4,9 +4,10 @@ version = "0.1.1"
 edition = "2021"
 
 [dependencies]
-toml = "0.7.2"
 dirs = "1.0"
 rand = "0.8.5"
+anyhow = "1.0.79"
+thiserror = "1.0.57"
 project_manager_api = {path = "../api"}
 
 [dependencies.clap]

@@ -4,10 +4,8 @@ use crate::SystemHandler;
 
 use super::{Params, Arguments};
 use clap::Args;
-use project_manager_api::{
-    error::{ProjectResult, ProjectError},
-    config::{manager::{Manager, ProjectData, Location}, default::create_project}
-};
+use project_manager_api::config::{manager::{Manager, ProjectData, Location}, default::create_project} ;
+use anyhow::{Result, anyhow};
 
 #[derive(Args, Debug, Clone)]
 pub struct NewStruct{
@@ -21,20 +19,20 @@ pub struct NewStruct{
 }
 
 impl NewStruct{
-    fn get_location(&self) -> ProjectResult<Location>{
+    fn get_location(&self) -> Result<Location>{
         let mut path = current_dir()?;
         path.push("status");
         path.set_extension("toml");
 
         if path.exists(){
-            return Err(ProjectError::Other("status.toml already exists try using init instead!".to_string()));
-        };
+            anyhow!("status.toml already exists try using init instead!");
+        }
         Ok(Location::Path{path})
     }
 
     fn validate_path(&self) -> bool { true }
 
-    pub fn run(self, args: Arguments, mut handler: SystemHandler) -> ProjectResult<()> {
+    pub fn run(self, args: Arguments, mut handler: SystemHandler) -> Result<()> {
 
         if self.validate_path() {
             handler.new_project(self.name.clone(), self.get_location()?)?;
