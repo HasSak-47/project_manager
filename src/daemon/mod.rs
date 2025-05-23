@@ -72,6 +72,32 @@ impl ProjectManager{
     }
 }
 
+fn get_duration(s: &String) -> std::time::Duration{
+    let parts : Vec<&str> = s.split(':').collect();
+    let h = u64::from_str_radix(parts[0], 10).unwrap();
+    let m = u64::from_str_radix(parts[1], 10).unwrap();
+
+    Duration::from_secs((m + (60 * h)) * 60)
+}
+
+impl From<&Project> for ProjectManager{
+    fn from(p: &Project) -> ProjectManager{
+        ProjectManager::new(p.project.name.clone(), p.project.folder.clone(),
+            Local {
+                countdown: get_duration(&p.local.countdown),
+                add_all: p.local.add_all, 
+                force_commit: p.local.force_commit,
+            },
+            Remote {
+                push: p.remote.push,
+                countdown:  get_duration(&p.remote.countdown),
+                local_commit: p.remote.local_commit,
+                force_push: p.remote.force_push,
+            }
+        )
+    }
+}
+
 
 #[allow(dead_code)]
 #[allow(unused_variables)]
