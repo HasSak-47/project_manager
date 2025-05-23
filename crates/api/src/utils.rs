@@ -3,6 +3,7 @@ pub trait IsZero{
     fn is_zero(&self) -> bool;
 }
 
+// iz = is zero
 macro_rules! iz_int {
     ($ty: ty) => { impl IsZero for $ty{ fn is_zero(&self) -> bool { *self == 0 } } };
 }

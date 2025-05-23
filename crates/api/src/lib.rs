@@ -204,7 +204,7 @@ impl Database{
         self.get_project_id(p).and_then(|p| Ok(Manager::new(p, self)))
     }
 
-    pub fn get_project_mut<P>(&mut self, p: P) -> Result<ManagerMut<ProjectTable>>
+    pub fn get_project_mut<P>(&mut self, p: P) -> Result<ManagerMut<Project>>
     where
         P: FnMut(&&ProjectTable) -> bool,
     {

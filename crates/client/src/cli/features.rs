@@ -46,7 +46,7 @@ impl AddFeat{
                 .difficulty(self.difficulty)
             ).project(project);
 
-        let _ = log!("task added: {task:?}");
+        log!("task added: {task:?}");
 
         db.add_full_task(task)?;
         save_database(&db)?;

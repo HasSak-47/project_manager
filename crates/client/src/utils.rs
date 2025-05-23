@@ -26,9 +26,9 @@ pub fn database_path() -> Result<PathBuf>{
     let mut path = dirs::data_local_dir().unwrap();
     path.push("project_manager");
 
-    let _ = log!("data path: {}", path.display());
+    log!("data path: {}", path.display());
     if !path.exists(){
-        let _ = warn!("path does not exits creating...");
+        warn!("path does not exits creating...");
         fs::create_dir_all(&path)?;
     }
 
@@ -40,12 +40,12 @@ pub fn database_path() -> Result<PathBuf>{
 
 pub fn save_database(db: &Database) -> Result<()>{
     let path = database_path()?;
-    let _ = log!("saving database {db:?}");
-    let _ = log!("at {}", path.display());
+    log!("saving database {db:?}");
+    log!("at {}", path.display());
     let mut manager = Manager::default();
 
     for project in db.build_project_trees()?{
-        let _ = log!("saving project {:#?}", project);
+        log!("saving project {:#?}", project);
         manager.projects.push(Pair{
             name: project.desc.name.clone(),
             loc: project.location.clone(),
@@ -53,13 +53,13 @@ pub fn save_database(db: &Database) -> Result<()>{
 
         if let Location::Path(p) = &project.location{
             let mut file = File::create(p)?;
-            let _ = log!("writing project: {project:?}");
+            log!("writing project: {project:?}");
             file.write_all( toml::to_string_pretty(&project)?.as_bytes() )?;
         }
     }
 
     let mut file = File::create(path)?;
-    let _ = log!("writing manager: {manager:?}");
+    log!("writing manager: {manager:?}");
     file.write_all( toml::to_string_pretty(&manager)?.as_bytes() )?;
 
     Ok(())
