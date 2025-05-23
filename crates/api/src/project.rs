@@ -2,13 +2,14 @@ use std::{fmt::Debug, rc::Rc};
 
 use super::Location;
 use anyhow::{anyhow, Result};
+use serde::{Deserialize, Serialize};
 
 #[allow(dead_code)]
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Feature{
     name: String,
-    description: String,
-    status: String,
+    status: Option<String>,
+    description: Option<String>,
     priority: u8,
     difficulty: u8,
 
@@ -18,13 +19,19 @@ pub struct Feature{
 
 impl Feature{
     pub fn new(name: String, description: String, status: String, priority: u8, difficulty: u8) -> Self {
-        Feature{name, description, status, priority, difficulty, todo: Vec::new(), done: Vec::new()}
+        Feature{
+            name,
+            priority, difficulty,
+            todo: Vec::new(), done: Vec::new(),
+            description: Some(description),
+            status: Some(status),
+        }
     }
 }
 
 // the status of the project
 #[allow(dead_code)]
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct ProjectStatus{
     pub name: String,
     pub description: String,
@@ -95,9 +102,9 @@ impl ProjectStatus{
 }
 
 
-// info on the project
+// info on the project that is stored in the manager and project
 #[allow(dead_code)]
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct ProjectInfo{
     pub name: String,
     pub location: Location,
@@ -105,8 +112,11 @@ pub struct ProjectInfo{
     pub last_update: Option<usize>, // timestamp
 }
 
-// the project inside the manager
-#[derive(Debug, Default)]
+// the project that is loaded in memory
+// it has an info and a status
+// the status may not be loaded
+// therefore it is a box
+#[derive(Debug, Default, Clone)]
 pub struct Project{
     pub info: ProjectInfo,
     pub status: Option<Box<ProjectStatus>>, // the project may not be loaded
@@ -117,7 +127,7 @@ impl Project{
         self.status = None;
     }
 
-    pub fn load<R: Reader>(&mut self, reader: &R) -> Result<()>{
+    pub fn load<I: IO>(&mut self, reader: &I) -> Result<()>{
         if !self.is_loaded(){
             self.status = Some(Box::new(reader.read(&self.info.location)?));
         }
@@ -127,33 +137,28 @@ impl Project{
     pub fn is_loaded(&self) -> bool{ self.status.is_some() }
 }
 
-pub trait Writer{
-    fn write(&mut self, location: &Location, prj: &ProjectStatus) -> Result<()>;
-}
-
-pub trait Reader{
+pub trait IO{
     fn read(&self, location: &Location) -> Result<ProjectStatus>;
+    fn write(&mut self, location: &Location, prj: &ProjectStatus) -> Result<()>;
 }
 
 #[derive(Default)]
 pub struct ProjectHandler{
-    writer: Option<Rc<dyn Writer>>,
-    reader: Option<Rc<dyn Reader>>,
+    io: Option<Box<dyn IO>>,
 }
 
 impl Debug for ProjectHandler{
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result{
-        write!(f, "ProjectHandler{{ writer: {}, reader: {}, }}", self.writer.is_some(), self.reader.is_some())
+        write!(f, "ProjectHandler{{ io: {}, }}", self.io.is_some())
     }
 }
 
 impl ProjectHandler{
-    pub fn new() -> Self{ ProjectHandler{ writer: None, reader: None, } }
-    pub fn set_writer(&mut self, writer: Rc<dyn Writer>){ self.writer = Some(writer); }
-    pub fn set_reader(&mut self, reader: Rc<dyn Reader>){ self.reader = Some(reader); }
+    pub fn new() -> Self{ ProjectHandler{ io: None, } }
+    pub fn set_io(&mut self, writer: Box<dyn IO>){ self.io = Some(writer); }
 
     pub fn write(&mut self, project: &Project) -> Result<()> {
-        match &mut self.writer{
+        match &mut self.io{
             Some(s) => {
                 let status = match &project.status{
                     Some(s) => s,
@@ -167,7 +172,7 @@ impl ProjectHandler{
     }
 
     pub fn read(&self, project: &mut Project) -> Result<()> {
-        match &self.reader {
+        match &self.io {
             Some(s) => {
                 project.status = Some(Box::new(s.read(&project.info.location)?));
 
