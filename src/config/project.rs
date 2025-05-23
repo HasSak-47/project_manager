@@ -1,27 +1,83 @@
 use serde::{Deserialize, Serialize};
-use toml::{ Value, map::Map};
+use toml::{Table, value::Array};
 
+#[derive(Deserialize, Serialize, Debug, Default, Clone)]
 pub struct Feature{
-    name: String,
-    difficulty: f32,
-    priority: f32,
+    name       : String,
+    priority   : f32,
+    difficulty : f32,
+    description: Option<String>,
     sub_feature: Vec<Feature>,
 }
 
+#[derive(Debug, Default, Clone)]
 pub struct Project{
-    name : String,
-    features: Vec<Feature>,
-    todo: Vec<usize>,
-    done: Vec<usize>,
+    info : ProjectInfo,
+    todo: Vec<Feature>,
+    done: Vec<Feature>,
 }
 
+#[derive(Default, Clone, Deserialize, Serialize, Debug)]
+pub struct ProjectInfo{
+    name: String,
+    version: String,
+    edition: String,
+}
+
+
+#[derive(Deserialize, Serialize, Debug)]
 pub struct ProjectToml{
-    name : String,
-    features: Option<Vec<Feature>>,
-    todo    : Option<Vec<usize>>,
-    done    : Option<Vec<usize>>,
+    project : ProjectInfo,
+    todo    : Option<Array>, 
+    done    : Option<Array>, 
 }
 
-pub fn load_project<S: AsRef<str>>(path : S){
-    let path = path.as_str();
+use crate::error::ProjectResult;
+
+fn gen_feature(t: &Table) -> Feature{
+    let mut f = Feature::default();
+    f.name = t["name"].as_str().unwrap().to_string();
+    f.description = t["name"].as_str().map(str::to_string);
+    f.difficulty = t["difficulty"].as_float().unwrap() as f32;
+    f.priority = t["priority"].as_float().unwrap() as f32;
+
+    f
+}
+
+fn get_feature(t: &Table) -> Feature{
+    let mut f = gen_feature(t);
+    let subfeature = t.get("subfeature");
+    if let None = subfeature{
+        return f;
+    }
+
+    let arr = subfeature.unwrap().as_array();
+    match arr{
+        Some(subfeats) => {
+            for feat in subfeats {
+                f.sub_feature.push(get_feature(feat.as_table().unwrap()))
+            }
+        },
+        None => return f,
+    }
+
+    f
+}
+
+pub fn load_project<S: std::fmt::Display>(path : S) -> ProjectResult<Project>{
+    let path = format!{"{path}/status.toml"};
+    let data = crate::utils::read_file(path)?;
+
+    let project_toml : ProjectToml = toml::from_str(std::str::from_utf8(data.as_bytes())?)?;
+    let mut project = Project::default();
+
+    project.info = project_toml.project;
+    for f in project_toml.todo.unwrap_or(Vec::new()){
+        project.todo.push(get_feature(&f.as_table().unwrap()));
+    }
+    for f in project_toml.done.unwrap_or(Vec::new()){
+        project.done.push(get_feature(&f.as_table().unwrap()));
+    }
+
+    Ok(project)
 }

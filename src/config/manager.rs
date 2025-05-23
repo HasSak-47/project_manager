@@ -1,42 +1,69 @@
-use std::{fs::File, io::Read};
 use serde::{Serialize, Deserialize};
 use dirs::config_dir;
-use toml;
-
-use std::io::BufReader;
+use toml::{self, map::Map};
 
 use crate::error::*;
 
 const CONFIG_PATH: &str = "project_manager/config.toml";
 
-#[derive(Serialize, Deserialize)]
-pub struct ManagerConfig{
-    pub projects: Vec<String>,
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ProjectData{
+    pub path: String,
+    pub name: String,
+}
+
+#[derive(Serialize, Deserialize, Default, Debug)]
+pub struct ManagerData{
     pub version : String,
 }
 
-impl std::default::Default for ManagerConfig{
+#[derive(Serialize, Deserialize, Debug)]
+struct ManagerToml{
+    pub manager : ManagerData,
+    pub projects: Map<String, toml::Value>,
+}
+
+#[derive(Default, Debug)]
+pub struct Manager{
+    pub manager : ManagerData,
+    pub projects: Vec<ProjectData>
+}
+
+impl std::default::Default for ManagerToml{
     fn default() -> Self {
-        Self {projects: vec!["/home".to_string()], version: "0.0.0".to_string()}
+        Self {
+            projects: Map::new(),
+            manager : ManagerData::default(),
+        }
     }
 }
 
-pub fn load_config<S: std::fmt::Display>(path: S) -> ProjectResult<ManagerConfig>{
-    let file_path = format!("{path}/{CONFIG_PATH}");
-    let file = File::open(file_path).unwrap();
+fn map_to_data(m: Map<String, toml::Value>) -> Vec<ProjectData>{
+    let mut r = Vec::new();
+    for (k, v) in m{
+        r.push(ProjectData{
+            name: k,
+            path: v.as_str().unwrap().to_string(),
+        });
+    }
 
-    let mut bufread = BufReader::new(file);
-    let mut data = Vec::new();
-    bufread.read_to_end(&mut data)?;
-
-    let config : ManagerConfig  = toml::from_str(std::str::from_utf8(&data)?)?;
-    Ok(config)
+    r
 }
 
-pub fn get_config() -> ManagerConfig{
+pub fn load_config<S: std::fmt::Display>(path: S)
+    -> ProjectResult<Manager>
+{
+    let file_path = format!("{path}/{CONFIG_PATH}");
+    let data = crate::utils::read_file(&file_path)?;
+
+    let config : ManagerToml = toml::from_str(std::str::from_utf8(data.as_bytes())?)?;
+    Ok(Manager{manager: config.manager, projects: map_to_data(config.projects)})
+}
+
+pub fn get_config() -> Manager{
     match get_dir(config_dir){
-        Ok(path) => {load_config(path).unwrap_or(ManagerConfig::default())},
-        Err(_) => {ManagerConfig::default()},
+        Ok(path) => {load_config(path).unwrap_or(Manager::default())},
+        Err(_) => {Manager::default()},
     }
 }
 

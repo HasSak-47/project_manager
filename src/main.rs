@@ -1,16 +1,14 @@
 mod config;
 mod error;
+mod utils;
 
 use error::*;
-use config::manager;
+#[allow(unused_imports)]
+use config::{manager, project::load_project};
 
 fn main() -> ProjectResult<()>{
-    let config = manager::get_config();
-    let folders = &config.projects;
+    let project = load_project("/home/lilith/project_manager").unwrap();
 
-    for folder in folders{
-        println!("{folder}");
-    }
-    
+
     Ok(())
 }
