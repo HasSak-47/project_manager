@@ -26,6 +26,12 @@ impl Display for Location{
 
 impl Location{
     pub fn path(path: PathBuf) -> Self{ Self::Path {path} }
+    pub fn to_string(&self) -> String { 
+        match self {
+            Self::Path{path} => path.to_string_lossy().to_string(),
+            Self::Other(o) => o.clone(),
+        }
+    }
 }
 
 impl Default for Location{ fn default() -> Self { Self::Other(String::new()) } }
