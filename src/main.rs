@@ -1,3 +1,4 @@
+mod update;
 mod config;
 mod error;
 mod utils;
@@ -9,20 +10,7 @@ use error::*;
 use config::{manager::Manager, project};
 use std::env::args;
 
-fn __print_feat_v(v: &Vec<Feature>, level : i32){
-    for f in v{
-        println!("{f:?}");
-        if f.todo.len() != 0{ println!("todo:") }
-        __print_feat_v(&f.todo, level + 1);
-        if f.done.len() != 0{ println!("done:") }
-        __print_feat_v(&f.done, level + 1);
-    }
-
-}
-
-fn print_feat_v(v: &Vec<Feature>){
-    __print_feat_v(v, 0)
-}
+const EDITION : &str = env!("CARGO_PKG_VERSION");
 
 fn main() -> ProjectResult<()>{
     let manager = Manager::get_config();
@@ -35,8 +23,13 @@ fn main() -> ProjectResult<()>{
     });
 
 
+    println!("config version {}", EDITION);
     for p in projects{
-        println!("{:20}: {:>7.2}%", p.info.name, p.get_completion() * 100.);
+        print!("{:20}: {:>7.2}%", p.info.name, p.get_completion() * 100.);
+        if p.info.edition != EDITION {
+            print!(" config out date! '{}'", p.info.edition);
+        }
+        println!();
     }
 
     /*
