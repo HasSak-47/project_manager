@@ -6,11 +6,10 @@ mod features;
 mod init;
 mod new;
 // mod done;
-// mod mark_feature;
+mod mark_feature;
 // mod utils;
 
 use std::path::PathBuf;
-use std::{fs::OpenOptions, io::Read};
 
 use ly::log::prelude::*;
 use ly::log::write::ANSI;
