@@ -5,7 +5,6 @@ use anyhow::{Result, anyhow};
 
 pub use cached_project::*;
 
-pub mod error;
 pub mod cached_project;
 pub mod config;
 
@@ -132,6 +131,11 @@ where
         self._loader.write_project(tml, &p._data.location)?;
         Ok(())
     }
+    pub fn init_project(&mut self, name: &String) -> Result<()> {
+        let p = self._projects.get_mut(name).unwrap();
+        p._proj = Some(Project::default());
+        self.commit_project(name)
+    }
 
     pub fn commit_projects(&mut self) -> Result<()> {
         let keys : Vec<_> = self._projects.keys().map(|f| f.clone()).collect();
@@ -141,7 +145,14 @@ where
         Ok(())
     }
 
-    pub fn add_project(&mut self, name: String, location: Location) {
+    pub fn add_project(&mut self, name: String, location: Location) -> Result<()>{
+        if self._projects.contains_key(&name){
+            return Err(anyhow!("Project {name} is already managed!"));
+        }
+        if self._projects.iter().any(|(_, p)| &p._data.location == &location){
+            return Err(anyhow!("Project with location {location} is already managed!"));
+        }
+
         let cached = CachedProject{
             _name : name.clone(),
             _data : ProjectData{
@@ -149,6 +160,7 @@ where
             }, ..Default::default()
         };
         self._projects.insert(name, cached);
+        Ok(())
     }
 
     pub fn remove_project(&mut self, name: String) -> Result<()> {

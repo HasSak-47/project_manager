@@ -12,6 +12,7 @@ use serde::{Serialize, Deserialize};
 #[serde(tag = "type")]
 pub enum Location{
     Path{path: PathBuf},
+    Url{url: String},
     Other(String),
 }
 
@@ -19,6 +20,7 @@ impl Display for Location{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Path{path} => write!(f, "location::path {}", path.display()),
+            Self::Url{url} => write!(f, "location::url {}", url),
             Self::Other(o) => write!(f, "location::other {o}"),
         }
     }
@@ -29,6 +31,7 @@ impl Location{
     pub fn to_string(&self) -> String { 
         match self {
             Self::Path{path} => path.to_string_lossy().to_string(),
+            Self::Url{url} => url.clone(),
             Self::Other(o) => o.clone(),
         }
     }
