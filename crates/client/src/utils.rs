@@ -1,7 +1,6 @@
 use std::{fs::File, path::PathBuf};
 use std::fs;
 use anyhow::Result;
-use project_manager_api::project;
 use std::io::Read;
 use std::io::Write;
 use project_manager_api::{project::Project, Database, Location};
@@ -9,11 +8,10 @@ use ly::log::prelude::*;
 
 use crate::{Manager, Pair};
 
-pub fn exists_path(db: &Database, path: PathBuf) -> bool {
-    let path = Location::Path(path);
+pub fn exists_path(db: &Database, path: &PathBuf) -> bool {
     return db.get_all_projects()
         .iter()
-        .find(|p| *p.location() == path)
+        .find(|p| p.location().is_path(path))
         .is_some();
 }
 

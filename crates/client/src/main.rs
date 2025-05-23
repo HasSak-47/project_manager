@@ -47,11 +47,9 @@ fn panic_main() -> Result<()>{
     let mut buf = Vec::new();
     file.read_to_end(&mut buf)?;
     let _ = log!("read file");
-    
 
-    let mut db = Database::default();
-
-    load_database(&mut db)?;
+    let db = Database::default();
     cli(db)?;
+
     Ok(())
 }
