@@ -2,7 +2,7 @@ use crate::config::project;
 
 #[derive(Default)]
 pub struct Project{
-    pub info : project::ProjectInfo,
+    pub project: project::ProjectInfo,
     pub subproj: Vec<usize>,
     todo: Vec<project::Feature>,
     done: Vec<project::Feature>,
@@ -13,7 +13,7 @@ impl Project{
         let mut v = Vec::new();
         let mut s = Self::default();
 
-        s.info = p.info;
+        s.project = p.project;
         s.done = p.done;
         s.todo = p.todo;
 
