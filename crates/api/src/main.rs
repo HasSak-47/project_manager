@@ -1,17 +1,8 @@
-pub struct Project{
-    local_id: usize,
-    name: String,
-}
+pub mod db;
+use anyhow::Result;
+use db::DatabaseGraph;
 
-pub struct ExternalDatabase{
-    local_id: usize,
-    location: String,
-}
-
-pub struct Subproject{
-    parent_id: usize,
-    child_id: Vec<usize>,
-}
-
-fn main(){
+fn main() -> Result<()> {
+    let mut db = DatabaseGraph::from_file("./testing/root.db")?;
+    return Ok(());
 }
