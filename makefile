@@ -1,9 +1,9 @@
-run:
-	cargo run
 
 build_client:
-	cd crates/client
-	make
+	cd ./crates/client && cargo rustc -- -Awarnings && cargo build
+
+run:
+	cargo run
 
 impl_util:
 	cargo build --release

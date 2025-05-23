@@ -35,10 +35,10 @@ where
             )?,
         };
         loader.ensure_existance().unwrap();
-        let manager : Manager = 
-            loader
+        let manager : Manager = loader
             .get_manager()
             .and_then(|p| Ok(toml::from_str(p.as_str())))??;
+
         let _projects = manager.projects
             .into_iter()
             .map(|(name, pdata)| (name.clone(), CachedProject{
@@ -55,14 +55,18 @@ where
         } 
     }
 
+    pub fn load_project(&mut self, p : &mut CachedProject) {
+        p.__load_project(&self._loader);
+    }
+
     #[allow(dead_code)]
     fn drop_projects(&self){
-        todo!("find project via name");
+        todo!("drop projects");
     }
 
     #[allow(dead_code)]
     fn drop_cache(&self){
-        todo!("find project via name");
+        todo!("drop cache");
     }
     pub fn get_projects_mut(&mut self) -> Vec<&mut CachedProject>{
         self._projects
@@ -115,8 +119,8 @@ where
         Ok(())
     }
 
-    pub fn commit_project(&mut self, name: String) -> Result<()> {
-        let p = &self._projects[&name];
+    pub fn commit_project(&mut self, name: &String) -> Result<()> {
+        let p = &self._projects[name];
         if p._proj.is_none(){
             return Err(anyhow!("Project is missing or it is not loaded!"))
         }
@@ -128,7 +132,7 @@ where
     pub fn commit_projects(&mut self) -> Result<()> {
         let keys : Vec<_> = self._projects.keys().map(|f| f.clone()).collect();
         for name in keys {
-            self.commit_project(name.clone())?;
+            self.commit_project(&name)?;
         }
         Ok(())
     }
@@ -153,6 +157,6 @@ where
             .iter_mut()
             .map(|(_,c)| c)
             .find(|c| c.match_criteria(&find_criteria))
-            .ok_or(anyhow!("project with criteria ({find_criteria:?}) was not found!"))
+            .ok_or(anyhow!("project with criteria ({find_criteria:#?}) was not found!"))
     }
 }

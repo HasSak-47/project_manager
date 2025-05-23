@@ -1,6 +1,8 @@
 
 use std::{path::PathBuf, time::{UNIX_EPOCH, Duration, SystemTime}};
 
+use crate::{config::project::Feature, ProjectsHandler};
+
 use super::config::{project::Project, manager::{ProjectData, Location}};
 use super::ProjectLoader;
 use anyhow::{Result, anyhow};
@@ -12,6 +14,7 @@ pub(crate) struct ProjectCache{
     _todo: Option<f64>,
     _done: Option<f64>,
     _comp: Option<f64>,
+    _read_me: String,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -48,6 +51,12 @@ impl CachedProject{
         self._loaded = true;
     }
 
+    pub fn broken(&self) -> Option<bool>{
+        if self._loaded { Some(self._proj.is_none()) }
+        else { None}
+        
+    }
+
     pub fn get_completion_mut(&mut self) -> f64 {
         if self._cache._comp.is_some(){
             return self._cache._comp.unwrap();
@@ -55,7 +64,7 @@ impl CachedProject{
         if self._loaded && self._proj.is_some(){
             let comp = self._proj
                 .as_ref()
-                .and_then(|p| Some(p.get_completion())).unwrap();
+                .and_then(|p| Some(p.get_completion())).unwrap_or(0.);
             self._cache._comp = Some(comp);
             return comp;
         }
@@ -63,7 +72,7 @@ impl CachedProject{
     }
 
     pub fn get_completion(&self) -> f64 {
-        return self._cache._comp.unwrap();
+        self._cache._comp.unwrap_or(0.)
     }
 
     pub fn update(&mut self) -> Result<()>{
@@ -92,6 +101,18 @@ impl CachedProject{
         match find_criteria{
             FindCriteria::Location(local) => self._data.location == *local,
             FindCriteria::Name(name) => self._name == *name,
+        }
+    }
+
+    pub fn add_todo(&mut self, f: Feature) {
+        if let Some(ref mut p) = self._proj{
+            p.add_todo(f)
+        }
+    }
+
+    pub fn add_done(&mut self, f: Feature) {
+        if let Some(ref mut p) = self._proj{
+            p.add_done(f)
         }
     }
 }

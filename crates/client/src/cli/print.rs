@@ -56,9 +56,22 @@ enum PrintEnum{
     Random,
     Project(PrintProject),
     Projects(PrintProjects),
+    Broken,
     #[default]
     #[clap(skip)]
     None,
+}
+
+fn print_broken_projects(mut handler: SystemHandler) -> Result<()>{
+    handler.load_projects();
+    let projects = handler.get_projects();
+    for project in projects{
+        if project.broken().is_some_and(|f| f == true) {
+            println!("project {} status is broken", project.get_name());
+            println!("{:?}", project)
+        }
+    }
+    Ok(())
 }
 
 fn print_projects(projects: Vec<&mut CachedProject>, _data: PrintProjects) -> Result<()>{
@@ -75,19 +88,17 @@ fn print_projects(projects: Vec<&mut CachedProject>, _data: PrintProjects) -> Re
     Ok(())
 }
 
-fn print_project(projects: Vec<&mut CachedProject>, data: PrintProject){
-    match projects.iter().find(|p| *p.get_name() == data.name){
-        Some(s) => {
-            if !data.toml{
-                println!("{}: {s:?}", data.name);
+impl PrintProject{
+    fn print(&self, projects: Vec<&mut CachedProject>){
+        match projects.iter().find(|p| *p.get_name() == self.name){
+            Some(s) => {
+                if !self.toml{ println!("{}: {s:?}", self.name); }
+                else{ panic!("I can not print project toml!!"); }
             }
-            else{
-                panic!("not implemented!");
-            }
+            None => println!("project not found"),
         }
-        None => println!("project not found"),
+    
     }
-
 }
 
 fn print(projects: Vec<&mut CachedProject>){
@@ -146,10 +157,14 @@ impl PrintStruct{
         };
         use PrintEnum as PE;
         match option{
-            PE::Project(p) => {print_project(projects, p);}
+            PE::Project(p) => {p.print(projects);}
             PE::Projects(p) => {print_projects(projects, p)?;}
             PE::Random => {print_random(projects);}
             PE::Percentajes(p) => {p.print(projects)?}
+            PE::Broken => {
+                drop(projects);
+                print_broken_projects(handler)?
+            }
             _ => {print(projects);},
         }
 
