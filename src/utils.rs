@@ -1,4 +1,4 @@
-use std::{fs::File, io::{Read, BufReader}};
+use std::{fs::File, io::{Read, BufReader}, default};
 use crate::ProjectResult;
 use std::path::Path;
 
@@ -9,4 +9,32 @@ pub fn read_file<S: AsRef<Path>>(path: S) -> ProjectResult<String>{
     buf_reader.read_to_end(&mut data)?;
 
     Ok(String::from_utf8(data)?)
+}
+
+/*
+ * config: version asked
+ * current: version compared to
+ */
+pub fn version_cmp(config: &str, current: &str) -> bool{
+    if config == "*" { return true; }
+    let config_parts  : Vec<&str> = config.split('.').collect();
+    let current_parts : Vec<&str> = current.split('.').collect();
+
+    // lmao what the fuck
+    if config_parts[0] != current_parts[0] {
+        return false;
+    }
+    if config_parts[1] == "*"{
+        return true
+    }
+    if config_parts[1] != current_parts[1] {
+        return false;
+    }
+    if config_parts[2] == "*"{
+        return true
+    }
+    if config_parts[2] != current_parts[2] {
+        return false;
+    }
+    true
 }
