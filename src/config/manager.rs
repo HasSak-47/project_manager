@@ -1,4 +1,4 @@
-use std::{fs::{DirBuilder, File}, path::{PathBuf, Path}};
+use std::{fs::{DirBuilder, File}, path::{PathBuf, Path}, io::Write};
 
 use serde::{Serialize, Deserialize};
 use dirs::{config_dir, data_local_dir};
@@ -65,6 +65,15 @@ impl Manager{
         let config : ManagerToml = toml::from_str(std::str::from_utf8(data.as_bytes())?)?;
 
         Ok(Manager{manager: config.manager, projects: map_to_data(config.projects)})
+    }
+
+    pub fn write_data_to<P: AsRef<Path>>(&self, path: P)
+        -> ProjectResult<()>
+    {
+        let mut file = File::open(path)?;
+        let buffer = toml::to_string(self)?;
+        file.write(buffer.as_bytes())?;
+        Ok(())
     }
 
     pub fn get_path() -> ProjectResult<PathBuf>{
