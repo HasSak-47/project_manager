@@ -1,11 +1,11 @@
 use std::path::PathBuf;
 
 use libc::STDOUT_FILENO;
-use project_manager_api::{project::ProjectInfo, CachedProject, Handler, Location};
+use project_manager_api::{project::ProjectInfo, Handler, Location};
 use super::Arguments;
 use clap::{Subcommand, Args, ValueEnum};
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result};
 
 // this looks like shit
 #[derive(Args, Debug, Default, Clone)]
