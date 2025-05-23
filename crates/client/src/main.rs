@@ -15,9 +15,8 @@ pub struct SystemLoader{
 }
 
 impl SystemLoader {
-    fn new() -> Self{
-        Self{manager_path: PathBuf::new()}
-    }
+    pub fn new() -> Self{ Self{manager_path: PathBuf::new()} }
+    pub fn set_path(&mut self, path: PathBuf)  {self.manager_path = path}
 }
 
 impl ProjectLoader for SystemLoader{
