@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc};
 
 use super::project::*;
 
@@ -9,18 +9,18 @@ pub struct Manager{
     pub projects: HashMap<String, Project>,
 }
 
-pub trait ManagerWriter{
-    fn write_manager(&mut self, man: &Manager) -> Result<()>;
+pub trait Writer{
+    fn write(&mut self, man: &Manager) -> Result<()>;
 }
 
-pub trait ManagerReader{
-    fn read_manager(&self) -> Result<Manager>;
+pub trait Reader{
+    fn read(&self) -> Result<Manager>;
 }
 
 #[derive(Default)]
 pub struct ManagerHandler{
-    writer: Option<Box<dyn ManagerWriter>>,
-    reader: Option<Box<dyn ManagerReader>>,
+    writer: Option<Rc<dyn Writer>>,
+    reader: Option<Rc<dyn Reader>>,
 }
 
 impl std::fmt::Debug for ManagerHandler{
@@ -31,19 +31,19 @@ impl std::fmt::Debug for ManagerHandler{
 
 impl ManagerHandler{
     pub fn new() -> Self{ ManagerHandler{ writer: None, reader: None, } }
-    pub fn set_writer(&mut self, writer: Box<dyn ManagerWriter>){ self.writer = Some(writer); }
-    pub fn set_reader(&mut self, reader: Box<dyn ManagerReader>){ self.reader = Some(reader); }
+    pub fn set_writer(&mut self, writer: Rc<dyn Writer>){ self.writer = Some(writer); }
+    pub fn set_reader(&mut self, reader: Rc<dyn Reader>){ self.reader = Some(reader); }
 
-    pub fn write_manager(&mut self, manager: &Manager) -> Result<()> {
+    pub fn write(&mut self, manager: &Manager) -> Result<()> {
         match &mut self.writer{
-            Some(s) => s.write_manager(&manager),
+            Some(s) => s.write(&manager),
             None => return Err(anyhow::anyhow!("there is no manager writer")),
         }
     }
 
-    pub fn read_manager(&self) -> Result<Manager> {
+    pub fn read(&self) -> Result<Manager> {
         match &self.reader {
-            Some(s) => s.read_manager(),
+            Some(s) => s.read(),
             None => return Err(anyhow::anyhow!("there is no manager reader")),
         }
     }
