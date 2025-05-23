@@ -4,11 +4,6 @@ version="0.1.1"
 edition="0.1.0"
 
 [[todo]]
-name="rework file interaction"
-priority=1.0
-difficulty=1.0
-
-[[todo]]
 name="upgrade system"
 priority=0.3
 difficulty=1.0
@@ -27,6 +22,26 @@ difficulty=0.8
 name="cli system"
 priority=0.8
 difficulty=0.5
+
+[[todo.todo]]
+name="print options"
+priority=0.2
+difficulty=0.5
+
+[[todo.done]]
+name="print percentajes"
+priority=0.2
+difficulty=0.1
+
+[[todo.done]]
+name="print all"
+priority=0.2
+difficulty=0.1
+
+[[todo.todo]]
+name="print random"
+priority=0.2
+difficulty=0.1
 
 [[todo]]
 name="bake projects"
@@ -73,3 +88,9 @@ difficulty=0.1
 name="calculate % done"
 priority=0.4
 difficulty=0.1
+
+[[done]]
+name="rework file interaction"
+priority=1.0
+difficulty=1.0
+
