@@ -15,6 +15,10 @@ pub struct TaskTree{
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub childs: Vec<TaskTree>,
 
+    #[serde(default)]
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub project: String,
+
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
