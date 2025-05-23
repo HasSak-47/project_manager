@@ -1,5 +1,5 @@
 use ly::proc::builder;
-use serde::{Deserialize, Serialize};
+use crate::*;
 
 use crate::Description;
 use std::time::Duration;
@@ -11,6 +11,7 @@ pub struct TaskTable{
     pub(crate) done: bool,
 
     // minimun time needed to perform the task min_time   : time::Duration,
+    #[builder(def_val = Duration::new(1000))]
     pub(crate) min_time: Duration,
     #[builder(ty = String)]
     pub(crate) parent_task: Option<usize>,
