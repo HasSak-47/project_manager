@@ -38,15 +38,11 @@ pub struct Params{
     manager_path: PathBuf,
 }
 
-trait RunCmd{
-    fn run(&self, params: Params) -> ProjectResult<()>;
-}
-
 #[derive(Args, Default, Debug, Clone, Copy)]
 struct NotDone;
 
-impl RunCmd for NotDone{
-    fn run(&self, _ : Params) -> ProjectResult<()>{
+impl NotDone{
+    pub fn run(&self, _ : Params) -> ProjectResult<()>{
         println!("not yet implemented!!");
         Err(ProjectError::Other("not yet implemented".to_string()))
     }
