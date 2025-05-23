@@ -2,13 +2,13 @@ use toml::{Value, map::Map};
 use serde::{Deserialize, Serialize};
 use std::fs::read;
 
-use super::errors::*;
+use super::super::errors::*;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ProjectData{
-    name: String,
-    path: String,
-    todo: String,
+    pub name: String,
+    pub path: String,
+    pub todo: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -18,20 +18,41 @@ pub struct ProjectFile{
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ProjectTodo{
-    done: Option<Map<String, Value>>,
-    todo: Option<Map<String, Value>>,
+    pub done: Option<Map<String, Value>>,
+    pub todo: Option<Map<String, Value>>,
+}
+
+#[derive(Debug)]
+pub struct ParsedTodo{
+    pub done: Vec<(String, f64)>,
+    pub todo: Vec<(String, f64)>,
 }
 
 #[derive(Debug)]
 pub struct Project{
-    data: ProjectData,
-    todo: ProjectTodo,
+    pub data: ProjectData,
+    pub todo: ParsedTodo,
 }
 
 pub fn read_project(data: ProjectData) -> Result<Project>{
     let file_data = String::from_utf8(read(data.todo.clone())?)?;
-    let todo: ProjectTodo = toml::from_str(file_data.as_str())?;
-    Ok(Project{data, todo})
+    let todo_toml: ProjectTodo = toml::from_str(file_data.as_str())?;
+
+
+    let parse_map = |map: toml::Table|{
+        let mut todos: Vec<(String, f64)> = vec![];
+        for todo in map{
+            if todo.1.is_float(){
+                todos.push((todo.0, todo.1.as_float().unwrap()));
+            }
+        }
+        todos
+    };
+
+    Ok(Project{data, todo: ParsedTodo{
+        todo: parse_map(todo_toml.todo.unwrap()),
+        done: parse_map(todo_toml.done.unwrap()),
+    }})
 }
 
 pub fn get_projects() -> Result<Vec<Project>> {
