@@ -1,0 +1,10 @@
+[package]
+name = "project_manager_client"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+toml = "0.7.2"
+dirs = "1.0"
+rand = "0.8.5"
+project_manager_api = {path = "../api"}
