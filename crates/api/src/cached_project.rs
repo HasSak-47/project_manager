@@ -110,6 +110,12 @@ impl CachedProject{
         }
     }
 
+    // searches for a feature in the project 
+    // removes it from todo and adds it to done
+    pub fn mark_todo_done(&mut self, f: String) {
+        self._proj.as_mut().and_then(|p| Some(p.mark_done(f)));
+    }
+
     pub fn add_done(&mut self, f: Feature) {
         if let Some(ref mut p) = self._proj{
             p.add_done(f)

@@ -4,6 +4,7 @@ mod features;
 mod delete;
 mod init;
 mod new;
+mod mark_feature;
 
 
 use anyhow::{Result, anyhow};
@@ -16,10 +17,7 @@ use std::path::PathBuf;
 
 use crate::{SystemHandler, VERSION};
 use self::{
-    delete::DelStruct,
-    new::NewStruct,
-    features::AddFeat,
-    git::GitStruct
+    delete::DelStruct, features::AddFeat, git::GitStruct, mark_feature::MarkFeature, new::NewStruct
 };
 
 #[derive(Parser, Debug)]
@@ -61,6 +59,8 @@ enum Tree{
     DoneFeat(NotDone),
     Update(NotDone),
 
+    MarkFeature(MarkFeature),
+
     Git(GitStruct),
 }
 
@@ -82,6 +82,7 @@ pub fn cli(handler: SystemHandler) -> Result<()>
         TR::New(n) => n.run(args, handler)?,
         TR::AddFeat(f) => f.run(args, handler)?,
         TR::Git(g) => g.run(args, handler)?,
+        TR::MarkFeature(f) => f.run(args, handler)?,
         _ => NotDone::default().run(args, handler)?,
     }
 

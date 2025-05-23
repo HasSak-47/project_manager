@@ -84,6 +84,12 @@ impl Project {
     pub fn add_todo(&mut self, f: Feature){ self.todo.as_mut().and_then(|v| Some(v.push(f))); }
     pub fn add_done(&mut self, f: Feature){ self.done.as_mut().and_then(|v| Some(v.push(f))); }
 
+    pub fn mark_done(&mut self, name: String){
+        let i = self.todo.as_ref().and_then(|v| v.iter().position(|f| f.name == name));
+        let todo = self.todo.as_mut().and_then(|v| i.and_then(|i| Some(v.remove(i))));
+        self.done.as_mut().and_then(|v| todo.and_then(|t| Some(v.push(t))));
+    }
+
     pub fn get_completion(&self) -> f64{
         let t = self.get_todo();
         let d = self.get_done();
