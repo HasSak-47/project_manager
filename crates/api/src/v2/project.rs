@@ -2,6 +2,7 @@ use super::Location;
 use anyhow::Result;
 
 #[allow(dead_code)]
+#[derive(Debug, Clone)]
 pub struct Feature{
     name: String,
     description: String,
@@ -13,6 +14,12 @@ pub struct Feature{
     done: Vec<Feature>,
 }
 
+impl Feature{
+    pub fn new(name: String, description: String, status: String, priority: u8, difficulty: u8) -> Self {
+        Feature{name, description, status, priority, difficulty, todo: Vec::new(), done: Vec::new()}
+    }
+}
+
 // the status of the project
 #[allow(dead_code)]
 pub struct ProjectStatus{
@@ -21,6 +28,71 @@ pub struct ProjectStatus{
     pub todo: Vec<Feature>,
     pub done: Vec<Feature>,
 }
+
+impl ProjectStatus{
+    pub fn new(name: String, description: String) -> Self {
+        ProjectStatus{name, description, todo: Vec::new(), done: Vec::new()}
+    }
+
+    pub fn add_todo(&mut self, feature: Feature){ self.todo.push(feature); }
+    pub fn add_done(&mut self, feature: Feature){ self.done.push(feature); }
+
+    fn remove_from(features: &mut Vec<Feature>, feature_name: String) -> Result<Feature>{
+        let i = features.iter().position(|f| f.name == feature_name);
+        match i{
+            Some(i) => Ok(features.remove(i)),
+            None => Err(anyhow::anyhow!("Feature not found")),
+        }
+    }
+    
+    pub fn mark_done(&mut self, feature_name: String) -> Result<()>{
+        let p = ProjectStatus::remove_from(&mut self.todo, feature_name);
+        self.done.push(p?);
+        Ok(())
+    }
+
+    pub fn mark_todo(&mut self, feature_name: String) -> Result<()>{
+        let p = ProjectStatus::remove_from(&mut self.done, feature_name);
+        self.todo.push(p?);
+        Ok(())
+    }
+
+    fn get_features_difficulty<S>(v: Option<&Vec<Feature>>, selector: S) -> usize
+    where
+        S: Fn(&Feature) -> Option<&Vec<Feature>>
+    {
+        if v.is_none(){
+            return 0;
+        }
+
+        let v = v.unwrap();
+        let mut d = 0;
+        for f in v{
+            d += f.difficulty as usize;
+            d += ProjectStatus::get_features_difficulty(selector(f), &selector);
+        }
+
+        d
+    }
+
+    pub fn get_todo_difficulty(&self) -> usize{ ProjectStatus::get_features_difficulty(Some(&self.todo), |f| Some(&f.todo)) }
+    pub fn get_done_difficulty(&self) -> usize{ ProjectStatus::get_features_difficulty(Some(&self.done), |f| Some(&f.done)) }
+
+    pub fn get_completion(&self) -> f64{
+        let todo = self.get_todo_difficulty();
+        let done = self.get_done_difficulty();
+        let total = todo + done;
+        if total == 0{
+            return 0.;
+        }
+        done as f64 / total as f64
+    }
+
+    fn add_to(v: &mut Vec<Feature>, f: Feature){ v.push(f); }
+
+
+}
+
 
 // info on the project
 #[allow(dead_code)]
